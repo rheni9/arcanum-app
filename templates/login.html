@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+  <div class="login-container">
+    <div class="login-illustration">
+        <img src="{{ url_for('static', filename='img/lock.png') }}" alt="Lock icon">
+      </div>
+    </div>
+
+    <h2>Login</h2>
+
+    {% if error %}
+      <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <form method="post" class="login-form">
+      <input type="password" name="password" placeholder="Enter password" class="input-field" required>
+      <button type="submit" class="login-button">Sign In</button>
+    </form>
+
+    <div class="logo-illustration">
+      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo icon">
+    </div>
+  </div>
+{% endblock %}

@@ -5,4 +5,14 @@
 {% block content %}
   <h1>Welcome to Arcanum</h1>
   <p>This is your private space.</p>
+  <div class="logo-illustration">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo icon">
+  </div>
+  <p class="motto"><em>Arcanum in silentio est</em></p>
+{% endblock %}
+
+{% block extra_footer %}
+  {% if not session.get('logged_in') %}
+    <div class="auth-notice">Access requires authorization</div>
+  {% endif %}
 {% endblock %}

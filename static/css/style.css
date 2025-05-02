@@ -6,7 +6,7 @@ body {
   }
   
   .site-header {
-    background-color: #0c1a3e; /* темно-синій */
+    background-color: #0c1a3e;
     padding: 10px 20px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   }
@@ -20,7 +20,7 @@ body {
   }
   
   .logo {
-    height: 32px;
+    height: 40px;
     vertical-align: middle;
   }
   
@@ -58,4 +58,87 @@ body {
     padding: 40px 20px;
     text-align: center;
   }
+
+  .motto {
+    font-style: italic;
+    color: #555;
+    margin-top: 20px;
+    font-size: 16px;
+  }
+
+  .auth-notice {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-style: italic;
+    color: #999;
+    background-color: transparent;
+    border-top: 1px solid #eee;
+    border-left: 1px solid #eee;
+    opacity: 0.8;
+    z-index: 100;
+  }
+  
+  .login-form {
+    max-width: 300px;
+    margin: 60px auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .input-field,
+  .login-button {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .input-field {
+    padding: 10px 14px;
+    font-size: 16px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    background-color: #eef4fa;
+    color: #0c1a3e;
+    transition: border-color 0.2s, background-color 0.2s;
+  }
+  
+  .input-field:focus {
+    border-color: #0c1a3e;
+    background-color: #e8f0f9;
+    outline: none;
+  }
+  
+  .login-button {
+    background-color: #0c1a3e;
+    color: #fff;
+    padding: 10px 14px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .login-button:hover {
+    background-color: #1a2d5a;
+  }
+  
+  .error {
+    color: crimson;
+    margin-top: 10px;
+  }
+  
+  .login-illustration img {
+    width: 48px;
+    margin-top: 0;
+  }
+
+  .logo-illustration img {
+    width: 80px;
+    margin-top: 0;
+  }
+  
   
