@@ -1,0 +1,61 @@
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    background-color: #ffffff;
+    color: #222;
+  }
+  
+  .site-header {
+    background-color: #0c1a3e; /* темно-синій */
+    padding: 10px 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .logo {
+    height: 32px;
+    vertical-align: middle;
+  }
+  
+  .logo-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+  }
+  
+  .site-title {
+    color: white;
+    margin-left: 10px;
+    font-size: 20px;
+    font-weight: 600;
+    transition: color 0.2s;
+  }
+  
+  .site-title:hover {
+    color: #e0e0e0;
+  }
+  
+  .auth-nav .nav-link {
+    color: white;
+    margin-left: 15px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: opacity 0.2s;
+  }
+  
+  .auth-nav .nav-link:hover {
+    opacity: 0.8;
+  }
+  
+  .main-content {
+    padding: 40px 20px;
+    text-align: center;
+  }
+  
