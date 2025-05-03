@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Arcanum{% endblock %}
+
+{% block content %}
+  <h1 class="dashboard-title">Dashboard</h1>
+
+  <div class="card-grid">
+    <a href="{{ url_for('chats') }}" class="dashboard-card">
+      <img src="{{ url_for('static', filename='img/chats.png') }}" alt="Chats">
+      <h2>Messages</h2>
+    </a>
+  </div>
+{% endblock %}

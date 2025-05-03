@@ -8,7 +8,7 @@
 <body>
 
   <header class="site-header">
-    <div class="container header-content">
+    <div class="header-content">
       <a href="{{ url_for('home') }}" class="logo-link">
         <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="logo">
         <span class="site-title">Arcanum</span>
@@ -16,7 +16,7 @@
 
       <nav class="auth-nav">
         {% if session.get('logged_in') %}
-          <a href="#" class="nav-link">Profile</a>
+          <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
           <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
         {% else %}
           <a href="{{ url_for('login') }}" class="nav-link">Login</a>
@@ -26,7 +26,9 @@
   </header>
 
   <main class="main-content">
+    <div class="container">
     {% block content %}{% endblock %}
+  </div>
   </main>
 
   <footer>

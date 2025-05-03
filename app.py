@@ -42,6 +42,16 @@ def restrict_access():
         return redirect(url_for("login"))
 
 
+@app.route("/dashboard")
+def dashboard():
+    return render_template("dashboard.html")
+
+
+@app.route("/chats")
+def chats():
+    return render_template("chats/index.html")
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
