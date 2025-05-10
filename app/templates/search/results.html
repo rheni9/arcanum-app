@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results | Arcanum{% endblock %}
+
+{% block content %}
+  <h1 class="page-title">Search Results</h1>
+
+  {# === Search and Filter Form === #}
+  <div class="chat-filters-bar">
+    <form method="get" class="chat-filter-form" action="{{ url_for('search.search_messages') }}">
+      <input type="text" name="query" placeholder="Search messages..."
+             class="form-control search-input" value="{{ query or '' }}">
+      <button type="submit" name="action" value="search" class="btn">
+        <img src="{{ url_for('static', filename='img/search_icon.png') }}" alt="Search">
+        <span>Search</span>
+      </button>
+
+      <div class="date-group">
+        <div class="date-select-wrapper">
+          <select name="date_mode" class="date-mode-select">
+            <option value="on" {% if date_mode == 'on' %}selected{% endif %}>On</option>
+            <option value="before" {% if date_mode == 'before' %}selected{% endif %}>Before</option>
+            <option value="after" {% if date_mode == 'after' %}selected{% endif %}>After</option>
+            <option value="between" {% if date_mode == 'between' %}selected{% endif %}>Between</option>
+          </select>
+          <input type="date" name="start_date" class="form-control date-input"
+                 value="{{ start_date if start_date else '' }}">
+        </div>
+        <input type="date" name="end_date" class="form-control date-input" id="end_date"
+               value="{{ end_date if end_date else '' }}">
+        <button type="submit" name="action" value="filter" class="btn">
+          <img src="{{ url_for('static', filename='img/calendar_icon.png') }}" alt="Filter">
+          <span>Filter by date</span>
+        </button>
+      </div>
+
+      <a href="{{ url_for('search.search_messages') }}" class="btn btn-light">
+        <img src="{{ url_for('static', filename='img/reset_icon.png') }}" alt="Reset">
+        Clear filters
+      </a>
+    </form>
+  </div>
+
+  {# === Filter Summary Message === #}
+  {% if query or start_date %}
+    <div class="filter-summary-box">
+      <p class="filter-summary {{ 'no-results' if not results }}">
+        {# Summary description #}
+        {% if query %}
+          Search results for “<strong>{{ query }}</strong>”
+        {% endif %}
+
+        {% if date_mode == 'on' and start_date %}
+          {% if query %} — {% endif %}
+          Messages on <strong>{{ start_date|dateonlyformat }}</strong>
+        {% elif date_mode == 'before' and start_date %}
+          {% if query %} — {% endif %}
+          Messages before <strong>{{ start_date|dateonlyformat }}</strong>
+        {% elif date_mode == 'after' and start_date %}
+          {% if query %} — {% endif %}
+          Messages after <strong>{{ start_date|dateonlyformat }}</strong>
+        {% elif date_mode == 'between' and start_date and end_date %}
+          {% if query %} — {% endif %}
+          Messages between <strong>{{ start_date|dateonlyformat }}</strong>
+          and <strong>{{ end_date|dateonlyformat }}</strong>
+        {% endif %}
+
+        {# Result count #}
+        {% if results %}
+          <br>
+          <span>
+            — <strong>{{ results.values() | map('length') | sum }}</strong>
+            message{{ 's' if results.values() | map('length') | sum != 1 else '' }}
+            found across chats.
+          </span>
+        {% else %}
+          <br>
+          <span>
+            {% if query %}No messages found for “<strong>{{ query }}</strong>”.{% endif %}
+            {% if not query %}No messages found.{% endif %}
+          </span>
+        {% endif %}
+      </p>
+    </div>
+  {% endif %}
+
+  {# === Back Button === #}
+  <div class="back-to-chats">
+    <a href="{{ url_for('chats.list_chats') }}" class="btn">
+      <img src="{{ url_for('static', filename='img/back_icon.png') }}" alt="Back">
+      <span>Back to Chats</span>
+    </a>
+  </div>
+
+  {# === Grouped Results Tables === #}
+  <div id="results-table-container">
+    {% for slug, messages in results.items() %}
+      {% with slug=slug, messages=messages, sort_by=sort_by, order=order %}
+        {% include "search/_grouped_msg_table.html" %}
+      {% endwith %}
+    {% endfor %}
+  </div>
+
+{% endblock %}

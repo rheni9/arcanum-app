@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}{{ chat.name }} | Arcanum{% endblock %}
+
+{% block content %}
+  <h1 class="page-title">{{ chat.name }}</h1>
+
+  {# Flash messages #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="alert {{ 'alert-success' if category == 'success' else 'alert-error' }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  {# Chat metadata #}
+  <div class="chat-info-box">
+    <table class="chat-info-table">
+      <tr><td><strong>Slug:</strong></td><td>{{ chat.slug }}</td></tr>
+      <tr><td><strong>Type:</strong></td><td>{{ chat.type or '—' }}</td></tr>
+      <tr>
+        <td><strong>Link:</strong></td>
+        <td>
+          {% if chat.link %}
+            <a href="{{ chat.link }}" target="_blank" rel="noopener noreferrer">{{ chat.link }}</a>
+          {% else %}—{% endif %}
+        </td>
+      </tr>
+      <tr><td><strong>Chat ID:</strong></td><td>{{ chat.chat_id or '—' }}</td></tr>
+      <tr><td><strong>Joined:</strong></td>
+          <td>{{ chat.joined | dateonlyformat("long_date") if chat.joined else '—' }}</td></tr>
+      <tr><td><strong>Total messages:</strong></td><td>{{ chat.message_count }}</td></tr>
+      <tr><td><strong>Active:</strong></td><td>{{ 'Yes' if chat.is_active else 'No' }}</td></tr>
+      <tr><td><strong>Member:</strong></td><td>{{ 'Yes' if chat.is_member else 'No' }}</td></tr>
+      <tr><td><strong>Notes:</strong></td><td>{{ chat.notes or '—' }}</td></tr>
+    </table>
+  </div>
+
+  {# Action buttons #}
+  <div class="chat-controls-row">
+    <a href="{{ url_for('chats.list_chats') }}" class="btn">
+      <img src="{{ url_for('static', filename='img/back_icon.png') }}" alt="Back">
+      <span>Back to Chats</span>
+    </a>
+    <div class="chat-actions">
+      <a href="{{ url_for('chats.new_chat', slug=chat.slug) }}" class="btn btn-primary">
+        <img src="{{ url_for('static', filename='img/add_msg_icon.png') }}" alt="Add"> Add Message
+      </a>
+      <a href="{{ url_for('chats.edit_chat', slug=chat.slug) }}" class="btn btn-secondary">
+        <img src="{{ url_for('static', filename='img/edit_icon.png') }}" alt="Edit"> Edit
+      </a>
+      <form action="{{ url_for('chats.delete_chat', slug=chat.slug) }}" method="post" class="inline-form">
+        <button type="submit" class="btn btn-danger"
+                data-type="chat" data-label="{{ chat.name }}"
+                data-msgcount="{{ chat.message_count }}" data-confirm="chat">
+          <img src="{{ url_for('static', filename='img/delete_icon.png') }}" alt="Delete">
+          <span>Delete</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  {# Search and filter form #}
+  <div class="chat-filters-bar">
+    <form method="get" class="chat-filter-form" action="{{ url_for('chats.view_chat', slug=chat.slug) }}">
+      <input type="text" name="query" placeholder="Search in this chat..."
+             class="form-control search-input" value="{{ query or '' }}">
+      <button type="submit" name="action" value="search" class="btn">
+        <img src="{{ url_for('static', filename='img/search_icon.png') }}" alt="Search">
+        <span>Search</span>
+      </button>
+
+      <div class="date-group">
+        <div class="date-select-wrapper">
+          <select name="date_mode" class="date-mode-select">
+            <option value="on" {% if date_mode == 'on' %}selected{% endif %}>On</option>
+            <option value="before" {% if date_mode == 'before' %}selected{% endif %}>Before</option>
+            <option value="after" {% if date_mode == 'after' %}selected{% endif %}>After</option>
+            <option value="between" {% if date_mode == 'between' %}selected{% endif %}>Between</option>
+          </select>
+          <input type="date" name="start_date" class="form-control date-input"
+                 value="{{ start_date or '' }}">
+        </div>
+        <input type="date" name="end_date" class="form-control date-input" id="end_date"
+               value="{{ end_date or '' }}">
+        <button type="submit" name="action" value="filter" class="btn">
+          <img src="{{ url_for('static', filename='img/calendar_icon.png') }}" alt="Filter">
+          <span>Filter by date</span>
+        </button>
+      </div>
+
+      {% if has_filters %}
+        <a href="{{ url_for('chats.view_chat', slug=chat.slug) }}" class="btn btn-light">
+          <img src="{{ url_for('static', filename='img/reset_icon.png') }}" alt="Reset">
+          Clear filters
+        </a>
+      {% endif %}
+    </form>
+  </div>
+
+  {# Filter summary message #}
+{% if has_filters and (query or start_date or end_date) %}
+  <div class="filter-summary-box">
+    <p class="filter-summary {{ 'no-results' if not messages }}">
+
+      {# Start of search text part #}
+      {% if messages %}
+        {% if query %}
+          Search results for “<strong>{{ query }}</strong>”
+        {% endif %}
+        {% if date_mode in ['on', 'before', 'after', 'between'] and start_date %}
+          {% if query %} — {% endif %}
+          {% if date_mode == 'on' %}
+            Messages on <strong>{{ start_date|dateonlyformat }}</strong>
+          {% elif date_mode == 'before' %}
+            Messages before <strong>{{ start_date|dateonlyformat }}</strong>
+          {% elif date_mode == 'after' %}
+            Messages after <strong>{{ start_date|dateonlyformat }}</strong>
+          {% elif date_mode == 'between' and end_date %}
+            Messages between <strong>{{ start_date|dateonlyformat }}</strong>
+            and <strong>{{ end_date|dateonlyformat }}</strong>
+          {% endif %}
+        {% endif %}
+        <br>
+        <span>
+          — <strong>{{ messages|length }}</strong>
+          message{{ 's' if messages|length != 1 else '' }} found in this chat.
+        </span>
+      {% else %}
+        {% if query %}
+          No messages found for “<strong>{{ query }}</strong>”.
+        {% elif date_mode == 'on' %}
+          No messages for <strong>{{ start_date|dateonlyformat }}</strong>.
+        {% elif date_mode == 'before' %}
+          No messages before <strong>{{ start_date|dateonlyformat }}</strong>.
+        {% elif date_mode == 'after' %}
+          No messages after <strong>{{ start_date|dateonlyformat }}</strong>.
+        {% elif date_mode == 'between' and end_date %}
+          No messages between <strong>{{ start_date|dateonlyformat }}</strong>
+          and <strong>{{ end_date|dateonlyformat }}</strong>.
+        {% endif %}
+      {% endif %}
+
+    </p>
+  </div>
+{% elif not messages %}
+  <div class="filter-summary-box">
+    <p class="filter-summary no-results">No messages in this chat.</p>
+  </div>
+{% endif %}
+
+  {# Messages table #}
+  <div class="chat-messages-table">
+    {% if messages %}
+      {% include "chats/_msg_table.html" %}
+    {% endif %}
+  </div>
+{% endblock %}

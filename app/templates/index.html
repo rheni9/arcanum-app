@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Home | Arcanum{% endblock %}
+
+{% block content %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="alert {{ 'alert-success' if category == 'success' else 'alert-message' }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <h1>Welcome to Arcanum</h1>
+  <p>This is your private space.</p>
+
+  <div class="logo-illustration">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo icon">
+  </div>
+
+  <p class="motto"><em>Arcanum in silentio est</em></p>
+{% endblock %}
+
+{% block extra_footer %}
+  {% if not session.get('logged_in') %}
+    <div class="auth-notice">
+      Access requires authorization
+    </div>
+  {% endif %}
+{% endblock %}

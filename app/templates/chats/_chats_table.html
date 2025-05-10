@@ -1,0 +1,50 @@
+<!-- templates/chats/_chats_table.html -->
+<div id="chat-table-container">
+  <table class="table chat-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th class="sortable {% if sort_by == 'name' %}active-sort{% endif %}" data-sort="name">
+          <div class="sort-wrapper">
+            <span class="header-label">Chat Name</span>
+            <span class="sort-arrow">{{ '▲' if sort_by == 'name' and order == 'asc' else '▼' if sort_by == 'name' else '' }}</span>
+          </div>
+        </th>
+        <th class="sortable {% if sort_by == 'message_count' %}active-sort{% endif %}" data-sort="message_count">
+          <div class="sort-wrapper">
+            <span class="header-label">Messages</span>
+            <span class="sort-arrow">
+              {{ '▲' if sort_by == 'message_count' and order == 'asc'
+                 else '▼' if sort_by == 'message_count' else '' }}
+            </span>
+          </div>
+        </th>
+        <th class="sortable {% if sort_by == 'last' %}active-sort{% endif %}" data-sort="last">
+          <div class="sort-wrapper">
+            <span class="header-label">Last Message</span>
+            <span class="sort-arrow">{{ '▲' if sort_by == 'last' and order == 'asc' else '▼' if sort_by == 'last' else '' }}</span>
+          </div>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for chat in chats %}
+      <tr class="clickable-row" data-href="{{ url_for('chats.view_chat', slug=chat.slug) }}">
+        <td>{{ loop.index }}</td>
+        <td>{{ chat.name }}</td>
+        <td>{{ chat.message_count }}</td>
+        <td>
+          {% if chat.last_message_at %}
+            <div class="table-timestamp">
+              <div class="date">{{ chat.last_message_at | datetimeformat("long_date") }}</div>
+              <div class="time">{{ chat.last_message_at | datetimeformat("time") }}</div>
+            </div>
+          {% else %}
+            <div class="table-timestamp"><em>No messages</em></div>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

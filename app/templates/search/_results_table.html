@@ -1,0 +1,8 @@
+{# templates/search/_results_table.html #}
+<div id="container-{{ slug }}">
+  {% set slug = slug %}
+  {% set messages = messages %}
+  {% set sort_by = sort_by %}
+  {% set order = order %}
+  {% include "search/_grouped_msg_table.html" with context %}
+</div>

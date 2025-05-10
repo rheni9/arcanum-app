@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Chats | Arcanum{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Chats</h1>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-messages">
+            {% for category, message in messages %}
+              <div class="alert {{ 'alert-success' if category == 'success' else 'alert-error' }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+<div class="chat-filters-bar">
+    <form id="chat-filter-form" class="chat-filter-form" method="get" action="{{ url_for('search.search_messages') }}">
+      <input type="text" name="query" placeholder="Search messages..." class="form-control search-input">
+      <button type="submit" name="action" value="search" class="btn">
+        <img src="{{ url_for('static', filename='img/search_icon.png') }}" alt="Search">
+        <span>Search</span>
+      </button>
+
+      <div class="date-group">
+        <div class="date-select-wrapper">
+          <select name="date_mode" class="date-mode-select">
+            <option value="on">On</option>
+            <option value="before">Before</option>
+            <option value="after">After</option>
+            <option value="between">Between</option>
+          </select>
+          <input type="date" name="start_date" class="form-control date-input">
+        </div>
+        <input type="date" name="end_date" class="form-control date-input" id="end_date">
+        <button type="submit" name="action" value="filter" class="btn chat-add-button">
+          <img src="{{ url_for('static', filename='img/calendar_icon.png') }}" alt="Filter">
+          <span>Filter by date</span>
+        </button>
+      </div>
+    </form>
+
+  <div class="chat-add-outer">
+    <a href="{{ url_for('chats.new_chat') }}" class="btn">
+      <img src="{{ url_for('static', filename='img/add_chat_icon.png') }}" alt="Add">
+      <span>Add Chat</span>
+    </a>
+  </div>
+</div>
+
+{% if info_message %}
+  <div class="filter-summary-box">
+    <p>{{ info_message }}</p>
+  </div>
+{% endif %}
+
+<!-- Table container (replaced dynamically on sort) -->
+<div id="chat-table-container">
+  {% include "chats/_chats_table.html" %}
+</div>
+{% endblock %}

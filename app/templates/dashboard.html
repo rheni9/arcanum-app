@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Arcanum{% endblock %}
+
+{% block content %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="alert {{ 'alert-success' if category == 'success' else 'alert-message' }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <h1 class="dashboard-title">Dashboard</h1>
+
+  <div class="card-grid">
+    <a href="{{ url_for('chats.list_chats') }}" class="dashboard-card">
+      <img src="{{ url_for('static', filename='img/chats.png') }}" alt="Chats icon">
+      <h2>Chats</h2>
+    </a>
+
+  </div>
+{% endblock %}

@@ -1,0 +1,45 @@
+<div class="grouped-table-container" id="container-{{ slug }}">
+  <h2 class="chat-subtitle">
+    <a href="{{ url_for('chats.view_chat', slug=slug) }}">{{ messages[0].chat_name }}</a>
+  </h2>
+
+  <table class="table messages-table" id="table-{{ slug }}">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>ID</th>
+        <th>Text</th>
+        <th class="sortable {% if sort_by == 'timestamp' %}active-sort{% endif %}"
+            data-sort="timestamp" data-chat="{{ slug }}">
+          <div class="sort-wrapper">
+            <span class="header-label">Sent</span>
+            <span class="sort-arrow">
+              {% if sort_by == 'timestamp' %}
+                {{ '▲' if order == 'asc' else '▼' }}
+              {% endif %}
+            </span>
+          </div>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for msg in messages %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>
+          {% if msg.msg_id %}
+            <a href="{{ msg.link }}" target="_blank" rel="noopener noreferrer">{{ msg.msg_id }}</a>
+          {% else %}&mdash;{% endif %}
+        </td>
+        <td><div class="msg-text">{{ msg.text }}</div></td>
+        <td>
+          <div class="table-timestamp">
+            <div class="date">{{ msg.timestamp | datetimeformat("long_date") }}</div>
+            <div class="time">{{ msg.timestamp | datetimeformat("time") }}</div>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

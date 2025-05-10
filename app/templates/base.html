@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Arcanum{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-content">
+      <a href="{{ url_for('home.home') }}" class="logo-link">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="logo">
+        <span class="site-title">Arcanum</span>
+      </a>
+      <nav class="auth-nav">
+        {% if session.get('logged_in') %}
+          <a href="{{ url_for('dashboard.dashboard') }}" class="nav-link">Dashboard</a>
+          <a href="{{ url_for('auth.logout') }}" class="nav-link">Logout</a>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}" class="nav-link">Login</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  <footer>
+    {% block extra_footer %}{% endblock %}
+  </footer>
+
+  <div id="confirm-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <h2 id="confirm-title">Are you sure?</h2>
+      <p id="confirm-message">This action cannot be undone.</p>
+      <div class="modal-actions">
+        <button id="confirm-yes" class="btn btn-danger">Yes, delete</button>
+        <button id="confirm-no" class="btn btn-light">Cancel</button>
+      </div>
+    </div>
+  </div>
+  
+
+  <!-- Global JavaScript -->
+  <script type="module" src="{{ url_for('static', filename='js/base.js') }}"></script>
+
+</body>
+</html>
