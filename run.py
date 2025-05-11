@@ -5,6 +5,7 @@ This module initializes the Flask application using the factory pattern
 and defines global error handlers for common HTTP errors.
 """
 
+import os
 from flask import render_template
 from app import create_app
 
@@ -60,4 +61,5 @@ def internal_server_error(_e):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
