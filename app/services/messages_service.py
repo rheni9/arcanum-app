@@ -4,15 +4,14 @@ Service module for managing and querying messages in the Arcanum application.
 Provides utilities to:
 - retrieve messages by chat,
 - perform full-text search queries,
-- filter messages by date,
-- count total messages in a chat.
+- filter messages by date.
 
 All queries use context-managed SQLite access with consistent ordering,
 validation, and structured logging for debugging and monitoring.
 """
 
 import logging
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from sqlite3 import DatabaseError
 
 from app.models.filters import MessageFilters
@@ -22,16 +21,19 @@ from app.utils.sql_utils import build_order_clause, OrderConfig
 logger = logging.getLogger(__name__)
 
 
-def get_messages_by_chat(
+def get_chat_data(
     slug: str,
     sort_by: str = "timestamp",
     order: str = "desc"
-) -> List[dict]:
+) -> Tuple[int, List[dict]]:
     """
-    Retrieve all messages belonging to a specific chat.
+    Retrieve all messages for a specific chat and count them.
 
-    Returns messages sorted by the given field. Messages include
-    basic metadata such as ID, content, timestamp, and link.
+    Combines:
+    - Counting total messages in the chat.
+    - Retrieving message details (msg_id, link, text, timestamp).
+
+    Results are sorted according to the provided field and order.
 
     :param slug: Slug of the chat to retrieve messages from.
     :type slug: str
@@ -39,32 +41,43 @@ def get_messages_by_chat(
     :type sort_by: str
     :param order: Sorting direction ('asc' or 'desc').
     :type order: str
-    :return: List of message records.
-    :rtype: List[dict]
-    :raises DatabaseError: If message retrieval fails.
+    :return: Tuple with (message_count, list of messages).
+    :rtype: Tuple[int, List[dict]]
+    :raises DatabaseError: If retrieval fails.
     """
     config = OrderConfig(
         allowed_fields={"timestamp", "msg_id"},
         default_field="timestamp",
         default_order="desc"
     )
-    query = f'''
+
+    query_count = "SELECT COUNT(*) FROM messages WHERE chat_slug = ?"
+    query_messages = f'''
         SELECT msg_id, link, text, timestamp
         FROM messages
         WHERE chat_slug = ?
         {build_order_clause(sort_by, order, config)}
     '''
+
     try:
         with get_connection() as conn:
-            rows = conn.execute(query, (slug,)).fetchall()
+            result = conn.execute(query_count, (slug,)).fetchone()
+            count = result[0] if result else 0
+
+            rows = conn.execute(query_messages, (slug,)).fetchall()
+
     except DatabaseError as e:
-        logger.error("[DB] Failed to retrieve messages for chat '%s': %s",
-                     slug, e)
+        logger.error(
+            "[DB] Failed to retrieve messages and count for chat '%s': %s",
+            slug, e
+        )
         raise
 
+    logger.debug("[COUNT] Counted %d message(s) in chat '%s'.", count, slug)
     logger.info("[DB] Messages have been retrieved for chat '%s' (%d total).",
                 slug, len(rows))
-    return [dict(row) for row in rows]
+
+    return count, [dict(row) for row in rows]
 
 
 def search_messages_by_text(
@@ -216,25 +229,3 @@ def filter_messages(
     )
 
     return [dict(row) for row in results]
-
-
-def count_messages_in_chat(slug: str) -> int:
-    """
-    Count the number of messages in a specific chat.
-
-    Used for displaying summary statistics or sorting chats
-    by message volume.
-
-    :param slug: Slug of the target chat.
-    :type slug: str
-    :return: Number of messages found in the chat.
-    :rtype: int
-    """
-    query = "SELECT COUNT(*) FROM messages WHERE chat_slug = ?"
-
-    with get_connection() as conn:
-        result = conn.execute(query, (slug,)).fetchone()
-        count = result[0] if result else 0
-
-    logger.debug("[COUNT] Chat '%s' contains %d message(s).", slug, count)
-    return count
