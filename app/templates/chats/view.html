@@ -5,7 +5,7 @@
 {% block content %}
   <h1 class="page-title">{{ chat.name }}</h1>
 
-  {# Flash messages #}
+  {# === Flash Messages === #}
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       <div class="flash-messages">
@@ -18,19 +18,17 @@
     {% endif %}
   {% endwith %}
 
-  {# Chat metadata #}
+  {# === Chat Metadata Table === #}
   <div class="chat-info-box">
     <table class="chat-info-table">
       <tr><td><strong>Slug:</strong></td><td>{{ chat.slug }}</td></tr>
       <tr><td><strong>Type:</strong></td><td>{{ chat.type or '—' }}</td></tr>
-      <tr>
-        <td><strong>Link:</strong></td>
-        <td>
-          {% if chat.link %}
-            <a href="{{ chat.link }}" target="_blank" rel="noopener noreferrer">{{ chat.link }}</a>
-          {% else %}—{% endif %}
-        </td>
-      </tr>
+      <tr><td><strong>Link:</strong></td>
+          <td>
+            {% if chat.link %}
+              <a href="{{ chat.link }}" target="_blank" rel="noopener noreferrer">{{ chat.link }}</a>
+            {% else %}—{% endif %}
+          </td></tr>
       <tr><td><strong>Chat ID:</strong></td><td>{{ chat.chat_id or '—' }}</td></tr>
       <tr><td><strong>Joined:</strong></td>
           <td>{{ chat.joined | dateonlyformat("long_date") if chat.joined else '—' }}</td></tr>
@@ -41,7 +39,7 @@
     </table>
   </div>
 
-  {# Action buttons #}
+  {# === Chat Action Buttons === #}
   <div class="chat-controls-row">
     <a href="{{ url_for('chats.list_chats') }}" class="btn">
       <img src="{{ url_for('static', filename='img/back_icon.png') }}" alt="Back">
@@ -65,7 +63,7 @@
     </div>
   </div>
 
-  {# Search and filter form #}
+  {# === Search and Filter Form === #}
   <div class="chat-filters-bar">
     <form method="get" class="chat-filter-form" action="{{ url_for('chats.view_chat', slug=chat.slug) }}">
       <input type="text" name="query" placeholder="Search in this chat..."
@@ -103,58 +101,61 @@
     </form>
   </div>
 
-  {# Filter summary message #}
-{% if has_filters and (query or start_date or end_date) %}
-  <div class="filter-summary-box">
-    <p class="filter-summary {{ 'no-results' if not messages }}">
+  {# === Filter Summary and Results Info === #}
+  {% if query or start_date %}
+    <div class="filter-summary-box">
+      <p class="filter-summary {{ 'no-results' if not messages }}">
 
-      {# Start of search text part #}
-      {% if messages %}
-        {% if query %}
-          Search results for “<strong>{{ query }}</strong>”
-        {% endif %}
-        {% if date_mode in ['on', 'before', 'after', 'between'] and start_date %}
-          {% if query %} — {% endif %}
-          {% if date_mode == 'on' %}
-            Messages on <strong>{{ start_date|dateonlyformat }}</strong>
-          {% elif date_mode == 'before' %}
-            Messages before <strong>{{ start_date|dateonlyformat }}</strong>
-          {% elif date_mode == 'after' %}
-            Messages after <strong>{{ start_date|dateonlyformat }}</strong>
-          {% elif date_mode == 'between' and end_date %}
-            Messages between <strong>{{ start_date|dateonlyformat }}</strong>
-            and <strong>{{ end_date|dateonlyformat }}</strong>
+        {% if messages %}
+          {% if query %}
+            Search results for “<strong>{{ query }}</strong>”
           {% endif %}
-        {% endif %}
-        <br>
-        <span>
-          — <strong>{{ messages|length }}</strong>
-          message{{ 's' if messages|length != 1 else '' }} found in this chat.
-        </span>
-      {% else %}
-        {% if query %}
-          No messages found for “<strong>{{ query }}</strong>”.
-        {% elif date_mode == 'on' %}
-          No messages for <strong>{{ start_date|dateonlyformat }}</strong>.
-        {% elif date_mode == 'before' %}
-          No messages before <strong>{{ start_date|dateonlyformat }}</strong>.
-        {% elif date_mode == 'after' %}
-          No messages after <strong>{{ start_date|dateonlyformat }}</strong>.
-        {% elif date_mode == 'between' and end_date %}
-          No messages between <strong>{{ start_date|dateonlyformat }}</strong>
-          and <strong>{{ end_date|dateonlyformat }}</strong>.
-        {% endif %}
-      {% endif %}
 
-    </p>
-  </div>
-{% elif not messages %}
-  <div class="filter-summary-box">
-    <p class="filter-summary no-results">No messages in this chat.</p>
-  </div>
-{% endif %}
+          {% if date_mode in ['on', 'before', 'after', 'between'] and start_date %}
+            {% if query %} — {% endif %}
+            {% if date_mode == 'on' %}
+              Messages on <strong>{{ start_date|dateonlyformat }}</strong>
+            {% elif date_mode == 'before' %}
+              Messages before <strong>{{ start_date|dateonlyformat }}</strong>
+            {% elif date_mode == 'after' %}
+              Messages after <strong>{{ start_date|dateonlyformat }}</strong>
+            {% elif date_mode == 'between' and end_date %}
+              Messages between <strong>{{ start_date|dateonlyformat }}</strong>
+              and <strong>{{ end_date|dateonlyformat }}</strong>
+            {% endif %}
+          {% endif %}
 
-  {# Messages table #}
+          <br>
+          <span>
+            — <strong>{{ messages|length }}</strong>
+            message{{ 's' if messages|length != 1 else '' }} found in this chat.
+          </span>
+        {% else %}
+          <span>
+            {% if query %}
+              No messages found for “<strong>{{ query }}</strong>” in this chat.
+            {% elif date_mode == 'on' %}
+              No messages for <strong>{{ start_date|dateonlyformat }}</strong> in this chat.
+            {% elif date_mode == 'before' %}
+              No messages before <strong>{{ start_date|dateonlyformat }}</strong> in this chat.
+            {% elif date_mode == 'after' %}
+              No messages after <strong>{{ start_date|dateonlyformat }}</strong> in this chat.
+            {% elif date_mode == 'between' and end_date %}
+              No messages between <strong>{{ start_date|dateonlyformat }}</strong>
+              and <strong>{{ end_date|dateonlyformat }}</strong> in this chat.
+            {% endif %}
+          </span>
+        {% endif %}
+
+      </p>
+    </div>
+  {% elif not messages %}
+    <div class="filter-summary-box">
+      <p class="filter-summary no-results">No messages in this chat.</p>
+    </div>
+  {% endif %}
+
+  {# === Messages Table === #}
   <div class="chat-messages-table">
     {% if messages %}
       {% include "chats/_msg_table.html" %}
