@@ -27,11 +27,7 @@ def get_chat_data(
     order: str = "desc"
 ) -> Tuple[int, List[dict]]:
     """
-    Retrieve all messages for a specific chat and count them.
-
-    Combines:
-    - Counting total messages in the chat.
-    - Retrieving message details (msg_id, link, text, timestamp).
+    Retrieve all messages of a chat along with the total message count.
 
     Results are sorted according to the provided field and order.
 
@@ -51,9 +47,9 @@ def get_chat_data(
         default_order="desc"
     )
 
-    query_count = "SELECT COUNT(*) FROM messages WHERE chat_slug = ?"
-    query_messages = f'''
-        SELECT msg_id, link, text, timestamp
+    sql = f'''
+        SELECT msg_id, link, text, timestamp,
+               COUNT(*) OVER() as total_count
         FROM messages
         WHERE chat_slug = ?
         {build_order_clause(sort_by, order, config)}
@@ -61,10 +57,7 @@ def get_chat_data(
 
     try:
         with get_connection() as conn:
-            result = conn.execute(query_count, (slug,)).fetchone()
-            count = result[0] if result else 0
-
-            rows = conn.execute(query_messages, (slug,)).fetchall()
+            rows = conn.execute(sql, (slug,)).fetchall()
 
     except DatabaseError as e:
         logger.error(
@@ -73,11 +66,11 @@ def get_chat_data(
         )
         raise
 
-    logger.debug("[COUNT] Counted %d message(s) in chat '%s'.", count, slug)
-    logger.info("[DB] Messages have been retrieved for chat '%s' (%d total).",
-                slug, len(rows))
+    messages = [dict(row) for row in rows]
+    count = rows[0]["total_count"] if rows else 0
 
-    return count, [dict(row) for row in rows]
+    logger.info("[DB] Retrieved %d message(s) for chat '%s'.", count, slug)
+    return messages, count
 
 
 def search_messages_by_text(

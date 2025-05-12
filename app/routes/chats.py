@@ -270,7 +270,7 @@ def view_chat(_slug: str) -> str:
                 chat.slug, filters, sort_by, order
             )
         else:
-            chat.message_count, messages = get_chat_data(chat.slug,
+            messages, chat.message_count = get_chat_data(chat.slug,
                                                          sort_by,
                                                          order)
             info_message = None
