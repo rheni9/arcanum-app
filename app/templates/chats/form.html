@@ -3,60 +3,138 @@
 {% block title %}{{ "Edit" if is_editing else "Add" }} Chat | Arcanum{% endblock %}
 
 {% block content %}
-  <h1 class="page-title">{{ "Edit" if is_editing else "Add" }} Chat</h1>
+<h1 class="page-title">{{ "Edit" if is_editing else "Add" }} Chat</h1>
 
-  {# === Flash Messages === #}
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div class="flash-messages">
-        {% for category, message in messages %}
-          <div class="alert {{ 'alert-success' if category == 'success' else 'alert-error' }}">
-            {{ message }}
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
-
-  {# === Chat Form === #}
-  <form method="post" class="chat-form" action="{{ url_for('chats.save_chat') }}">
-    {# hidden fields (for edit mode) #}
-    {% if chat and chat.slug %}
-      <input type="hidden" name="original_slug" value="{{ chat.slug }}">
-    {% endif %}
-    {% if original_slug %}
-      <input type="hidden" name="original_slug" value="{{ original_slug }}">
-    {% endif %}
-
-    {# Form Fields (name, type, link, etc.) #}
-    {# ... залишаємо як є ... #}
-
-    {# === Conflict Resolution === #}
-    {% if conflict %}
-      <div class="conflict-box">
-        <p class="conflict-text">Chat with this slug already exists. Choose what to do:</p>
-        <div class="conflict-actions">
-          <button type="submit" name="action" value="create_copy" class="btn btn-dark">Create Copy</button>
-          <button type="submit" name="action" value="overwrite" class="btn btn-danger">Overwrite</button>
+{# === Flash Messages === #}
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-messages">
+      {% for category, message in messages %}
+        <div class="alert {{ 'alert-success' if category == 'success' else 'alert-error' }}">
+          {{ message }}
         </div>
-      </div>
-    {% endif %}
-
-    {# === Form Actions === #}
-    <div class="form-footer">
-      <button type="submit" class="btn btn-primary">
-        <img src="{{ url_for('static', filename='img/save_icon.png') }}" alt="Save"> Save
-      </button>
-      <a href="{% if chat and chat.slug %}
-                  {{ url_for('chats.view_chat', slug=chat.slug) }}
-                {% else %}
-                  {{ url_for('chats.list_chats') }}
-                {% endif %}"
-        class="btn btn-secondary">
-        Cancel
-      </a>
+      {% endfor %}
     </div>
-  </form>
+  {% endif %}
+{% endwith %}
 
-  <p class="form-note"><span class="required-asterisk">*</span> Required field</p>
+{# === Chat Form === #}
+<form method="post" class="chat-form" action="{{ url_for('chats.save_chat') }}">
+
+  {# Hidden original slug if present #}
+  {% if chat and chat.slug %}
+    <input type="hidden" name="original_slug" value="{{ chat.slug }}">
+  {% endif %}
+  {% if original_slug %}
+    <input type="hidden" name="original_slug" value="{{ original_slug }}">
+  {% endif %}
+
+  {# Display slug if editing #}
+  {% if chat %}
+    <div class="form-section form-inline-row">
+      <label>Slug:</label>
+      <span class="inline-value">{{ chat.slug }}</span>
+    </div>
+  {% endif %}
+
+  {# === Form Fields === #}
+  <div class="form-section">
+    <label for="name">Chat Name<span class="required-asterisk">*</span></label>
+    <input type="text" id="name" name="name"
+           class="form-control {% if errors is defined and errors.name %}input-error{% endif %}"
+           value="{{ chat.name or '' }}">
+    {% if errors is defined and errors.name %}
+      <div class="alert alert-error">{{ errors.name }}</div>
+    {% endif %}
+  </div>
+
+  <div class="form-section">
+    <label for="type">Type:</label>
+    <input type="text" id="type" name="type" class="form-control" value="{{ chat.type or '' }}">
+  </div>
+
+  <div class="form-section">
+    <label for="link">Link:</label>
+    <input type="text" id="link" name="link"
+           class="form-control {% if errors is defined and errors.link %}input-error{% endif %}"
+           value="{{ chat.link or '' }}"
+           placeholder="e.g. https://t.me/mygroup">
+    <small class="form-hint">Must be a valid link starting with http:// or https://</small>
+    {% if errors is defined and errors.link %}
+      <div class="alert alert-error">{{ errors.link }}</div>
+    {% endif %}
+  </div>
+
+  <div class="form-section">
+    <label for="chat_id">Chat ID:</label>
+    <input type="text" id="chat_id" name="chat_id"
+           class="form-control {% if errors is defined and errors.chat_id %}input-error{% endif %}"
+           value="{{ chat.chat_id or '' }}"
+           placeholder="e.g. 1234567890">
+    <small class="form-hint">Only digits, like 1234567890</small>
+    {% if errors is defined and errors.chat_id %}
+      <div class="alert alert-error">{{ errors.chat_id }}</div>
+    {% endif %}
+  </div>
+
+  <div class="form-section">
+    <label for="joined">Joined Date:</label>
+    <input type="date" id="joined" name="joined"
+           class="form-control {% if errors is defined and errors.joined %}input-error{% endif %}"
+           value="{{ chat.joined if chat.joined else '' }}">
+    {% if errors is defined and errors.joined %}
+      <div class="alert alert-error">{{ errors.joined }}</div>
+    {% endif %}
+  </div>
+
+  <div class="form-section">
+    <label for="notes">Notes:</label>
+    <textarea id="notes" name="notes" class="form-control" rows="3">{{ chat.notes or '' }}</textarea>
+  </div>
+
+  {# === Toggle Controls === #}
+  <div class="toggle-group">
+    <label>Active:
+      <label class="switch">
+        <input type="checkbox" id="is_active" name="is_active" {% if chat and chat.is_active %}checked{% endif %}>
+        <span class="slider"></span>
+      </label>
+    </label>
+    <label>Member:
+      <label class="switch">
+        <input type="checkbox" id="is_member" name="is_member"
+               {% if chat and chat.is_member %}checked{% endif %}
+               {% if chat and not chat.is_active %}disabled{% endif %}>
+        <span class="slider"></span>
+      </label>
+    </label>
+  </div>
+
+  {# === Conflict Resolution === #}
+  {% if conflict %}
+    <div class="conflict-box">
+      <p class="conflict-text">Chat with this slug already exists. Choose what to do:</p>
+      <div class="conflict-actions">
+        <button type="submit" name="action" value="create_copy" class="btn btn-dark">Create Copy</button>
+        <button type="submit" name="action" value="overwrite" class="btn btn-danger">Overwrite</button>
+      </div>
+    </div>
+  {% endif %}
+
+  {# === Form Footer === #}
+  <div class="form-footer">
+    <button type="submit" class="btn btn-primary">
+      <img src="{{ url_for('static', filename='img/save_icon.png') }}" alt="Save">
+      Save
+    </button>
+
+    {% set cancel_url = url_for('chats.view_chat', slug=chat.slug) if chat and chat.slug else url_for('chats.list_chats') %}
+    <a href="{{ cancel_url }}" class="btn btn-secondary">Cancel</a>
+  </div>
+
+</form>
+
+{# === Required Field Note === #}
+<p class="form-note"><span class="required-asterisk">*</span> Required field</p>
+
 {% endblock %}
