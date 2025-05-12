@@ -33,14 +33,17 @@ def is_valid_url(url: str) -> bool:
              False otherwise.
     :rtype: bool
     """
-    try:
-        parsed = urlparse(url)
-        return parsed.scheme in ("http", "https") and bool(parsed.netloc)
-    except (TypeError, AttributeError) as e:
+    parsed = urlparse(url)
+    is_valid = parsed.scheme in ("http", "https") and bool(parsed.netloc)
+
+    if not is_valid:
         logger.warning(
-            "[FORM-VALIDATION] Invalid link value: '%s': %s", url, e
+            "[FORM-VALIDATION] Invalid link value: '%s' "
+            "(scheme='%s', netloc='%s')",
+            url, parsed.scheme, parsed.netloc
         )
-        return False
+
+    return is_valid
 
 
 def validate_chat_form(data: dict) -> Tuple[dict, dict]:
