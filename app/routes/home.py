@@ -13,7 +13,9 @@ home_bp = Blueprint("home", __name__)
 @home_bp.route("/")
 def home() -> str:
     """
-    Display the main landing page of the application.
+    Render the main landing page of the application.
+
+    Serves as the entry point, shown both before and after login.
 
     :returns: Rendered HTML content for the homepage.
     :rtype: str

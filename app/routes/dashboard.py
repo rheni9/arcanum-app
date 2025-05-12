@@ -13,7 +13,9 @@ dashboard_bp = Blueprint("dashboard", __name__)
 @dashboard_bp.route("/dashboard")
 def dashboard() -> str:
     """
-    Display the main dashboard page for authenticated users.
+    Render the user dashboard after successful login.
+
+    Displays an overview panel accessible to authenticated users.
 
     :returns: Rendered HTML content of the dashboard.
     :rtype: str
