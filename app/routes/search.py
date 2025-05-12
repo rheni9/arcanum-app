@@ -119,10 +119,9 @@ def _render_full_results_page(
 @search_bp.route("/search")
 def search_messages() -> str:
     """
-    Handle full-text and date-based search across all chats.
+    Display global search results across all chats with optional filters.
 
-    Supports both AJAX updates for individual chat blocks
-    and full-page rendering of grouped search results.
+    Handles both full-page and AJAX rendering.
 
     :returns: Rendered HTML page or table fragment.
     :rtype: str
