@@ -63,6 +63,7 @@ def resolve_search_action(
 
     if not is_valid:
         if filters.is_empty():
+            logger.info("[FORM] No filters or search query applied.")
             info_message = "No filters or search query applied."
             return [], info_message, filters
         logger.warning(

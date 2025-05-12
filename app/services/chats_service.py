@@ -43,7 +43,8 @@ def get_chats(sort_by: str = "name", order: str = "asc") -> List[Dict]:
     )
 
     order_clause = build_order_clause(sort_by, order, config)
-    logger.info("[DB] Chats have been fetched sorted by %s %s", sort_by, order)
+    logger.debug("[DB] Chats have been fetched sorted by %s %s",
+                 sort_by, order)
 
     query = f'''
         SELECT c.slug, c.name,
