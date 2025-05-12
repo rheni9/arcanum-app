@@ -28,11 +28,12 @@ def login() -> str | Response:
     :rtype: str | Response
     """
     if request.method == "POST":
+        logger.debug("[AUTH] Received POST request for login form.")
         password = request.form.get("password")
         if password == os.getenv("LOGIN_PASSWORD"):
             session["logged_in"] = True
             logger.info("[AUTH] User logged in successfully.")
-            flash("Successfully logged in.", "success")
+            flash("You have been successfully logged in.", "success")
             return redirect(url_for("dashboard.dashboard"))
 
         logger.warning("[AUTH] Failed login attempt with incorrect password.")

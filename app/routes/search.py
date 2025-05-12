@@ -64,7 +64,7 @@ def _render_ajax_response(
     :returns: Rendered HTML of the message table for the chat.
     :rtype: str
     """
-    logger.info(
+    logger.debug(
         "[AJAX] Updated grouped messages for chat '%s' sorted by %s %s.",
         chat_slug, sort_by, order
     )

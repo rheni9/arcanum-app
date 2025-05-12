@@ -31,6 +31,24 @@ chats_bp = Blueprint("chats", __name__, url_prefix="/chats")
 logger = logging.getLogger(__name__)
 
 
+def _log_render_list_view(
+    sort_by: str,
+    order: str,
+    is_ajax: bool
+) -> None:
+    """
+    Log the rendering of the chat list (full page or AJAX table).
+
+    :param sort_by: Field used for sorting.
+    :param order: Sorting direction.
+    :param is_ajax: Whether the request is an AJAX request.
+    """
+    log_prefix = "[AJAX]" if is_ajax else "[FULL]"
+    action = "Updated" if is_ajax else "Displayed"
+    logger.debug("%s %s chat list view, sorted by %s %s.",
+                 log_prefix, action, sort_by, order)
+
+
 @chats_bp.route("/")
 def list_chats() -> str:
     """
@@ -54,9 +72,7 @@ def list_chats() -> str:
         chats = get_chats(sort_by, order)
         is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
         template = "chats/_chats_table.html" if is_ajax else "chats/index.html"
-        log_prefix = "[AJAX]" if is_ajax else "[FULL]"
-        logger.info("%s Displayed chat list view sorted by %s %s.",
-                    log_prefix, sort_by, order)
+        _log_render_list_view(sort_by, order, is_ajax)
         return render_template(
             template, chats=chats, sort_by=sort_by, order=order
         )
@@ -121,6 +137,7 @@ def save_chat() -> Response:
     validated_fields, errors = validate_chat_form(data)
 
     if errors:
+        logger.info("[FORM] Validation errors detected: %s", errors)
         return render_template(
             "chats/form.html",
             chat=data,
@@ -232,8 +249,8 @@ def _log_view_chat(
     """
     log_prefix = "[AJAX]" if is_ajax else "[FULL]"
     action = "Updated" if is_ajax else "Displayed"
-    logger.info("%s %s chat '%s' view, sorted by %s %s.",
-                log_prefix, action, chat_slug, sort_by, order)
+    logger.debug("%s %s chat '%s' view, sorted by %s %s.",
+                 log_prefix, action, chat_slug, sort_by, order)
 
 
 @chats_bp.route("/<slug>")
