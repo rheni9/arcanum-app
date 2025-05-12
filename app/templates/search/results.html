@@ -41,32 +41,31 @@
     </form>
   </div>
 
-  {# === Filter Summary Message === #}
+  {# === Filter Summary and Results Info === #}
   {% if query or start_date %}
     <div class="filter-summary-box">
       <p class="filter-summary {{ 'no-results' if not results }}">
-        {# Summary description #}
-        {% if query %}
-          Search results for “<strong>{{ query }}</strong>”
-        {% endif %}
-
-        {% if date_mode == 'on' and start_date %}
-          {% if query %} — {% endif %}
-          Messages on <strong>{{ start_date|dateonlyformat }}</strong>
-        {% elif date_mode == 'before' and start_date %}
-          {% if query %} — {% endif %}
-          Messages before <strong>{{ start_date|dateonlyformat }}</strong>
-        {% elif date_mode == 'after' and start_date %}
-          {% if query %} — {% endif %}
-          Messages after <strong>{{ start_date|dateonlyformat }}</strong>
-        {% elif date_mode == 'between' and start_date and end_date %}
-          {% if query %} — {% endif %}
-          Messages between <strong>{{ start_date|dateonlyformat }}</strong>
-          and <strong>{{ end_date|dateonlyformat }}</strong>
-        {% endif %}
-
-        {# Result count #}
+        {# === Results Summary (if found) === #}
         {% if results %}
+          {% if query %}
+            Search results for “<strong>{{ query }}</strong>”
+          {% endif %}
+
+          {% if date_mode == 'on' and start_date %}
+            {% if query %} — {% endif %}
+            Messages on <strong>{{ start_date|dateonlyformat }}</strong>
+          {% elif date_mode == 'before' and start_date %}
+            {% if query %} — {% endif %}
+            Messages before <strong>{{ start_date|dateonlyformat }}</strong>
+          {% elif date_mode == 'after' and start_date %}
+            {% if query %} — {% endif %}
+            Messages after <strong>{{ start_date|dateonlyformat }}</strong>
+          {% elif date_mode == 'between' and start_date and end_date %}
+            {% if query %} — {% endif %}
+            Messages between <strong>{{ start_date|dateonlyformat }}</strong>
+            and <strong>{{ end_date|dateonlyformat }}</strong>
+          {% endif %}
+
           <br>
           <span>
             — <strong>{{ results.values() | map('length') | sum }}</strong>
@@ -74,17 +73,44 @@
             found across chats.
           </span>
         {% else %}
-          <br>
+          {# === No Results Message === #}
           <span>
-            {% if query %}No messages found for “<strong>{{ query }}</strong>”.{% endif %}
-            {% if not query %}No messages found.{% endif %}
+            {% if query %}
+              No messages found for “<strong>{{ query }}</strong>”
+              {% if date_mode == 'on' and start_date %}
+                on <strong>{{ start_date|dateonlyformat }}</strong>
+              {% elif date_mode == 'before' and start_date %}
+                before <strong>{{ start_date|dateonlyformat }}</strong>
+              {% elif date_mode == 'after' and start_date %}
+                after <strong>{{ start_date|dateonlyformat }}</strong>
+              {% elif date_mode == 'between' and start_date and end_date %}
+                between <strong>{{ start_date|dateonlyformat }}</strong>
+                and <strong>{{ end_date|dateonlyformat }}</strong>
+              {% endif %}
+              .
+            {% elif start_date %}
+              No messages found
+              {% if date_mode == 'on' %}
+                on <strong>{{ start_date|dateonlyformat }}</strong>
+              {% elif date_mode == 'before' %}
+                before <strong>{{ start_date|dateonlyformat }}</strong>
+              {% elif date_mode == 'after' %}
+                after <strong>{{ start_date|dateonlyformat }}</strong>
+              {% elif date_mode == 'between' and end_date %}
+                between <strong>{{ start_date|dateonlyformat }}</strong>
+                and <strong>{{ end_date|dateonlyformat }}</strong>
+              {% endif %}
+              .
+            {% else %}
+              No messages found.
+            {% endif %}
           </span>
         {% endif %}
       </p>
     </div>
   {% endif %}
 
-  {# === Back Button === #}
+  {# === Back to Chats Button === #}
   <div class="back-to-chats">
     <a href="{{ url_for('chats.list_chats') }}" class="btn">
       <img src="{{ url_for('static', filename='img/back_icon.png') }}" alt="Back">
@@ -92,7 +118,7 @@
     </a>
   </div>
 
-  {# === Grouped Results Tables === #}
+  {# === Grouped Results Tables (if any) === #}
   <div id="results-table-container">
     {% for slug, messages in results.items() %}
       {% with slug=slug, messages=messages, sort_by=sort_by, order=order %}
@@ -100,5 +126,4 @@
       {% endwith %}
     {% endfor %}
   </div>
-
 {% endblock %}
