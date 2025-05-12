@@ -102,7 +102,7 @@ def validate_search_filters(
     is_valid = message is None
 
     if is_valid:
-        logger.info(
+        logger.debug(
             "[FILTERS] Validation passed | action=%s | mode=%s "
             "| start=%s | end=%s",
             action, mode, start, end

@@ -30,7 +30,7 @@ def group_messages_by_chat(messages: List[dict]) -> dict[str, List[dict]]:
             continue
         grouped.setdefault(slug, []).append(msg)
 
-    logger.info(
+    logger.debug(
         "[GROUP] Grouped %d message(s) into %d chat(s).",
         len(messages), len(grouped)
     )

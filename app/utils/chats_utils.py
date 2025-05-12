@@ -37,6 +37,7 @@ def validate_chat_form(data: dict) -> Tuple[dict, dict]:
     chat_id = (data.get("chat_id") or "").strip()
     if chat_id and not chat_id.isdigit():
         errors["chat_id"] = "Chat ID must contain only digits."
+        logger.warning("[VALIDATION] Invalid chat ID value: '%s'.", chat_id)
     result["chat_id"] = chat_id or None
 
     link = (data.get("link") or "").strip()
@@ -44,6 +45,7 @@ def validate_chat_form(data: dict) -> Tuple[dict, dict]:
         errors["link"] = (
             "Please enter a valid URL (starting with http:// or https://)."
         )
+        logger.warning("[VALIDATION] Invalid link value: '%s'.", link)
     result["link"] = link or None
 
     joined_raw = data.get("joined")
@@ -52,6 +54,8 @@ def validate_chat_form(data: dict) -> Tuple[dict, dict]:
 
     if joined and joined > date.today().isoformat():
         errors["joined"] = "Join date cannot be in the future."
+        logger.warning("[VALIDATION] Join date is in the future: '%s'.",
+                       joined)
 
     if errors:
         logger.info("[VALIDATION] Chat form validation errors: %s", errors)
