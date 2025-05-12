@@ -88,7 +88,4 @@ def validate_chat_form(data: dict) -> Tuple[dict, dict]:
             "[FORM-VALIDATION] Join date is in the future: '%s'.", joined
         )
 
-    if errors:
-        logger.info("[FORM-VALIDATION] Validation errors: %s", errors)
-
     return result, errors
