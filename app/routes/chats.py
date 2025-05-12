@@ -165,14 +165,16 @@ def save_chat() -> Response:
         )
 
 
-def _get_chat_messages_with_filters(
+def _get_filtered_messages(
     chat_slug: str,
     filters: MessageFilters,
     sort_by: str,
     order: str
 ) -> tuple[list[dict], str | None, MessageFilters]:
     """
-    Retrieve filtered messages for a given chat and log the results.
+    Retrieve messages for a chat based on search or date filters.
+
+    Logs the number of results and applied filter parameters.
 
     :param chat_slug: Unique slug of the chat.
     :type chat_slug: str
@@ -266,7 +268,7 @@ def view_chat(_slug: str) -> str:
 
     try:
         if filters.action:
-            messages, info_message, filters = _get_chat_messages_with_filters(
+            messages, info_message, filters = _get_filtered_messages(
                 chat.slug, filters, sort_by, order
             )
         else:
