@@ -3,11 +3,12 @@
 {% block title %}Home | Arcanum{% endblock %}
 
 {% block content %}
+  {# === Flash Messages === #}
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       <div class="flash-messages">
         {% for category, message in messages %}
-          <div class="alert {{ 'alert-success' if category == 'success' else 'alert-message' }}">
+          <div class="alert {{ 'alert-success' if category == 'success' else 'alert-error' }}">
             {{ message }}
           </div>
         {% endfor %}
@@ -15,7 +16,7 @@
     {% endif %}
   {% endwith %}
 
-  <h1>Welcome to Arcanum</h1>
+  <h1 class="page-title">Welcome to Arcanum</h1>
   <p>This is your private space.</p>
 
   <div class="logo-illustration">

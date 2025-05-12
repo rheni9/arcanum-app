@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -8,6 +8,7 @@
 </head>
 <body>
 
+  {# === Site Header === #}
   <header class="site-header">
     <div class="header-content">
       <a href="{{ url_for('home.home') }}" class="logo-link">
@@ -25,16 +26,19 @@
     </div>
   </header>
 
+  {# === Main Content === #}
   <main class="main-content">
     <div class="container">
       {% block content %}{% endblock %}
     </div>
   </main>
 
+  {# === Extra Footer (optional per-page block) === #}
   <footer>
     {% block extra_footer %}{% endblock %}
   </footer>
 
+  {# === Global Confirm Modal === #}
   <div id="confirm-modal" class="modal hidden">
     <div class="modal-overlay"></div>
     <div class="modal-content">
@@ -46,10 +50,12 @@
       </div>
     </div>
   </div>
-  
 
-  <!-- Global JavaScript -->
+  {# === Global JavaScript === #}
   <script type="module" src="{{ url_for('static', filename='js/base.js') }}"></script>
+
+  {# === Optional per-page scripts === #}
+  {% block scripts %}{% endblock %}
 
 </body>
 </html>

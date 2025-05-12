@@ -1,11 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}Error{% endblock %}
+{% block title %}Error | Arcanum{% endblock %}
 
 {% block content %}
   <div class="error-container">
-    <h1>Something went wrong</h1>
+    <h1 class="page-title">Something went wrong</h1>
     <p class="alert alert-error">{{ message }}</p>
-    <a href="{{ url_for('home.home') }}" class="btn">Back to Home</a>
+
+    <a href="{{ url_for('home.home') }}" class="btn">
+      <img src="{{ url_for('static', filename='img/back_icon.png') }}" alt="Back">
+      <span>Back to Home</span>
+    </a>
   </div>
 {% endblock %}

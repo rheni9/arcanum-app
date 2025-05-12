@@ -1,8 +1,14 @@
+{# === Grouped Messages Table for a Single Chat === #}
 <div class="grouped-table-container" id="container-{{ slug }}">
+
+  {# === Chat Header with Link to Full View === #}
   <h2 class="chat-subtitle">
-    <a href="{{ url_for('chats.view_chat', slug=slug) }}">{{ messages[0].chat_name }}</a>
+    <a href="{{ url_for('chats.view_chat', slug=slug) }}">
+      {{ chat_name }}
+    </a>
   </h2>
 
+  {# === Messages Table === #}
   <table class="table messages-table" id="table-{{ slug }}">
     <thead>
       <tr>
@@ -28,10 +34,16 @@
         <td>{{ loop.index }}</td>
         <td>
           {% if msg.msg_id %}
-            <a href="{{ msg.link }}" target="_blank" rel="noopener noreferrer">{{ msg.msg_id }}</a>
-          {% else %}&mdash;{% endif %}
+            <a href="{{ msg.link }}" target="_blank" rel="noopener noreferrer">
+              {{ msg.msg_id }}
+            </a>
+          {% else %}
+            &mdash;
+          {% endif %}
         </td>
-        <td><div class="msg-text">{{ msg.text }}</div></td>
+        <td>
+          <div class="msg-text">{{ msg.text }}</div>
+        </td>
         <td>
           <div class="table-timestamp">
             <div class="date">{{ msg.timestamp | datetimeformat("long_date") }}</div>
@@ -42,4 +54,5 @@
       {% endfor %}
     </tbody>
   </table>
+
 </div>
