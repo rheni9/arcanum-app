@@ -21,7 +21,8 @@ from app.services.chats_service import (
 )
 from app.services.filters_service import resolve_search_action
 from app.services.messages_service import get_chat_data
-from app.utils.chats_utils import build_chat_object, validate_chat_form
+from app.utils.chat_form_validators import validate_chat_form
+from app.utils.chats_utils import build_chat_object
 from app.utils.form_utils import clean_form
 from app.utils.slugify_utils import slugify, generate_unique_slug
 from app.utils.sort_utils import get_sort_order
