@@ -4,10 +4,15 @@ SQL utilities for safe and consistent query construction.
 Provides reusable helpers for composing SQL clauses such as ORDER BY
 with input validation to prevent injection and ensure consistency across
 database operations.
+The module also logs corrections of invalid sort parameters and
+constructed ORDER BY clauses.
 """
 
+import logging
 from dataclasses import dataclass
 from typing import Optional, Set
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -47,10 +52,35 @@ def build_order_clause(
     :return: SQL ORDER BY clause string.
     :rtype: str
     """
-    field = sort_by if sort_by in config.allowed_fields \
-        else config.default_field
-    direction = order.lower() \
-        if order and order.lower() in {"asc", "desc"} \
-        else config.default_order
+
+    # Validate sort_by field
+    if sort_by in config.allowed_fields:
+        field = sort_by
+    else:
+        logger.warning(
+            "[SQL] Invalid sort field '%s'; defaulted to '%s'.",
+            sort_by, config.default_field
+        )
+        field = config.default_field
+
+    # Validate sort direction
+    if order and order.lower() in {"asc", "desc"}:
+        direction = order.lower()
+    else:
+        if order:
+            logger.warning(
+                "[SQL] Invalid sort order '%s'; defaulted to '%s'.",
+                order, config.default_order
+            )
+        direction = config.default_order
+
+    # Compose field reference with prefix if any
     field_ref = f"{config.prefix}{field}" if config.prefix else field
+
+    # Log final ORDER BY clause
+    logger.debug(
+        "[SQL] ORDER BY clause constructed: ORDER BY %s %s",
+        field_ref, direction
+    )
+
     return f"ORDER BY {field_ref} {direction}"

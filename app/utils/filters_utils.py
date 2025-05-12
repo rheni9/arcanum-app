@@ -6,8 +6,11 @@ Includes:
 - validation of combinations (e.g. start before end, required fields)
 """
 
+import logging
 from typing import Optional
 from app.utils.time_utils import parse_date
+
+logger = logging.getLogger(__name__)
 
 
 def normalize_filters(
@@ -97,4 +100,14 @@ def validate_search_filters(
         message = "Please enter a search query or select a date filter."
 
     is_valid = message is None
+
+    if is_valid:
+        logger.info(
+            "[FILTERS] Validation passed | action=%s | mode=%s "
+            "| start=%s | end=%s",
+            action, mode, start, end
+        )
+    else:
+        logger.warning("[FILTERS] Validation failed: %s", message)
+
     return is_valid, message

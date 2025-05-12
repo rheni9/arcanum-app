@@ -4,7 +4,8 @@ Datetime utilities: parse, normalize, and format UTC-aware date/time values.
 Includes tools for:
 - parsing flexible date/time input formats into ISO 8601 UTC strings,
 - converting between time zones,
-- rendering date/time for display in templates.
+- rendering date/time for display in templates,
+- structured logging of errors and fallbacks.
 """
 
 import logging
@@ -29,7 +30,8 @@ def to_utc_iso(dt: datetime) -> str:
     """
     if dt.tzinfo is None:
         logger.warning(
-            "Naive datetime passed to to_utc_iso, assuming DEFAULT_TZ."
+            "[TIME] Naive datetime received in to_utc_iso. "
+            "Defaulting to DEFAULT_TZ."
         )
         dt = DEFAULT_TZ.localize(dt)
     return dt.astimezone(dt_timezone.utc).isoformat().replace('+00:00', 'Z')
@@ -52,7 +54,8 @@ def from_utc_iso(utc_str: str, target_tz: str = "Europe/Kyiv") -> datetime:
     utc_dt = isoparse(utc_str)
     if utc_dt.tzinfo is None:
         logger.error(
-            "from_utc_iso: received naive datetime string '%s'", utc_str
+            "[TIME] Received naive datetime string '%s' in from_utc_iso.",
+            utc_str
         )
         raise ValueError("Input datetime must be timezone-aware (UTC).")
     return utc_dt.astimezone(timezone(target_tz))
@@ -101,7 +104,9 @@ def parse_datetime(
         return to_utc_iso(dt)
 
     except ValueError as e:
-        logger.warning("Failed to convert '%s' to datetime: %s", text, e)
+        logger.warning(
+            "[TIME] Failed to parse datetime string '%s': %s", text, e
+        )
         return None
 
 
@@ -117,7 +122,9 @@ def parse_date(text: str) -> str | None:
     try:
         return datetime.strptime(text.strip(), "%Y-%m-%d").date().isoformat()
     except (ValueError, TypeError, AttributeError) as e:
-        logger.warning("Failed to parse date '%s': %s", text, e)
+        logger.warning(
+            "[DATE] Failed to parse date string '%s': %s", text, e
+        )
         return None
 
 
@@ -144,7 +151,7 @@ def datetimeformat(
 
     if format_type not in {"datetime", "long_date", "time"}:
         logger.warning(
-            "Unknown format_type '%s' in datetimeformat", format_type
+            "[TIME] Unknown format_type '%s' in datetimeformat.", format_type
         )
         return dt.isoformat()
 
@@ -174,7 +181,7 @@ def dateonlyformat(value: str, format_type: str = "long_date") -> str:
 
     if format_type not in {"long_date", "short"}:
         logger.warning(
-            "Unknown format_type '%s' in dateonlyformat", format_type
+            "[DATE] Unknown format_type '%s' in dateonlyformat.", format_type
         )
         return dt.isoformat()
 

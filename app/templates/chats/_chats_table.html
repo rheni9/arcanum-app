@@ -19,10 +19,10 @@
             </span>
           </div>
         </th>
-        <th class="sortable {% if sort_by == 'last' %}active-sort{% endif %}" data-sort="last">
+        <th class="sortable {% if sort_by == 'last_message_at' %}active-sort{% endif %}" data-sort="last_message_at">
           <div class="sort-wrapper">
             <span class="header-label">Last Message</span>
-            <span class="sort-arrow">{{ '▲' if sort_by == 'last' and order == 'asc' else '▼' if sort_by == 'last' else '' }}</span>
+            <span class="sort-arrow">{{ '▲' if sort_by == 'last_message_at' and order == 'asc' else '▼' if sort_by == 'last_message_at' else '' }}</span>
           </div>
         </th>
       </tr>

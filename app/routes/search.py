@@ -29,8 +29,8 @@ def _log_search_summary(filters: MessageFilters, messages: list[dict]) -> None:
     """
     if filters.action == "search":
         logger.info(
-            "[SEARCH] Found %d message(s) across all chats for query '%s'.",
-            len(messages), filters.query
+            "[SEARCH] Displayed %d search result(s) for query '%s' "
+            "across all chats.", len(messages), filters.query
         )
     elif filters.action == "filter":
         date_range = (
@@ -39,9 +39,8 @@ def _log_search_summary(filters: MessageFilters, messages: list[dict]) -> None:
             else filters.start_date
         )
         logger.info(
-            "[FILTER] Found %d message(s) across all chats "
-            "using date mode %s (%s).",
-            len(messages), filters.date_mode, date_range
+            "[FILTER] Displayed %d filtered message(s) across all chats "
+            "| mode=%s (%s).", len(messages), filters.date_mode, date_range
         )
 
 
@@ -66,7 +65,7 @@ def _render_ajax_response(
     :rtype: str
     """
     logger.info(
-        "[AJAX] Updated grouped message table for chat '%s' sorted by %s %s.",
+        "[AJAX] Updated grouped messages for chat '%s' sorted by %s %s.",
         chat_slug, sort_by, order
     )
     return render_template(
@@ -102,7 +101,7 @@ def _render_full_results_page(
     :rtype: str
     """
     logger.info(
-        "[FULL] Displayed global search results sorted by %s %s.",
+        "[FULL] Displayed global search results page, sorted by %s %s.",
         sort_by, order
     )
     return render_template("search/results.html", **{
@@ -154,7 +153,7 @@ def search_messages() -> str:
         )
         _log_search_summary(filters, messages)
     except DatabaseError as e:
-        logger.error("[DATABASE] Failed to complete global search: %s", e)
+        logger.error("[DB] Failed to complete global search: %s", e)
         return render_template("error.html", message=f"Database error: {e}")
 
     grouped = group_messages_by_chat(messages)

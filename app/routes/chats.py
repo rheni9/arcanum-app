@@ -20,9 +20,7 @@ from app.services.chats_service import (
     delete_chat_and_messages, slug_exists
 )
 from app.services.filters_service import resolve_search_action
-from app.services.messages_service import (
-    get_messages_by_chat, count_messages_in_chat
-)
+from app.services.messages_service import get_chat_data
 from app.utils.chats_utils import build_chat_object, validate_chat_form
 from app.utils.form_utils import clean_form
 from app.utils.slugify_utils import slugify, generate_unique_slug
@@ -47,8 +45,8 @@ def list_chats() -> str:
     sort_by, order = get_sort_order(
         request.args.get("sort"),
         request.args.get("order"),
-        allowed_fields={"name", "message_count", "last"},
-        default_field="last",
+        allowed_fields={"name", "message_count", "last_message_at"},
+        default_field="last_message_at",
         default_order="desc"
     )
 
@@ -57,13 +55,13 @@ def list_chats() -> str:
         is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
         template = "chats/_chats_table.html" if is_ajax else "chats/index.html"
         log_prefix = "[AJAX]" if is_ajax else "[FULL]"
-        logger.info("%s Displayed chat list sorted by %s %s",
+        logger.info("%s Displayed chat list view sorted by %s %s.",
                     log_prefix, sort_by, order)
         return render_template(
             template, chats=chats, sort_by=sort_by, order=order
         )
     except DatabaseError as e:
-        logger.error("[DATABASE] Failed to retrieve chats: %s", e)
+        logger.error("[DB] Failed to retrieve chats: %s", e)
         return render_template("error.html", message=f"Database error: {e}")
 
 
@@ -123,7 +121,6 @@ def save_chat() -> Response:
     validated_fields, errors = validate_chat_form(data)
 
     if errors:
-        logger.warning("[VALIDATION] Chat form validation errors: %s", errors)
         return render_template(
             "chats/form.html",
             chat=data,
@@ -161,7 +158,7 @@ def save_chat() -> Response:
         return redirect(url_for("chats.view_chat", slug=chat.slug))
 
     except (ValueError, DatabaseError) as e:
-        logger.error("[DATABASE] Failed to save chat '%s': %s", chat.slug, e)
+        logger.error("[DB] Failed to save chat '%s': %s", chat.slug, e)
         flash(f"Failed to save chat: {e}", "error")
         return render_template(
             "chats/form.html", chat=chat, is_editing=is_editing
@@ -198,8 +195,8 @@ def _get_chat_messages_with_filters(
 
     if filters.action == "search":
         logger.info(
-            "[SEARCH] Found %d message(s) in chat '%s' for query '%s'.",
-            len(messages), chat_slug, filters.query
+            "[SEARCH] Displayed %d search result(s) for query '%s' "
+            "in chat '%s'.", len(messages), filters.query, chat_slug
         )
     elif filters.action == "filter":
         date_range = (
@@ -208,12 +205,33 @@ def _get_chat_messages_with_filters(
             else filters.start_date
         )
         logger.info(
-            "[FILTER] Found %d message(s) in chat '%s' "
-            "using date mode %s (%s).",
+            "[FILTER] Displayed %d filtered message(s) in chat '%s' "
+            "| mode=%s (%s).",
             len(messages), chat_slug, filters.date_mode, date_range
         )
 
     return messages, info_message, filters
+
+
+def _log_view_chat(
+    chat_slug: str, sort_by: str, order: str, is_ajax: bool
+) -> None:
+    """
+    Log the rendering of a chat view (full page or AJAX update).
+
+    :param chat_slug: Slug of the chat being displayed.
+    :type chat_slug: str
+    :param sort_by: Field used for sorting ('timestamp', 'msg_id', etc.).
+    :type sort_by: str
+    :param order: Sorting direction ('asc' or 'desc').
+    :type order: str
+    :param is_ajax: Whether the request is an AJAX request.
+    :type is_ajax: bool
+    """
+    log_prefix = "[AJAX]" if is_ajax else "[FULL]"
+    action = "Updated" if is_ajax else "Displayed"
+    logger.info("%s %s chat '%s' view, sorted by %s %s.",
+                log_prefix, action, chat_slug, sort_by, order)
 
 
 @chats_bp.route("/<slug>")
@@ -245,7 +263,6 @@ def view_chat(_slug: str) -> str:
     )
 
     chat: Chat = g.chat
-    chat.message_count = count_messages_in_chat(chat.slug)
 
     try:
         if filters.action:
@@ -253,16 +270,15 @@ def view_chat(_slug: str) -> str:
                 chat.slug, filters, sort_by, order
             )
         else:
-            messages = get_messages_by_chat(chat.slug, sort_by, order)
+            chat.message_count, messages = get_chat_data(chat.slug,
+                                                         sort_by,
+                                                         order)
             info_message = None
 
         is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
         template = "chats/_msg_table.html" if is_ajax else "chats/view.html"
-        log_prefix = "[AJAX]" if is_ajax else "[FULL]"
-        logger.info(
-            "%s Viewing chat '%s', sorted by %s %s",
-            log_prefix, chat.slug, sort_by, order
-        )
+        _log_view_chat(chat.slug, sort_by, order, is_ajax)
+
         context = {
             "chat": chat,
             "messages": messages,
@@ -280,7 +296,7 @@ def view_chat(_slug: str) -> str:
 
     except DatabaseError as e:
         logger.error(
-            "[DATABASE] Failed loading messages for chat '%s': %s",
+            "[DB] Failed loading messages for chat '%s': %s",
             chat.slug, e
         )
         return render_template("error.html", message=f"Database error: {e}")
@@ -307,7 +323,7 @@ def delete_chat(_slug: str) -> Response:
         )
     except DatabaseError as e:
         logger.error(
-            "[DATABASE] Failed to delete chat '%s': %s", g.chat.slug, e
+            "[DB] Failed to delete chat '%s': %s", g.chat.slug, e
         )
         flash(f"Failed to delete chat: {e}", "error")
 

@@ -11,7 +11,7 @@ import logging
 from colorlog import ColoredFormatter
 
 
-def configure_logging(level: int = logging.INFO) -> None:
+def configure_logging(level: int = logging.DEBUG) -> None:
     """
     Configure application-wide logging with both file and console output.
 

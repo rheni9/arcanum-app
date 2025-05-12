@@ -26,7 +26,10 @@ def clean_form(data: dict) -> dict:
 
 def is_valid_url(url: str) -> bool:
     """
-    Validate a URL to ensure it uses the HTTP or HTTPS scheme.
+    Validate a URL to ensure it uses a valid HTTP(S) scheme.
+
+    Supports only http and https protocols.
+    Logs a warning if validation fails due to invalid format.
 
     :param url: Input URL string.
     :type url: str
@@ -38,5 +41,8 @@ def is_valid_url(url: str) -> bool:
         parsed = urlparse(url)
         return parsed.scheme in ("http", "https") and bool(parsed.netloc)
     except (TypeError, AttributeError) as e:
-        logger.warning("URL validation failed for '%s': %s", url, e)
+        logger.warning(
+            "[VALIDATION] URL validation failed for '%s': %s",
+            url, e
+        )
         return False

@@ -62,7 +62,8 @@ def slugify(text: str, max_words: int = 3) -> str:
     if not slug or not any(char.isalnum() for char in slug):
         hash_part = hashlib.sha1(original_text.encode("utf-8")).hexdigest()[:6]
         logger.warning(
-            "Slugify fallback: using hash for input '%s'", original_text
+            "[SLUG] Fallback used: generated hash slug for input '%s'.",
+            original_text
         )
         return f"chat_{hash_part}"
 
@@ -90,7 +91,13 @@ def generate_unique_slug(
         new_slug = f"{base_slug}_{suffix}"
         if not slug_exists(new_slug):
             if i > 0:
-                logger.info("Slug collision: resolved with '%s'", new_slug)
+                logger.info(
+                    "[SLUG] Collision detected, resolved as '%s'.",
+                    new_slug
+                )
             return new_slug
-    logger.error("Failed to generate unique slug after %d attempts", max_tries)
+    logger.error(
+        "[SLUG] Failed to generate unique slug after %d attempts.",
+        max_tries
+    )
     raise ValueError("Could not generate unique slug")

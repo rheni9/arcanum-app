@@ -11,10 +11,13 @@ The exported `get_connection()` function is a context manager that ensures:
 """
 
 import os
+import logging
 import sqlite3
 from pathlib import Path
 from contextlib import contextmanager
 from typing import Generator, Optional
+
+logger = logging.getLogger(__name__)
 
 #  Default database path from PROJECT_ROOT or module location
 BASE_DIR = Path(
@@ -43,6 +46,8 @@ def get_connection(
     conn.execute("PRAGMA foreign_keys = ON")
 
     try:
+        logger.debug("[DB] Opened connection to '%s'.", db_path)
         yield conn
     finally:
+        logger.debug("[DB] Closed connection to '%s'.", db_path)
         conn.close()

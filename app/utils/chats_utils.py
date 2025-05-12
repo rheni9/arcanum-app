@@ -31,6 +31,7 @@ def validate_chat_form(data: dict) -> Tuple[dict, dict]:
     name = (data.get("name") or "").strip()
     if not name:
         errors["name"] = "Chat name is required."
+        logger.warning("[VALIDATION] Chat name is missing.")
     result["name"] = name or None
 
     chat_id = (data.get("chat_id") or "").strip()
@@ -51,7 +52,9 @@ def validate_chat_form(data: dict) -> Tuple[dict, dict]:
 
     if joined and joined > date.today().isoformat():
         errors["joined"] = "Join date cannot be in the future."
-        logger.warning("Rejected future join date: %s", joined)
+
+    if errors:
+        logger.info("[VALIDATION] Chat form validation errors: %s", errors)
 
     return result, errors
 

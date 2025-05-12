@@ -3,6 +3,7 @@ Sorting utilities for request query parameters.
 
 This module provides functions to extract, normalize, and validate
 sorting-related parameters (`sort` and `order`) from Flask request queries.
+The module also logs warnings when invalid sort parameters are corrected.
 """
 
 
@@ -39,7 +40,7 @@ def get_sort_order(
 
     if sort_by and sort_by not in allowed_set:
         logger.warning(
-            "Invalid sort field '%s'; defaulting to '%s'",
+            "[SORT] Invalid field '%s'; defaulted to '%s'.",
             sort_by, default_field
         )
     elif not sort_by:
@@ -50,7 +51,7 @@ def get_sort_order(
         order = order.lower()
         if order not in {"asc", "desc"}:
             logger.warning(
-                "Invalid sort order '%s'; defaulting to '%s'",
+                "[SORT] Invalid order '%s'; defaulted to '%s'.",
                 order, default_order
             )
             order = default_order

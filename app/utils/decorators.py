@@ -40,13 +40,13 @@ def catch_not_found(view_func: Callable) -> Callable:
         try:
             chat = get_chat_by_slug(slug)
         except sqlite3.DatabaseError as e:
-            logger.error("Database error in catch_not_found: %s", e)
+            logger.error("[DB] Failed to retrieve chat '%s': %s", slug, e)
             return render_template(
                 "error.html", message=f"Database error while loading chat: {e}"
             )
 
         if not chat:
-            logger.warning("Chat with slug '%s' not found", slug)
+            logger.warning("[NOTFOUND] Chat slug '%s' was not found.", slug)
             flash(
                 f"Chat with slug '{slug}' was not found or has been deleted.",
                 "error"
