@@ -13,6 +13,8 @@ python-dotenv = "^1.1.0"
 python-dateutil = "^2.9.0.post0"
 pytz = "^2025.2"
 colorlog = "^6.9.0"
+d = "^0.2.2"
+flask-wtf = "^1.2.2"
 
 
 [build-system]

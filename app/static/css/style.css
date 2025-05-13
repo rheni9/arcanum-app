@@ -215,9 +215,49 @@
   .login-form .form-control {
     margin-bottom: 1rem;
   }
+
+  .login-container {
+    width: 100%;
+    margin: 0 auto;
+    padding: 1rem;
+  }
+
+  .login-form .form-control,
+  .login-form .btn {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .login-form .form-label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
   
   .form-section {
     margin-bottom: 2rem;
+  }
+
+  .chat-form label {
+    display: block;
+    text-align: left;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+
+  .form-inline-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .form-inline-row label {
+    margin-bottom: 0;
+    font-weight: bold;
+  }
+
+  .form-inline-row .inline-value {
+    color: var(--text-color);
   }
 
   .form-footer {

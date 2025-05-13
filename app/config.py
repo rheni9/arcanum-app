@@ -2,13 +2,12 @@
 config.py
 
 Configuration classes for the Arcanum Flask application.
+
 Uses environment variables to manage settings for different environments.
 
 Required environment variables:
 - FLASK_SECRET_KEY    (required): Secret key for sessions and CSRF protection.
-- DATABASE_URL        (required): Database URI,
-                      e.g. sqlite:///../data/chatvault.sqlite or a full
-                      connection string.
+- DATABASE_URL        (required): Database URI
 - LOG_LEVEL           (optional): Logging level
                       (DEBUG, INFO, WARNING, ERROR). Defaults to 'INFO'.
 - FLASK_ENV           (optional): App environment
@@ -27,12 +26,22 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 class Config:
     """
     Base configuration with defaults and overrides.
+
+    Attributes:
+        SECRET_KEY (str): Main secret for sessions and CSRF.
+        WTF_CSRF_SECRET_KEY (str): Secret for WTForms CSRF.
+        WTF_CSRF_ENABLED (bool): Enable CSRF protection.
+        LOG_LEVEL (str): Root logger level.
+        SQLALCHEMY_DATABASE_URI (str): DB connection string.
+        SQLALCHEMY_TRACK_MODIFICATIONS (bool): Disable change tracking.
+        ENV (str): Flask environment name.
+        DEBUG (bool): Debug mode flag.
+        TESTING (bool): Testing mode flag.
     """
     _key = os.getenv("FLASK_SECRET_KEY")
     if not _key:
         raise RuntimeError(
-            "Environment variable FLASK_SECRET_KEY is required"
-            " and not set."
+            "Environment variable FLASK_SECRET_KEY is required and not set."
         )
     SECRET_KEY = _key
 
@@ -70,7 +79,7 @@ class TestingConfig(Config):
     """
     TESTING = True
     DEBUG = False
-    WTF_CSRF_ENABLED = False
+    WTF_CSRF_ENABLED = False  # disable CSRF in tests for convenience
 
 
 class ProductionConfig(Config):

@@ -1,4 +1,6 @@
 """
+app/__init__.py
+
 Application factory for the Arcanum Flask application.
 
 Creates and configures the Flask app:
@@ -32,16 +34,14 @@ def create_app(config_class=None) -> Flask:
     """
     Create and configure the Flask application instance.
 
-    :param config_class: Optional config class to use (dev, test, prod).
+    :param config_class: Config class (dev/test/prod). If None, use FLASK_ENV.
     :type config_class: class
     :return: Configured Flask application.
     :rtype: Flask
     """
+    load_dotenv()  # load .env before anything else
 
-    # Load environment variables from .env file
-    load_dotenv()
-
-    # Determine config class if not provided
+    # Select config based on FLASK_ENV if none provided
     if not config_class:
         env = os.getenv("FLASK_ENV", "production")
         if env == "development":
@@ -55,20 +55,22 @@ def create_app(config_class=None) -> Flask:
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    # Initialize CSRF and logging
+    # Initialize CSRF
     csrf.init_app(app)
-    configure_logging(app.config.get("LOG_LEVEL", "INFO"))
+
+    # Initialize logging
+    configure_logging(app.config.get("LOG_LEVEL"))
 
     # Register Jinja2 filters
     app.jinja_env.filters["datetimeformat"] = datetimeformat
     app.jinja_env.filters["dateonlyformat"] = dateonlyformat
 
     # Register blueprints
-    app.register_blueprint(home_bp)
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(chats_bp)
-    app.register_blueprint(dashboard_bp)
-    app.register_blueprint(search_bp)
+    app.register_blueprint(home_bp, url_prefix="/")
+    app.register_blueprint(auth_bp, url_prefix="/auth")
+    app.register_blueprint(chats_bp, url_prefix="/chats")
+    app.register_blueprint(dashboard_bp, url_prefix="/")
+    app.register_blueprint(search_bp, url_prefix="/search")
 
     # Register global before-request hooks
     app.before_request(restrict_access)

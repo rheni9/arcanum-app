@@ -1,4 +1,6 @@
 """
+app/routes/auth.py
+
 Authentication routes for the Arcanum application.
 
 Handles user login and logout using a password-based form.
@@ -8,38 +10,40 @@ Manages session state and access to authenticated views.
 import os
 import logging
 from flask import (
-    Blueprint, render_template, request,
-    redirect, url_for, session, flash, Response
+    Blueprint, render_template, redirect,
+    url_for, session, flash, Response
 )
 
-auth_bp = Blueprint("auth", __name__)
+from app.forms.auth_forms import LoginForm
+
+auth_bp = Blueprint("auth", __name__, template_folder="../../templates/auth")
 logger = logging.getLogger(__name__)
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
-def login() -> str | Response:
+def login() -> Response:
     """
-    Handle user authentication via password-protected login form.
+    Display login form and process submission.
 
-    Accepts POST requests to validate the provided password against
-    the stored application secret.
+    On GET: render login form with CSRF token.
+    On POST: validate form, check password, set session.
 
-    :returns: Redirect to dashboard if successful, or login form.
-    :rtype: str | Response
+    :returns: Redirect to dashboard or re-render login.
+    :rtype: Response
     """
-    if request.method == "POST":
-        logger.debug("[AUTH] Received POST request for login form.")
-        password = request.form.get("password")
-        if password == os.getenv("LOGIN_PASSWORD"):
+    form = LoginForm()
+    if form.validate_on_submit():
+        logger.debug("[AUTH] Processing login form.")
+        if form.password.data == os.getenv("LOGIN_PASSWORD"):
             session["logged_in"] = True
             logger.info("[AUTH] User logged in successfully.")
             flash("You have been successfully logged in.", "success")
             return redirect(url_for("dashboard.dashboard"))
 
-        logger.warning("[AUTH] Failed login attempt with incorrect password.")
+        logger.warning("[AUTH] Incorrect login attempt.")
         flash("Incorrect password.", "error")
 
-    return render_template("login.html")
+    return render_template("auth/login.html", form=form)
 
 
 @auth_bp.route("/logout")
