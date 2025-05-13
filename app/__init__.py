@@ -1,14 +1,8 @@
 """
-app/__init__.py
-
 Application factory for the Arcanum Flask application.
 
-Creates and configures the Flask app:
-- Loads environment variables
-- Applies configuration from config classes
-- Initializes CSRF protection
-- Sets up logging
-- Registers Jinja filters, blueprints, and global hooks
+Initializes app configuration, logging, CSRF, blueprints, Jinja filters,
+and global request hooks.
 """
 
 import os
@@ -32,16 +26,16 @@ csrf = CSRFProtect()
 
 def create_app(config_class=None) -> Flask:
     """
-    Create and configure the Flask application instance.
+    Create and configure the Flask application.
 
-    :param config_class: Config class (dev/test/prod). If None, use FLASK_ENV.
-    :type config_class: class
-    :return: Configured Flask application.
+    :param config_class: Optional config class.
+                         Determined by FLASK_ENV if None.
+    :type config_class: type
+    :returns: Configured Flask app instance.
     :rtype: Flask
     """
-    load_dotenv()  # load .env before anything else
+    load_dotenv()
 
-    # Select config based on FLASK_ENV if none provided
     if not config_class:
         env = os.getenv("FLASK_ENV", "production")
         if env == "development":
@@ -51,28 +45,22 @@ def create_app(config_class=None) -> Flask:
         else:
             config_class = ProductionConfig
 
-    # Create Flask app and load configuration
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    # Initialize CSRF
     csrf.init_app(app)
 
-    # Initialize logging
     configure_logging(app.config.get("LOG_LEVEL"))
 
-    # Register Jinja2 filters
     app.jinja_env.filters["datetimeformat"] = datetimeformat
     app.jinja_env.filters["dateonlyformat"] = dateonlyformat
 
-    # Register blueprints
     app.register_blueprint(home_bp, url_prefix="/")
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(chats_bp, url_prefix="/chats")
-    app.register_blueprint(dashboard_bp, url_prefix="/")
+    app.register_blueprint(dashboard_bp, url_prefix="/dashboard")
     app.register_blueprint(search_bp, url_prefix="/search")
 
-    # Register global before-request hooks
     app.before_request(restrict_access)
 
     return app

@@ -1,14 +1,13 @@
 """
-app/routes/auth.py
-
 Authentication routes for the Arcanum application.
 
-Handles user login and logout using a password-based form.
-Manages session state and access to authenticated views.
+Provides login and logout endpoints.
+Handles CSRF protection, session state,
+flash messages, and authentication logging.
 """
 
-import os
 import logging
+from os import getenv
 from flask import (
     Blueprint, render_template, redirect,
     url_for, session, flash, Response
@@ -23,38 +22,37 @@ logger = logging.getLogger(__name__)
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login() -> Response:
     """
-    Display login form and process submission.
+    Render and process the login form.
 
-    On GET: render login form with CSRF token.
-    On POST: validate form, check password, set session.
+    - GET: Display login form with CSRF token.
+    - POST: Validate form, authenticate user, update session.
 
-    :returns: Redirect to dashboard or re-render login.
+    :returns: Redirect to dashboard on success, or re-render form.
     :rtype: Response
     """
     form = LoginForm()
     if form.validate_on_submit():
-        logger.debug("[AUTH] Processing login form.")
-        if form.password.data == os.getenv("LOGIN_PASSWORD"):
+        logger.debug("[AUTH|LOGIN] Processing login form submission.")
+        if form.password.data == getenv("LOGIN_PASSWORD"):
             session["logged_in"] = True
-            logger.info("[AUTH] User logged in successfully.")
-            flash("You have been successfully logged in.", "success")
+            logger.info("[AUTH|LOGIN] User logged in successfully.")
+            flash("Successfully logged in.", "success")
             return redirect(url_for("dashboard.dashboard"))
-
-        logger.warning("[AUTH] Incorrect login attempt.")
+        logger.warning("[AUTH|LOGIN] Incorrect password entered.")
         flash("Incorrect password.", "error")
 
     return render_template("auth/login.html", form=form)
 
 
-@auth_bp.route("/logout")
+@auth_bp.route("/logout", methods=["POST"])
 def logout() -> Response:
     """
-    Log out the currently authenticated user and clear session data.
+    Process user logout and clear the session.
 
-    :returns: Redirect to home page after logout.
+    :returns: Redirect to homepage after logout.
     :rtype: Response
     """
     session.pop("logged_in", None)
-    logger.info("[AUTH] User logged out and session cleared.")
-    flash("You have been logged out successfully.", "success")
+    logger.info("[AUTH|LOGOUT] User logged out successfully.")
+    flash("Successfully logged out.", "success")
     return redirect(url_for("home.home"))

@@ -1,23 +1,25 @@
 """
-User dashboard route for the Arcanum application.
+Dashboard route for the Arcanum application.
 
-Displays an overview panel after successful login.
-Accessible only to authenticated users.
+Provides the user dashboard page.
+Requires authentication (checked via global hooks).
+Displays navigation links to main sections.
 """
 
+import logging
 from flask import Blueprint, render_template
 
 dashboard_bp = Blueprint("dashboard", __name__)
+logger = logging.getLogger(__name__)
 
 
-@dashboard_bp.route("/dashboard")
+@dashboard_bp.route("/")
 def dashboard() -> str:
     """
-    Render the user dashboard after successful login.
+    Render the dashboard for authenticated users.
 
-    Displays an overview panel accessible to authenticated users.
-
-    :returns: Rendered HTML content of the dashboard.
+    :returns: Rendered dashboard HTML page.
     :rtype: str
     """
+    logger.info("[DASHBOARD|VIEW] Dashboard displayed.")
     return render_template("dashboard.html")

@@ -1,8 +1,9 @@
 """
-Global search and filtering routes for chat messages.
+Search routes for the Arcanum application.
 
-Enables full-text search and date-based filtering across all chats.
-Supports grouped results, sorting, and AJAX updates for partial views.
+Provides global search and filtering of chat messages.
+Supports full-text queries, date filters, grouped results,
+sorting, and AJAX updates.
 """
 
 import logging
@@ -18,114 +19,126 @@ search_bp = Blueprint("search", __name__)
 logger = logging.getLogger(__name__)
 
 
-def _log_search_summary(filters: MessageFilters, messages: list[dict]) -> None:
+def _log_search_summary(filters: MessageFilters, total: int) -> None:
     """
-    Log summary information about a search or filter action.
+    Log summary of search or filter operation.
 
-    :param filters: Normalized filters used in the search.
+    :param filters: Applied search/filter parameters.
     :type filters: MessageFilters
-    :param messages: List of matched messages.
-    :type messages: list[dict]
+    :param total: Total number of retrieved messages.
+    :type total: int
     """
     if filters.action == "search":
         logger.info(
-            "[SEARCH] Displayed %d search result(s) for query '%s' "
-            "across all chats.", len(messages), filters.query
+            "[SEARCH|QUERY] Retrieved %d message(s) for '%s'.",
+            total, filters.query
         )
     elif filters.action == "filter":
-        date_range = (
-            f"{filters.start_date} to {filters.end_date}"
-            if filters.date_mode == "between" and filters.end_date
-            else filters.start_date
+        mode = filters.date_mode
+        start = filters.start_date
+        end = filters.end_date
+        range_desc = (
+            f"from {start} to {end}" if mode == "between" and end else start
         )
         logger.info(
-            "[FILTER] Displayed %d filtered message(s) across all chats "
-            "| mode=%s (%s).", len(messages), filters.date_mode, date_range
+            "[SEARCH|FILTER] Retrieved %d message(s) | mode=%s (%s).",
+            total, mode, range_desc
         )
 
 
 def _render_ajax_response(
     chat_slug: str,
-    grouped: dict[str, list[dict]],
+    grouped: dict[str, dict],
     sort_by: str,
     order: str
 ) -> str:
     """
-    Render the HTML response for an AJAX update of one chat block.
+    Render AJAX fragment with updated messages for a single chat.
 
-    :param chat_slug: Slug of the chat to render.
+    :param chat_slug: Chat slug identifier.
     :type chat_slug: str
-    :param grouped: Dictionary of grouped messages per chat.
-    :type grouped: dict[str, list[dict]]
-    :param sort_by: Field to sort messages by.
+    :param grouped: Grouped messages by chat slug.
+    :type grouped: dict[str, dict]
+    :param sort_by: Sort field ('timestamp', 'msg_id', 'text').
     :type sort_by: str
-    :param order: Sorting direction.
+    :param order: Sort direction ('asc' or 'desc').
     :type order: str
-    :returns: Rendered HTML of the message table for the chat.
+    :returns: Rendered HTML fragment.
     :rtype: str
     """
+    chat_data = grouped.get(chat_slug)
+    if not chat_data:
+        logger.warning("[SEARCH|AJAX] No data for chat '%s'.", chat_slug)
+        return ""
+
     logger.debug(
-        "[AJAX] Updated grouped messages for chat '%s' sorted by %s %s.",
+        "[SEARCH|AJAX] Updated chat '%s' | sorted by %s %s.",
         chat_slug, sort_by, order
     )
     return render_template(
         "search/_grouped_msg_table.html",
         slug=chat_slug,
-        messages=grouped.get(chat_slug, []),
+        messages=chat_data["messages"],
+        chat_name=chat_data["chat_name"],
         sort_by=sort_by,
         order=order
     )
 
 
 def _render_full_results_page(
-    grouped: dict[str, list[dict]],
+    grouped: dict[str, dict],
     filters: MessageFilters,
     sort_by: str,
     order: str,
     info_message: str | None
 ) -> str:
     """
-    Render the full grouped results page from a global search or filter.
+    Render full search/filter results page with grouped messages.
 
-    :param grouped: Messages grouped by chat slug.
-    :type grouped: dict[str, list[dict]]
-    :param filters: Normalized filters used in the request.
+    :param grouped: Grouped messages by chat slug.
+    :type grouped: dict[str, dict]
+    :param filters: Applied search/filter parameters.
     :type filters: MessageFilters
-    :param sort_by: Sorting field.
+    :param sort_by: Sort field ('timestamp', 'msg_id', 'text').
     :type sort_by: str
-    :param order: Sorting direction.
+    :param order: Sort direction ('asc' or 'desc').
     :type order: str
-    :param info_message: Optional informational banner message.
+    :param info_message: Optional informational banner.
     :type info_message: str | None
-    :returns: Rendered HTML of the full results page.
+    :returns: Rendered full results page HTML.
     :rtype: str
     """
+    total = sum(len(data["messages"]) for data in grouped.values())
+
     logger.info(
-        "[FULL] Displayed global search results page, sorted by %s %s.",
-        sort_by, order
+        "[SEARCH|FULL] Displayed results page | total=%d | sorted by %s %s.",
+        total, sort_by, order
     )
-    return render_template("search/results.html", **{
-        "results": grouped,
-        "query": filters.query,
-        "date_mode": filters.date_mode,
-        "start_date": filters.start_date,
-        "end_date": filters.end_date,
-        "sort_by": sort_by,
-        "order": order,
-        "info_message": info_message,
-    })
+    return render_template(
+        "search/results.html",
+        results=grouped,
+        query=filters.query,
+        date_mode=filters.date_mode,
+        start_date=filters.start_date,
+        end_date=filters.end_date,
+        sort_by=sort_by,
+        order=order,
+        total_messages=total,
+        info_message=info_message
+    )
 
 
 @search_bp.route("/search")
 def search_messages() -> str:
     """
-    Display global search results across all chats with optional filters.
+    Handle global search and filter requests for messages.
 
-    Handles both full-page and AJAX rendering.
+    Processes query parameters, retrieves matching messages,
+    and returns either an AJAX fragment or the full results page.
 
-    :returns: Rendered HTML page or table fragment.
+    :returns: Rendered HTML response.
     :rtype: str
-    :raises DatabaseError: If message retrieval from database fails.
+    :raises DatabaseError: On database retrieval failure.
     """
     sort_by, order = get_sort_order(
         request.args.get("sort"),
@@ -142,24 +155,27 @@ def search_messages() -> str:
         start_date=request.args.get("start_date"),
         end_date=request.args.get("end_date")
     )
+    chat_slug = request.args.get("chat")
 
     try:
         messages, info_message, filters = resolve_search_action(
             filters=filters,
             sort_by=sort_by,
             order=order,
-            chat_slug=None
+            chat_slug=chat_slug
         )
-        _log_search_summary(filters, messages)
     except DatabaseError as e:
-        logger.error("[DB] Failed to complete global search: %s", e)
+        logger.error("[DATABASE|SEARCH] Retrieval failed: %s", e)
         return render_template("error.html", message=f"Database error: {e}")
 
+    _log_search_summary(filters, len(messages))
+
     grouped = group_messages_by_chat(messages)
+    logger.debug("[SEARCH|GROUP] Prepared %d chat block(s).", len(grouped))
 
     if (
         request.headers.get("X-Requested-With") == "XMLHttpRequest"
-        and (chat_slug := request.args.get("chat"))
+        and chat_slug
     ):
         return _render_ajax_response(chat_slug, grouped, sort_by, order)
 

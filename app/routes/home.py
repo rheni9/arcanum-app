@@ -1,23 +1,25 @@
 """
-Public landing page route for the Arcanum application.
+Home route for the Arcanum application.
 
-Displays the homepage with general information before login.
+Provides the public landing page.
 Accessible without authentication.
+Displays general information about the application.
 """
 
+import logging
 from flask import Blueprint, render_template
 
 home_bp = Blueprint("home", __name__)
+logger = logging.getLogger(__name__)
 
 
 @home_bp.route("/")
 def home() -> str:
     """
-    Render the main landing page of the application.
+    Render the landing page of the application.
 
-    Serves as the entry point, shown both before and after login.
-
-    :returns: Rendered HTML content for the homepage.
+    :returns: Rendered homepage HTML.
     :rtype: str
     """
+    logger.info("[HOME|VIEW] Homepage displayed.")
     return render_template("index.html")

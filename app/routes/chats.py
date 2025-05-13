@@ -1,9 +1,8 @@
 """
-Chat management routes for the Arcanum application.
+Chat routes for the Arcanum application.
 
-Provides functionality to list, create, edit, delete, and view chats,
-including their messages. Supports AJAX table updates, sorting,
-message filtering by query or date, and conflict resolution on save.
+Provides endpoints to list, create, edit, view, and delete chats.
+Supports AJAX updates, sorting, message filtering, and conflict handling.
 """
 
 import logging
@@ -13,7 +12,6 @@ from flask import (
     url_for, flash, Response, g
 )
 
-from app.models.models import Chat
 from app.models.filters import MessageFilters
 from app.services.chats_service import (
     get_chats, insert_chat, update_chat,
@@ -32,34 +30,73 @@ chats_bp = Blueprint("chats", __name__, url_prefix="/chats")
 logger = logging.getLogger(__name__)
 
 
-def _log_render_list_view(
+def _log_list_view(
     sort_by: str,
     order: str,
-    is_ajax: bool
+    is_ajax: bool,
+    slug: str | None = None
 ) -> None:
     """
-    Log the rendering of the chat list (full page or AJAX table).
+    Log rendering of chat list or detail view.
 
-    :param sort_by: Field used for sorting.
-    :param order: Sorting direction.
-    :param is_ajax: Whether the request is an AJAX request.
+    :param sort_by: Field used for sorting, depends on context:
+                    - list view: 'name', 'message_count', 'last_message_at'
+                    - chat view: 'timestamp', 'msg_id', 'text'
+    :type sort_by: str
+    :param order: Sort direction ('asc' or 'desc').
+    :type order: str
+    :param is_ajax: True if AJAX request.
+    :type is_ajax: bool
+    :param slug: Chat slug if viewing single chat.
+    :type slug: str | None
     """
-    log_prefix = "[AJAX]" if is_ajax else "[FULL]"
-    action = "Updated" if is_ajax else "Displayed"
-    logger.debug("%s %s chat list view, sorted by %s %s.",
-                 log_prefix, action, sort_by, order)
+    context = (
+        "chats list" if slug is None
+        else f"messages list for chat '{slug}'"
+    )
+    action = "AJAX" if is_ajax else "FULL"
+    logger.debug(
+        "[CHATS|%s] Displayed %s sorted by %s %s.",
+        action, context, sort_by, order
+    )
+
+
+def _fetch_chat_messages(
+    slug: str,
+    filters: MessageFilters,
+    sort_by: str,
+    order: str
+) -> tuple[list[dict], str | None, MessageFilters]:
+    """
+    Retrieve messages for a chat with applied filters.
+
+    :param slug: Chat slug identifier.
+    :type slug: str
+    :param filters: Applied search/filter parameters.
+    :type filters: MessageFilters
+    :param sort_by: Sort field ('timestamp', 'msg_id', 'text').
+    :type sort_by: str
+    :param order: Sort direction ('asc' or 'desc').
+    :type order: str
+    :return: Tuple of (messages, info message, normalized filters).
+    :rtype: tuple[list[dict], str | None, MessageFilters]
+    """
+    if filters.action:
+        return resolve_search_action(
+            filters=filters, sort_by=sort_by, order=order, chat_slug=slug
+        )
+    messages, _ = get_chat_data(slug, sort_by, order)
+    return messages, None, filters
 
 
 @chats_bp.route("/")
 def list_chats() -> str:
     """
-    Display the list of all chats with optional sorting.
+    List all chats with optional sorting and AJAX updates.
 
-    Handles both full-page and AJAX requests.
-
-    :returns: Rendered HTML of chat list or AJAX table.
+    :returns: Rendered chats list or table fragment.
     :rtype: str
-    :raises DatabaseError: If an error occurs during chat retrieval.
+    :raises DatabaseError: On retrieval failure.
     """
     sort_by, order = get_sort_order(
         request.args.get("sort"),
@@ -73,198 +110,118 @@ def list_chats() -> str:
         chats = get_chats(sort_by, order)
         is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
         template = "chats/_chats_table.html" if is_ajax else "chats/index.html"
-        _log_render_list_view(sort_by, order, is_ajax)
+        _log_list_view(sort_by, order, is_ajax)
         return render_template(
             template, chats=chats, sort_by=sort_by, order=order
         )
     except DatabaseError as e:
-        logger.error("[DB] Failed to retrieve chats: %s", e)
+        logger.error("[DATABASE|CHATS] Retrieval failed: %s", e)
         return render_template("error.html", message=f"Database error: {e}")
 
 
 @chats_bp.route("/new")
 def new_chat() -> str:
     """
-    Render the form for creating a new chat.
+    Render form for creating a new chat.
 
-    :returns: Rendered HTML of the chat creation form.
+    :returns: Rendered empty chat form.
     :rtype: str
     """
-    return render_template("chats/form.html", chat=None, is_editing=False)
+    return render_template("chats/form.html", chat=None, is_edit=False)
 
 
 @chats_bp.route("/<slug>/edit")
 @catch_not_found
 def edit_chat(_slug: str) -> str:
     """
-    Render the form for editing an existing chat.
+    Render form for editing an existing chat.
 
-    :param slug: Unique identifier of the chat.
+    :param slug: Chat slug identifier.
     :type slug: str
-    :returns: Rendered HTML of the chat edit form.
+    :returns: Rendered form with existing chat data.
     :rtype: str
     """
-    return render_template("chats/form.html", chat=g.chat, is_editing=True)
+    return render_template("chats/form.html", chat=g.chat, is_edit=True)
 
 
 @chats_bp.route("/save", methods=["POST"])
 def save_chat() -> Response:
     """
-    Save a chat (create or update) based on submitted form data.
+    Save chat data: create or update.
 
-    Handles form validation, conflict resolution, and persistence.
+    Validates form data, resolves conflicts, persists changes.
 
-    :returns: Redirect on success or rendered form with errors.
+    :returns: Redirect or rendered form with errors.
     :rtype: Response
-    :raises ValueError: If data processing fails.
-    :raises DatabaseError: If a database operation fails.
+    :raises ValueError: On invalid data.
+    :raises DatabaseError: On persistence failure.
     """
     data = clean_form(request.form.to_dict())
-
-    original_slug = data.get("original_slug")
+    original = data.get("original_slug")
     action = data.get("action")
-    is_editing = bool(original_slug)
-    slug = original_slug if is_editing else slugify(data["name"])
+    is_edit = bool(original)
+    slug = original if is_edit else slugify(data["name"])
 
     if action == "create_copy":
         slug = generate_unique_slug(
             slug, data["name"] + (data.get("link") or "")
         )
-        is_editing = False
+        is_edit = False
     elif action == "overwrite":
-        slug = original_slug
-        is_editing = True
+        slug = original
+        is_edit = True
 
-    validated_fields, errors = validate_chat_form(data)
-
+    fields, errors = validate_chat_form(data)
     if errors:
-        logger.info("[FORM] Validation errors detected: %s", errors)
+        logger.info("[CHATS|FORM] Validation errors: %s", errors)
         return render_template(
             "chats/form.html",
             chat=data,
             errors=errors,
-            original_slug=original_slug,
-            is_editing=is_editing
+            original_slug=original,
+            is_edit=is_edit
         )
 
-    if not is_editing and slug_exists(slug) and not action:
-        logger.warning("[CONFLICT] Chat slug already exists: '%s'", slug)
-        conflict_chat = build_chat_object(data, slug)
+    if not is_edit and slug_exists(slug) and not action:
+        logger.warning("[CHATS|CONFLICT] Slug exists: '%s'", slug)
+        conflict = build_chat_object(data, slug)
         return render_template(
             "chats/form.html",
-            chat=conflict_chat,
+            chat=conflict,
             conflict=True,
-            is_editing=False
+            is_edit=False
         )
 
-    chat = build_chat_object({**data, **validated_fields}, slug)
-
+    chat = build_chat_object({**data, **fields}, slug)
     try:
-        if is_editing:
+        if is_edit:
             update_chat(chat)
-            logger.info("[UPDATE] Chat '%s' has been updated.", chat.slug)
-            flash(
-                f"Chat '{chat.name}' has been updated successfully.", "success"
-            )
+            logger.info("[CHATS|UPDATE] Chat '%s' updated.", chat.slug)
+            flash(f"Chat '{chat.name}' updated successfully.", "success")
         else:
             insert_chat(chat)
-            logger.info("[INSERT] New chat '%s' has been created.", chat.slug)
-            flash(
-                f"New chat '{chat.name}' has been created successfully.",
-                "success"
-            )
+            logger.info("[CHATS|CREATE] Chat '%s' created.", chat.slug)
+            flash(f"Chat '{chat.name}' created successfully.", "success")
+
         return redirect(url_for("chats.view_chat", slug=chat.slug))
 
     except (ValueError, DatabaseError) as e:
-        logger.error("[DB] Failed to save chat '%s': %s", chat.slug, e)
+        logger.error("[DATABASE|CHATS] Failed to save chat '%s': %s", slug, e)
         flash(f"Failed to save chat: {e}", "error")
-        return render_template(
-            "chats/form.html", chat=chat, is_editing=is_editing
-        )
-
-
-def _get_filtered_messages(
-    chat_slug: str,
-    filters: MessageFilters,
-    sort_by: str,
-    order: str
-) -> tuple[list[dict], str | None, MessageFilters]:
-    """
-    Retrieve messages for a chat based on search or date filters.
-
-    Logs the number of results and applied filter parameters.
-
-    :param chat_slug: Unique slug of the chat.
-    :type chat_slug: str
-    :param filters: Filters object containing query and date options.
-    :type filters: MessageFilters
-    :param sort_by: Field to sort messages by ('timestamp', 'msg_id', 'text').
-    :type sort_by: str
-    :param order: Sorting direction ('asc' or 'desc').
-    :type order: str
-
-    :returns: Tuple of (messages list, info message, normalized filters).
-    :rtype: tuple[list[dict], str | None, MessageFilters]
-    """
-    messages, info_message, filters = resolve_search_action(
-        filters=filters,
-        sort_by=sort_by,
-        order=order,
-        chat_slug=chat_slug
-    )
-
-    if filters.action == "search":
-        logger.info(
-            "[SEARCH] Displayed %d search result(s) for query '%s' "
-            "in chat '%s'.", len(messages), filters.query, chat_slug
-        )
-    elif filters.action == "filter":
-        date_range = (
-            f"{filters.start_date} to {filters.end_date}"
-            if filters.date_mode == "between" and filters.end_date
-            else filters.start_date
-        )
-        logger.info(
-            "[FILTER] Displayed %d filtered message(s) in chat '%s' "
-            "| mode=%s (%s).",
-            len(messages), chat_slug, filters.date_mode, date_range
-        )
-
-    return messages, info_message, filters
-
-
-def _log_view_chat(
-    chat_slug: str, sort_by: str, order: str, is_ajax: bool
-) -> None:
-    """
-    Log the rendering of a chat view (full page or AJAX update).
-
-    :param chat_slug: Slug of the chat being displayed.
-    :type chat_slug: str
-    :param sort_by: Field used for sorting ('timestamp', 'msg_id', etc.).
-    :type sort_by: str
-    :param order: Sorting direction ('asc' or 'desc').
-    :type order: str
-    :param is_ajax: Whether the request is an AJAX request.
-    :type is_ajax: bool
-    """
-    log_prefix = "[AJAX]" if is_ajax else "[FULL]"
-    action = "Updated" if is_ajax else "Displayed"
-    logger.debug("%s %s chat '%s' view, sorted by %s %s.",
-                 log_prefix, action, chat_slug, sort_by, order)
+        return render_template("chats/form.html", chat=chat, is_edit=is_edit)
 
 
 @chats_bp.route("/<slug>")
 @catch_not_found
-def view_chat(_slug: str) -> str:
+def view_chat(slug: str) -> str:
     """
-    Display details and messages of a chat, with optional filters and sorting.
+    View chat details and messages with filters/sorting.
 
-    :param slug: Unique identifier of the chat.
+    :param slug: Chat slug identifier.
     :type slug: str
-    :returns: Rendered chat page or AJAX message table.
+    :returns: Rendered chat page or table fragment.
     :rtype: str
-    :raises DatabaseError: If message retrieval from database fails.
+    :raises DatabaseError: On retrieval failure.
     """
     sort_by, order = get_sort_order(
         request.args.get("sort"),
@@ -282,68 +239,56 @@ def view_chat(_slug: str) -> str:
         end_date=request.args.get("end_date")
     )
 
-    chat: Chat = g.chat
-
     try:
-        if filters.action:
-            messages, info_message, filters = _get_filtered_messages(
-                chat.slug, filters, sort_by, order
-            )
-        else:
-            messages, chat.message_count = get_chat_data(chat.slug,
-                                                         sort_by,
-                                                         order)
-            info_message = None
+        messages, info_msg, filters = _fetch_chat_messages(
+            slug, filters, sort_by, order
+        )
+
+        g.chat.message_count = len(messages)
 
         is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
         template = "chats/_msg_table.html" if is_ajax else "chats/view.html"
-        _log_view_chat(chat.slug, sort_by, order, is_ajax)
+        _log_list_view(sort_by, order, is_ajax, slug)
 
-        context = {
-            "chat": chat,
-            "messages": messages,
-            "sort_by": sort_by,
-            "order": order,
-            "query": filters.query,
-            "date_mode": filters.date_mode,
-            "start_date": filters.start_date,
-            "end_date": filters.end_date,
-            "has_filters": filters.has_active(),
-            "info_message": info_message,
-        }
-
-        return render_template(template, **context)
+        return render_template(
+            template,
+            chat=g.chat,
+            messages=messages,
+            sort_by=sort_by,
+            order=order,
+            query=filters.query,
+            date_mode=filters.date_mode,
+            start_date=filters.start_date,
+            end_date=filters.end_date,
+            has_filters=filters.has_active(),
+            info_message=info_msg
+        )
 
     except DatabaseError as e:
-        logger.error(
-            "[DB] Failed loading messages for chat '%s': %s",
-            chat.slug, e
-        )
+        logger.error("[DATABASE|CHATS] Failed loading messages for '%s': %s",
+                     slug, e)
         return render_template("error.html", message=f"Database error: {e}")
 
 
 @chats_bp.route("/<slug>/delete", methods=["POST"])
 @catch_not_found
-def delete_chat(_slug: str) -> Response:
+def delete_chat(slug: str) -> Response:
     """
-    Delete a chat and all of its messages.
+    Delete a chat and its messages.
 
-    :param slug: Unique identifier of the chat.
+    :param slug: Chat slug identifier.
     :type slug: str
-    :returns: Redirect to the chat list view.
+    :return: Redirect to chats list.
     :rtype: Response
-    :raises DatabaseError: If deletion from database fails.
+    :raises DatabaseError: On deletion failure.
     """
     try:
-        delete_chat_and_messages(g.chat.slug)
-        logger.info("[DELETE] Chat '%s' has been deleted.", g.chat.slug)
-        flash(
-            f"Chat '{g.chat.name}' and all its messages have been deleted.",
-            "success"
-        )
+        delete_chat_and_messages(slug)
+        logger.info("[CHATS|DELETE] Chat '%s' deleted.", slug)
+        flash(f"Chat '{g.chat.name}' deleted successfully.", "success")
     except DatabaseError as e:
         logger.error(
-            "[DB] Failed to delete chat '%s': %s", g.chat.slug, e
+            "[DATABASE|CHATS] Failed to delete chat '%s': %s", slug, e
         )
         flash(f"Failed to delete chat: {e}", "error")
 
