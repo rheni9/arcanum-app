@@ -2,8 +2,8 @@
 Search routes for the Arcanum application.
 
 Provides global search and filtering of chat messages.
-Supports full-text queries, date filters, grouped results,
-sorting, and AJAX updates.
+Supports queries, date filters, grouped results, sorting,
+and AJAX updates.
 """
 
 import logging
@@ -13,6 +13,7 @@ from flask import Blueprint, render_template, request
 from app.models.filters import MessageFilters
 from app.services.filters_service import resolve_search_action
 from app.utils.messages_utils import group_messages_by_chat
+from app.utils.filters_utils import normalize_filters
 from app.utils.sort_utils import get_sort_order
 
 search_bp = Blueprint("search", __name__)
@@ -21,16 +22,16 @@ logger = logging.getLogger(__name__)
 
 def _log_search_summary(filters: MessageFilters, total: int) -> None:
     """
-    Log summary of search or filter operation.
+    Log a summary of the search or filter operation.
 
-    :param filters: Applied search/filter parameters.
+    :param filters: Applied search or filter parameters.
     :type filters: MessageFilters
     :param total: Total number of retrieved messages.
     :type total: int
     """
     if filters.action == "search":
         logger.info(
-            "[SEARCH|QUERY] Retrieved %d message(s) for '%s'.",
+            "[SEARCH|QUERY] Retrieved %d result(s) for '%s'.",
             total, filters.query
         )
     elif filters.action == "filter":
@@ -41,7 +42,7 @@ def _log_search_summary(filters: MessageFilters, total: int) -> None:
             f"from {start} to {end}" if mode == "between" and end else start
         )
         logger.info(
-            "[SEARCH|FILTER] Retrieved %d message(s) | mode=%s (%s).",
+            "[SEARCH|FILTER] Retrieved %d result(s) | mode=%s (%s).",
             total, mode, range_desc
         )
 
@@ -55,11 +56,11 @@ def _render_ajax_response(
     """
     Render AJAX fragment with updated messages for a single chat.
 
-    :param chat_slug: Chat slug identifier.
+    :param chat_slug: Target chat slug.
     :type chat_slug: str
-    :param grouped: Grouped messages by chat slug.
+    :param grouped: Messages grouped by chat slug.
     :type grouped: dict[str, dict]
-    :param sort_by: Sort field ('timestamp', 'msg_id', 'text').
+    :param sort_by: Field used for sorting.
     :type sort_by: str
     :param order: Sort direction ('asc' or 'desc').
     :type order: str
@@ -68,7 +69,7 @@ def _render_ajax_response(
     """
     chat_data = grouped.get(chat_slug)
     if not chat_data:
-        logger.warning("[SEARCH|AJAX] No data for chat '%s'.", chat_slug)
+        logger.warning("[SEARCH|AJAX] No data found for chat '%s'.", chat_slug)
         return ""
 
     logger.debug(
@@ -95,23 +96,23 @@ def _render_full_results_page(
     """
     Render full search/filter results page with grouped messages.
 
-    :param grouped: Grouped messages by chat slug.
+    :param grouped: Messages grouped by chat slug.
     :type grouped: dict[str, dict]
-    :param filters: Applied search/filter parameters.
+    :param filters: Applied search or filter parameters.
     :type filters: MessageFilters
-    :param sort_by: Sort field ('timestamp', 'msg_id', 'text').
+    :param sort_by: Field used for sorting.
     :type sort_by: str
     :param order: Sort direction ('asc' or 'desc').
     :type order: str
-    :param info_message: Optional informational banner.
+    :param info_message: Optional informational message.
     :type info_message: str | None
-    :returns: Rendered full results page HTML.
+    :returns: Rendered results page.
     :rtype: str
     """
     total = sum(len(data["messages"]) for data in grouped.values())
 
     logger.info(
-        "[SEARCH|FULL] Displayed results page | total=%d | sorted by %s %s.",
+        "[SEARCH|RESULTS] Displayed %d message(s) sorted by %s %s.",
         total, sort_by, order
     )
     return render_template(
@@ -134,7 +135,7 @@ def search_messages() -> str:
     Handle global search and filter requests for messages.
 
     Processes query parameters, retrieves matching messages,
-    and returns either an AJAX fragment or the full results page.
+    and returns either an AJAX fragment or a full results page.
 
     :returns: Rendered HTML response.
     :rtype: str
@@ -148,13 +149,20 @@ def search_messages() -> str:
         default_order="desc"
     )
 
-    filters = MessageFilters(
+    filters = normalize_filters(
         action=request.args.get("action"),
         query=request.args.get("query"),
-        date_mode=request.args.get("date_mode"),
-        start_date=request.args.get("start_date"),
-        end_date=request.args.get("end_date")
+        mode=request.args.get("date_mode"),
+        start=request.args.get("start_date"),
+        end=request.args.get("end_date")
     )
+    logger.debug(
+        "[SEARCH|FILTERS] Using action='%s' | query='%s' "
+        "| mode='%s' | start='%s' | end='%s'",
+        filters.action, filters.query, filters.date_mode,
+        filters.start_date, filters.end_date
+    )
+
     chat_slug = request.args.get("chat")
 
     try:
@@ -171,7 +179,7 @@ def search_messages() -> str:
     _log_search_summary(filters, len(messages))
 
     grouped = group_messages_by_chat(messages)
-    logger.debug("[SEARCH|GROUP] Prepared %d chat block(s).", len(grouped))
+    logger.debug("[SEARCH|GROUP] Prepared %d grouped block(s).", len(grouped))
 
     if (
         request.headers.get("X-Requested-With") == "XMLHttpRequest"

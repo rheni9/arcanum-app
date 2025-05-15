@@ -68,44 +68,39 @@
 
           <br>
           <span>
-            — <strong>{{ results.values() | map('length') | sum }}</strong>
-            message{{ 's' if results.values() | map('length') | sum != 1 else '' }}
-            found across chats.
+           — <strong>{{ total_messages }}</strong> message{{ 's' if total_messages != 1 else '' }} found across chats.
           </span>
         {% else %}
           {# === No Results Message === #}
           <span>
             {% if query %}
-              No messages found for “<strong>{{ query }}</strong>”
-              {% if date_mode == 'on' and start_date %}
-                on <strong>{{ start_date|dateonlyformat }}</strong>
-              {% elif date_mode == 'before' and start_date %}
-                before <strong>{{ start_date|dateonlyformat }}</strong>
-              {% elif date_mode == 'after' and start_date %}
-                after <strong>{{ start_date|dateonlyformat }}</strong>
-              {% elif date_mode == 'between' and start_date and end_date %}
-                between <strong>{{ start_date|dateonlyformat }}</strong>
-                and <strong>{{ end_date|dateonlyformat }}</strong>
-              {% endif %}
-              .
+              No messages found for “<strong>{{ query }}</strong>”.
             {% elif start_date %}
               No messages found
               {% if date_mode == 'on' %}
-                on <strong>{{ start_date|dateonlyformat }}</strong>
+                on <strong>{{ start_date|dateonlyformat }}</strong>.
               {% elif date_mode == 'before' %}
-                before <strong>{{ start_date|dateonlyformat }}</strong>
+                before <strong>{{ start_date|dateonlyformat }}</strong>.
               {% elif date_mode == 'after' %}
-                after <strong>{{ start_date|dateonlyformat }}</strong>
+                after <strong>{{ start_date|dateonlyformat }}</strong>.
               {% elif date_mode == 'between' and end_date %}
                 between <strong>{{ start_date|dateonlyformat }}</strong>
-                and <strong>{{ end_date|dateonlyformat }}</strong>
+                and <strong>{{ end_date|dateonlyformat }}</strong>.
               {% endif %}
-              .
             {% else %}
               No messages found.
             {% endif %}
           </span>
         {% endif %}
+      </p>
+    </div>
+  {% endif %}
+
+  {# === Empty State Message for Initial View === #}
+  {% if not query and not start_date and not results %}
+    <div class="filter-summary-box">
+      <p class="filter-summary no-results">
+        Use the search bar or date filters above to find messages.
       </p>
     </div>
   {% endif %}
@@ -120,10 +115,11 @@
 
   {# === Grouped Results Tables (if any) === #}
   <div id="results-table-container">
-    {% for slug, messages in results.items() %}
-      {% with slug=slug, messages=messages, sort_by=sort_by, order=order %}
+    {% for slug, data in results.items() %}
+      {% with slug=slug, messages=data.messages, chat_name=data.chat_name, sort_by=sort_by, order=order %}
         {% include "search/_grouped_msg_table.html" %}
       {% endwith %}
     {% endfor %}
   </div>
+
 {% endblock %}

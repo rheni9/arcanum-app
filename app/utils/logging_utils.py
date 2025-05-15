@@ -1,8 +1,8 @@
 """
-Logging configuration utility for the Arcanum application.
+Logging configuration for the Arcanum application.
 
-Ensures that logs are written both to file (logs/app.log) and console output,
-with consistent formatting across the application.
+Provides consistent formatting for file and console outputs,
+with colorized levels for readability in development.
 """
 
 import os
@@ -11,26 +11,34 @@ import logging
 from colorlog import ColoredFormatter
 
 
-def configure_logging(level: int = logging.DEBUG) -> None:
+def configure_logging(level: int = None) -> None:
     """
-    Configure application-wide logging with both file and console output.
+    Configure global logging for Arcanum.
 
-    :param level: Logging level (e.g., DEBUG, INFO)
-    :type level: int
+    Determines log level from:
+    - environment variable LOG_LEVEL,
+    - function argument,
+    - defaults to DEBUG.
+
+    :param level: Explicit log level (overrides env).
+    :type level: int | None
     """
+    if level is None:
+        env_level = os.getenv("LOG_LEVEL", "DEBUG").upper()
+        level = getattr(logging, env_level, logging.DEBUG)
+
     log_dir = os.path.join(os.path.dirname(__file__), "..", "..", "logs")
     os.makedirs(log_dir, exist_ok=True)
     log_file_path = os.path.join(log_dir, "app.log")
 
-    # ======= FORMATTERS =======
-    # Standard file formatter
+    # ===== File Handler =====
     file_handler = logging.FileHandler(log_file_path, encoding="utf-8")
     file_handler.setFormatter(logging.Formatter(
         fmt="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S"
     ))
 
-    # Colored formatter for console
+    # ===== Console Handler with Colors =====
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(ColoredFormatter(
         fmt=(
@@ -59,11 +67,11 @@ def configure_logging(level: int = logging.DEBUG) -> None:
         style="%",
     ))
 
-    # ======= ROOT LOGGER SETUP =======
+    # ===== Root Logger =====
     logging.basicConfig(
         level=level,
         handlers=[file_handler, console_handler]
     )
 
-    # Suppress overly verbose logs from Werkzeug/Flask
+    # Suppress noisy Werkzeug logs
     logging.getLogger("werkzeug").setLevel(logging.WARNING)

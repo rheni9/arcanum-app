@@ -1,17 +1,19 @@
 """
 Configuration classes for the Arcanum Flask application.
 
-Manages environment-specific settings using environment variables.
+Defines environment-specific settings using environment variables.
 
 Required:
-- FLASK_SECRET_KEY: Main secret for sessions and CSRF.
-- DATABASE_URL: Database URI.
+- FLASK_SECRET_KEY: Main secret key for sessions and CSRF.
+- DATABASE_URL: Database connection URI.
 
 Optional:
-- LOG_LEVEL: Logging level (DEBUG, INFO, WARNING, ERROR). Default: INFO.
-- FLASK_ENV: App environment (development, testing, production).
-             Default: production.
-- WTF_CSRF_SECRET_KEY: WTForms CSRF secret. Defaults to SECRET_KEY.
+- FLASK_ENV: Application environment ('development', 'testing', 'production').
+             Defaults to 'production'.
+- LOG_LEVEL: Logging level ('DEBUG', 'INFO', 'WARNING', 'ERROR').
+             Defaults to 'INFO'.
+- WTF_CSRF_SECRET_KEY: Separate secret key for WTForms CSRF.
+                       Defaults to FLASK_SECRET_KEY.
 """
 
 import os
@@ -22,25 +24,25 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 # pylint: disable=too-few-public-methods
 class Config:
     """
-    Base application configuration.
+    Base configuration class.
 
     Attributes:
-        SECRET_KEY (str): Secret for sessions and CSRF.
-        WTF_CSRF_SECRET_KEY (str): Secret for WTForms CSRF.
-        WTF_CSRF_ENABLED (bool): CSRF protection enabled.
-        LOG_LEVEL (str): Root logger level.
-        SQLALCHEMY_DATABASE_URI (str): DB connection string.
-        SQLALCHEMY_TRACK_MODIFICATIONS (bool): Disable change tracking.
-        ENV (str): Flask environment name.
-        DEBUG (bool): Debug mode flag.
-        TESTING (bool): Testing mode flag.
+        SECRET_KEY (str): Secret key for sessions and CSRF protection.
+        WTF_CSRF_SECRET_KEY (str): CSRF secret key for WTForms.
+        WTF_CSRF_ENABLED (bool): Enable CSRF protection for forms.
+        LOG_LEVEL (str): Application logging level.
+        SQLALCHEMY_DATABASE_URI (str): Database connection string.
+        SQLALCHEMY_TRACK_MODIFICATIONS (bool): Disable SQLAlchemy tracking.
+        ENV (str): App environment ('development', 'testing', 'production').
+        DEBUG (bool): Enable Flask debug mode.
+        TESTING (bool): Enable testing mode.
     """
-    _key = os.getenv("FLASK_SECRET_KEY")
-    if not _key:
+    SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
+    if not SECRET_KEY:
         raise RuntimeError(
-            "Environment variable FLASK_SECRET_KEY is required but not set."
+            "Environment variable 'FLASK_SECRET_KEY' is required but not set."
         )
-    SECRET_KEY = _key
+
     WTF_CSRF_SECRET_KEY = os.getenv("WTF_CSRF_SECRET_KEY", SECRET_KEY)
     WTF_CSRF_ENABLED = True
 
@@ -48,7 +50,9 @@ class Config:
 
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URL",
-        f"sqlite:///{os.path.join(basedir, '..', 'data', 'chatvault.sqlite')}"
+        "sqlite:///" + os.path.join(
+            basedir, "..", "data", "chatvault_new.sqlite"
+        )
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -58,19 +62,32 @@ class Config:
 
 
 class DevelopmentConfig(Config):
-    """Configuration for development environment."""
-    DEBUG = True
+    """
+    Configuration for the development environment.
+
+    Enables debug mode and development-specific settings.
+    """
     ENV = "development"
+    DEBUG = True
 
 
 class TestingConfig(Config):
-    """Configuration for testing environment."""
-    TESTING = True
+    """
+    Configuration for the testing environment.
+
+    Disables CSRF protection for easier testing.
+    """
+    ENV = "testing"
     DEBUG = False
-    WTF_CSRF_ENABLED = False  # Disabled in tests for convenience
+    TESTING = True
+    WTF_CSRF_ENABLED = False
 
 
 class ProductionConfig(Config):
-    """Configuration for production environment."""
+    """
+    Configuration for the production environment.
+
+    Ensures debug mode is disabled.
+    """
     ENV = "production"
     DEBUG = False

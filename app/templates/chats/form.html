@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}{{ "Edit" if is_editing else "Add" }} Chat | Arcanum{% endblock %}
+{% block title %}{{ "Edit" if is_edit else "Add" }} Chat | Arcanum{% endblock %}
 
 {% block content %}
-<h1 class="page-title">{{ "Edit" if is_editing else "Add" }} Chat</h1>
+<h1 class="page-title">{{ "Edit" if is_edit else "Add" }} Chat</h1>
 
 {# === Flash Messages === #}
 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -20,6 +20,7 @@
 
 {# === Chat Form === #}
 <form method="post" class="chat-form" action="{{ url_for('chats.save_chat') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
   {# Hidden original slug if present #}
   {% if chat and chat.slug %}
@@ -75,7 +76,8 @@
     {% if errors is defined and errors.chat_id %}
       <div class="alert alert-error">{{ errors.chat_id }}</div>
     {% endif %}
-  </div>
+</div>
+
 
   <div class="form-section">
     <label for="joined">Joined Date:</label>

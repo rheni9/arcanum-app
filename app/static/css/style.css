@@ -3,16 +3,23 @@
    Brand color: Dark blue (#0c1a3e)
    ========================================================== */
 
-   :root {
-    --brand-dark: #0c1a3e;
-    --light-bg: #f5f7fa;
-    --card-bg: #ffffff;
-    --hover-bg: #e5ecf4;
-    --border-radius: 4px;
-    --text-color: #1a1a1a;
-    --muted-text: #666;
-    --error-color: #c0392b;
-  }
+   
+:root {
+  --brand-dark: #0c1a3e;
+  --light-bg: #f5f7fa;
+  --card-bg: #ffffff;
+  --hover-bg: #e5ecf4;
+  --hover-table-bg: #f2f6fa;
+  --light-block-bg: #eef5fb;
+  --light-border-accent: #c9d6ed;
+  --border-light: #ddd;
+  --text-color: #1a1a1a;
+  --text-muted: #666;
+  --error-color: #c0392b;
+  --error-bg-light: #fff6f6;
+  --danger-accent: #d9534f;
+}
+
   
   /* ====================== Reset & Base ====================== */
   html,
@@ -59,11 +66,24 @@
   .logo {
     height: 40px;
     margin-right: 0.75rem;
+    transition: transform 0.2s ease, filter 0.2s ease;
+  }
+
+  .logo-link:hover .logo {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 6px var(--light-border-accent));
   }
   
   .site-title {
     font-size: 1.4rem;
     font-weight: bold;
+    transition: text-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .site-title:hover {
+    text-shadow: 0 0 6px var(--light-border-accent);
+    transform: translateY(-1px);
+    cursor: pointer;
   }
   
   .auth-nav .nav-link {
@@ -71,10 +91,30 @@
     margin-left: 1rem;
     text-decoration: none;
     font-weight: 500;
+    position: relative;
+    transition: color 0.2s ease, transform 0.2s ease;
   }
-  
+
+  .auth-nav .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: white;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+
+  .auth-nav .nav-link:hover::after {
+    transform: scaleX(1);
+  }
+
   .auth-nav .nav-link:hover {
-    text-decoration: underline;
+    text-shadow: 0 0 4px var(--light-border-accent);
+    filter: brightness(1.1);
   }
   
   /* ====================== Main Layout ======================= */
@@ -179,7 +219,7 @@
     font-size: 0.95rem;
     padding: 0.6rem 0.75rem;
     border-radius: var(--border-radius);
-    border: 1px solid #ccc;
+    border: 1px solid var(--border-light);
     background-color: var(--light-bg);
     box-sizing: border-box;
     width: 100%;
@@ -191,14 +231,14 @@
     border: 1px solid var(--brand-dark);
     background-color: #fff;
   }
-  
+ 
   .search-input {
     flex-grow: 1;
     min-width: 200px;
   }
   
   .date-mode-select {
-    border: 1px solid #ccc;
+    border: 1px solid var(--border-light);
     border-radius: var(--border-radius);
     background-color: var(--light-bg);
     padding: 0.4rem 0.5rem;
@@ -275,18 +315,18 @@
   }
 
   .input-error {
-    border-color: #d9534f;
-    background-color: #fff6f6;
+    border-color: var(--error-color);
+    background-color: var(--error-bg-light);
   }
 
   .form-hint {
-    color: #888;
+    color: var(--text-muted);
     font-size: 0.85em;
   }
 
   .conflict-box {
-    border: 1px solid --error-color;
-    background-color: #fff6f6;
+    border: 1px solid var(--error-color);
+    background-color: var(--error-bg-light);
     padding: 1rem;
     border-radius: 4px;
     margin-bottom: 1rem;
@@ -309,8 +349,8 @@
   }
 
   .filter-summary-box {
-    background-color: #eef5fb;
-    border: 1px solid #bcd;
+    background-color: var(--light-block-bg);
+    border: 1px solid var(--light-border-accent);
     padding: 1rem;
     border-radius: 6px;
     margin-bottom: 1.5rem;
@@ -323,14 +363,14 @@
 
   .no-messages-default {
     font-size: 1.2rem;
-    color: #777;
+    color: var(--text-muted);
     margin-top: 1rem;
     text-align: center;
   }
   
   .no-results {
     font-size: 1rem;
-    color: #a33;
+    color: var(--error-color);
     margin-top: 1rem;
     text-align: center;
   }
@@ -383,7 +423,6 @@
     align-items: center;
     gap: 0.5rem;
     flex-grow: 1;
-    /* margin-bottom: 2rem; */
   }
   
   .date-group {
@@ -451,25 +490,25 @@
     flex-wrap: wrap;
   }
 
-  /* ========================= Tables: Base Styles ========================= */
-.table {
+  /* ========================= Tables: Base Styling ========================= */
+  .table {
     width: 100%;
     border-collapse: collapse;
     background-color: var(--card-bg);
     margin-bottom: 2rem;
   }
-  
+
   .table th,
   .table td {
     padding: 0.75rem;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--border-light);
     vertical-align: top;
     text-align: left;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
   }
-  
+
   /* ========================= Tables: Header Styling ========================= */
   .table th {
     background-color: var(--hover-bg);
@@ -479,46 +518,98 @@
     color: var(--brand-dark);
     letter-spacing: 0.03em;
   }
-  
-  /* ========================= Tables: Hover and Interactions ========================= */
-  .table tr:hover {
-    background-color: #f2f6fa;
-  }
-  
-  .clickable-row {
-    cursor: pointer;
-  }
-  
-  /* ========================= Tables: Sorting Support ========================= */
+
   .table th.sortable {
     cursor: pointer;
     user-select: none;
     transition: background-color 0.2s;
   }
-  
+
   .table th.sortable:hover {
     background-color: #dce4f2;
   }
-  
+
   .table th.sortable .sort-wrapper {
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%;
   }
-  
+
   .table th.active-sort {
-    background-color: #c9d6ed !important;
+    background-color: var(--light-border-accent) !important;
   }
-  
+
   .header-label {
     padding-right: 0.5rem;
   }
-  
+
   .sort-arrow {
     width: 1em;
     text-align: center;
     display: inline-block;
+  }
+
+  /* ========================= Tables: Row Interactions ========================= */
+  .table tr:hover {
+    background-color: var(--hover-table-bg);
+  }
+
+  .clickable-row {
+    cursor: pointer;
+  }
+
+  /* ========================= Messages Table Specific ========================= */
+  .table.messages-table td {
+    vertical-align: top;
+  }
+
+  /* Fixed column widths */
+  .table.messages-table td:nth-child(1),  /* # */
+  .table.messages-table td:nth-child(2),  /* ID */
+  .table.messages-table td:nth-child(4) { /* Sent */
+    white-space: nowrap;
+    width: 1%;
+  }
+
+  .table.messages-table td:nth-child(3) { /* Text */
+    width: 100%;
+  }
+
+  /* Message text styling */
+  .table.messages-table td .msg-text {
+    white-space: normal;
+    word-break: break-word;
+    max-width: 600px;
+    line-height: 1.4;
+  }
+
+  /* ID & Number alignment fix */
+  .table.messages-table td:nth-child(1) span,
+  .table.messages-table td:nth-child(2) a,
+  .table.messages-table td:nth-child(2) span {
+    display: inline-block;
+    vertical-align: top;
+    line-height: normal;
+    padding-top: 0.15rem; /* Visual alignment tweak */
+  }
+
+  /* ========================= Message ID Styling ========================= */
+  .msg-id-link {
+    color: var(--text-color);
+    font-weight: bold;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .msg-id-link:hover {
+    text-decoration: underline;
+  }
+
+  .msg-id-no-link {
+    color: var(--text-muted);
+    font-style: italic;
+    cursor: default;
   }
 
   /* ========================= Timestamp Cell ========================= */
@@ -530,35 +621,15 @@
     white-space: nowrap;
     min-width: 120px;
   }
-  
+
   .table-timestamp .date {
     color: var(--text-color);
     font-weight: 400;
   }
-  
+
   .table-timestamp .time {
     font-size: 0.85rem;
     color: var(--muted-text);
-  }
-  
-  /* ========================= Messages Table ========================= */
-  .table.messages-table td .msg-text {
-    white-space: normal;
-    word-break: break-word;
-    max-width: 600px;
-    line-height: 1.4;
-  }
-  
-  /* Fixed column widths */
-  .table.messages-table td:nth-child(1),  /* # */
-  .table.messages-table td:nth-child(2),  /* ID */
-  .table.messages-table td:nth-child(4) { /* Sent */
-    white-space: nowrap;
-    width: 1%;
-  }
-  
-  .table.messages-table td:nth-child(3) { /* Text */
-    width: 100%;
   }
 
   /* =================== Chat Info Table =================== */ 
@@ -580,7 +651,7 @@
   
   .chat-info-table td {
     padding: 0.65rem 0.75rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border-light);
     vertical-align: top;
     text-align: left;
     word-break: break-word;
@@ -650,7 +721,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc;
+    background-color: var(--border-light);
     transition: 0.4s;
     border-radius: 24px;
   }
@@ -683,7 +754,7 @@
   }
   
   input:disabled + .slider:before {
-    background-color: #ccc;
+    background-color: var(--border-light);
   }
 
   
@@ -710,15 +781,7 @@
     margin-top: 1rem;
   }
   
-  .text-muted {
-    color: var(--muted-text);
-    font-size: 0.9rem;
-  }
   
-  .error-container {
-    text-align: center;
-    margin-top: 4rem;
-  }
 
   .alert {
     margin: 1rem 0 2rem;
@@ -742,12 +805,12 @@
   .form-note {
     font-size: 0.85rem;
     color: var(--muted-text);
-    margin-top: 1rem;
+    margin-top: 1.5rem;
   }
 
   .info-inline-msg {
-    background-color: #eef2fa;
-    border: 1px solid #c9d6ee;
+    background-color: var(--light-block-bg);
+    border: 1px solid var(--light-border-accent);
     padding: 0.75rem 1rem;
     margin: 1rem 0;
     border-radius: 4px;

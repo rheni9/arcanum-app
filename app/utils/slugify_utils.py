@@ -1,10 +1,10 @@
 """
-Slug utilities: transliterate Cyrillic text and generate safe, unique slugs.
+Slug utilities for chat names normalization in Arcanum.
 
-Includes tools for:
-- converting text to ASCII-friendly slugs,
-- generating unique slugs using hashes,
-- transliterating Cyrillic symbols to Latin.
+Provides:
+- Transliteration of Cyrillic chat names.
+- Safe slug generation from chat titles.
+- Collision-resistant slug resolution.
 """
 
 import re
@@ -30,9 +30,9 @@ def transliterate(text: str) -> str:
     """
     Transliterate a Cyrillic string into Latin characters.
 
-    :param text: Input string to transliterate.
+    :param text: Input string (chat name).
     :type text: str
-    :return: Transliterated lowercase Latin string.
+    :return: Transliterated lowercase string.
     :rtype: str
     """
     return ''.join(CYR_TO_LAT.get(char, char) for char in text.lower())
@@ -40,16 +40,16 @@ def transliterate(text: str) -> str:
 
 def slugify(text: str, max_words: int = 3) -> str:
     """
-    Convert a string into a slug suitable for filenames or identifiers.
+    Generate a safe slug from a Telegram chat name.
 
-    This includes transliteration, normalization, stripping special characters,
-    word limiting, and a hash-based fallback if needed.
+    Applies transliteration, normalization, and character filtering.
+    Limits slug to first N words. Uses hash fallback for edge cases.
 
     :param text: Input string to convert.
     :type text: str
-    :param max_words: Maximum number of words to include in the slug.
+    :param max_words: Maximum number of words in the slug.
     :type max_words: int
-    :return: Generated slug (e.g., "chat_name" or "chat_ab12ef").
+    :return: Resulting slug string (e.g., "chat_name" or "chat_ab12ef").
     :rtype: str
     """
     original_text = str(text) if text is not None else ""
@@ -57,13 +57,14 @@ def slugify(text: str, max_words: int = 3) -> str:
     text = transliterate(text)
     text = re.sub(r"[^a-z0-9 ]", "", text)
     words = text.strip().split()
+
     slug = "_".join(words[:max_words])
 
     if not slug or not any(char.isalnum() for char in slug):
         hash_part = hashlib.sha1(original_text.encode("utf-8")).hexdigest()[:6]
         logger.warning(
-            "[SLUG] Fallback used: generated hash slug for input '%s'.",
-            original_text
+            "[SLUG|FALLBACK] Generated hash slug for empty result "
+            "from input '%s'.", original_text
         )
         return f"chat_{hash_part}"
 
@@ -74,17 +75,19 @@ def generate_unique_slug(
     base_slug: str, seed: str, max_tries: int = 10
 ) -> str:
     """
-    Generate a unique slug by appending a short hash to the base slug.
+    Ensure a slug is unique among existing chats.
 
-    :param base_slug: Base part of the slug.
+    Appends short hash suffix to base_slug in case of collisions.
+
+    :param base_slug: Primary slug candidate.
     :type base_slug: str
-    :param seed: Seed value for hash generation (e.g., name + link).
+    :param seed: Seed for hash generation (e.g., name + link).
     :type seed: str
-    :param max_tries: Maximum attempts to find an unused slug.
+    :param max_tries: Maximum attempts to resolve collision.
     :type max_tries: int
     :return: Unique slug string.
     :rtype: str
-    :raises ValueError: If unique slug cannot be generated within max_tries.
+    :raises ValueError: If unique slug cannot be generated.
     """
     for i in range(max_tries):
         suffix = hashlib.sha1((seed + str(i)).encode()).hexdigest()[:6]
@@ -92,12 +95,13 @@ def generate_unique_slug(
         if not slug_exists(new_slug):
             if i > 0:
                 logger.info(
-                    "[SLUG] Collision detected, resolved as '%s'.",
+                    "[SLUG|RESOLVE] Collision detected, resolved to '%s'.",
                     new_slug
                 )
             return new_slug
+
     logger.error(
-        "[SLUG] Failed to generate unique slug after %d attempts.",
+        "[SLUG|FAIL] Failed to generate unique slug after %d attempts.",
         max_tries
     )
-    raise ValueError("Could not generate unique slug")
+    raise ValueError("Could not generate unique slug after collision retries.")

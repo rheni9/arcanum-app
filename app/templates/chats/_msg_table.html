@@ -1,21 +1,21 @@
 <!-- templates/chats/_msg_table.html -->
 <div id="messages-table-container">
-<table class="table messages-table">
+  <table class="table messages-table">
     <thead>
       <tr>
         <th>#</th>
         <th>ID</th>
         <th>Text</th>
         <th class="sortable {% if sort_by == 'timestamp' %}active-sort{% endif %}" data-sort="timestamp">
-            <div class="sort-wrapper">
-              <span class="header-label">Sent</span>
-              {% if sort_by == 'timestamp' %}
-                <span class="sort-arrow">{{ '▲' if order == 'asc' else '▼' }}</span>
-              {% else %}
-                <span class="sort-arrow"></span>
-              {% endif %}
-            </div>
-          </th>
+          <div class="sort-wrapper">
+            <span class="header-label">Sent</span>
+            {% if sort_by == 'timestamp' %}
+              <span class="sort-arrow">{{ '▲' if order == 'asc' else '▼' }}</span>
+            {% else %}
+              <span class="sort-arrow"></span>
+            {% endif %}
+          </div>
+        </th>
       </tr>
     </thead>
     <tbody>
@@ -24,19 +24,21 @@
         <td>{{ loop.index }}</td>
         <td>
           {% if msg.msg_id %}
-            <a  href="{{ msg.link }}" target="_blank" rel="noopener noreferrer">
+            <a href="{{ msg.link }}" target="_blank" rel="noopener noreferrer" class="msg-id-link">
               {{ msg.msg_id }}
             </a>
-          {% else %}&mdash;{% endif %}
+          {% else %}
+            <span class="msg-id-no-link">&mdash;</span>
+          {% endif %}
         </td>
         <td>
           <div class="msg-text">{{ msg.text }}</div>
         </td>
         <td>
-            <div class="table-timestamp">
+          <div class="table-timestamp">
             <div class="date">{{ msg.timestamp | datetimeformat("long_date") }}</div>
             <div class="time">{{ msg.timestamp | datetimeformat("time") }}</div>
-        </div>  
+          </div>
         </td>
       </tr>
       {% endfor %}

@@ -4,27 +4,30 @@ Reusable data model for message filtering in the Arcanum application.
 Encapsulates user-defined parameters for full-text search and
 date-based filtering, supporting all message-related views and routes.
 """
+
+import logging
 from dataclasses import dataclass
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
 class MessageFilters:
     """
-    Represents user-defined filters for searching and filtering messages.
+    Represents message filtering parameters for search and date filters.
 
-    Supports both full-text queries and date-based filters, such as filtering
-    messages on a specific date, before/after a date, or between two dates.
+    Used in search queries, filtering operations, and UI display logic.
 
     :param action: Type of filtering action ('search' or 'filter').
     :type action: Optional[str]
-    :param query: Full-text search query string.
+    :param query: Full-text search query.
     :type query: Optional[str]
-    :param date_mode: Filtering mode: 'on', 'before', 'after', or 'between'.
+    :param date_mode: Date filter mode ('on', 'before', 'after', 'between').
     :type date_mode: Optional[str]
-    :param start_date: Start date in 'YYYY-MM-DD' format.
+    :param start_date: Start date (YYYY-MM-DD).
     :type start_date: Optional[str]
-    :param end_date: End date in 'YYYY-MM-DD' format (for 'between' mode).
+    :param end_date: End date (YYYY-MM-DD).
     :type end_date: Optional[str]
     """
     action: Optional[str] = None
@@ -33,15 +36,15 @@ class MessageFilters:
     start_date: Optional[str] = None
     end_date: Optional[str] = None
 
-    def normalize(self) -> None:
+    def normalize(self, verbose: bool = False) -> None:
         """
-        Normalize all filter values for consistent processing.
+        Normalize all fields: strip whitespace, convert blanks to None.
 
-        Strips whitespace from all string fields and converts empty strings
-        to None. Ensures compatibility with validation and filtering logic.
+        :param verbose: If True, log normalized values.
+        :type verbose: bool
         """
         self.query = self.query.strip() or None if self.query else None
-        self.date_mode = self.date_mode or "on"
+        self.date_mode = self.date_mode.strip() if self.date_mode else "on"
         self.start_date = (
             self.start_date.strip() or None if self.start_date else None
         )
@@ -49,20 +52,28 @@ class MessageFilters:
             self.end_date.strip() or None if self.end_date else None
         )
 
+        if verbose:
+            logger.debug(
+                "[FILTERS|NORMALIZE] Normalized: action='%s', query='%s', "
+                "date_mode='%s', start_date='%s', end_date='%s'.",
+                self.action, self.query, self.date_mode,
+                self.start_date, self.end_date
+            )
+
     def has_active(self) -> bool:
         """
-        Check if any filter field is currently active.
+        Check if any filter is active (query or date filters).
 
-        :return: True if at least one of query, start_date, or end_date is set.
+        :return: True if query, start_date, or end_date is set.
         :rtype: bool
         """
-        return bool([self.query, self.start_date, self.end_date])
+        return any([self.query, self.start_date, self.end_date])
 
     def is_empty(self) -> bool:
         """
-        Check whether all filter parameters are empty.
+        Check if no filters are applied.
 
         :return: True if query, start_date, and end_date are all unset.
         :rtype: bool
         """
-        return not any([self.query, self.start_date, self.end_date])
+        return not self.has_active()

@@ -1,9 +1,8 @@
 """
 Core data models for the Arcanum application.
 
-Defines structured dataclasses for representing domain entities,
-such as chats and messages. These models enable consistent access,
-validation, and transfer of data between application layers.
+Defines structured dataclasses for representing chats and messages,
+ensuring consistent access, transfer, and validation of domain entities.
 """
 
 from dataclasses import dataclass, field
@@ -13,33 +12,35 @@ from typing import Optional, List
 @dataclass
 class Chat:
     """
-    Represents a chat entity with metadata and user-defined attributes.
+    Represents a chat record in the database.
 
-    Used throughout the application for storing, displaying, and filtering
-    chat-level information.
+    Used for storing, displaying, and filtering chat-level information.
 
-    :param slug: Unique identifier for the chat.
+    :param id: Primary key in the local database.
+    :type id: int
+    :param slug: Unique URL-friendly identifier.
     :type slug: str
-    :param name: Display name of the chat.
+    :param name: Human-readable chat name.
     :type name: str
-    :param chat_id: External platform-specific ID (e.g., Telegram ID).
-    :type chat_id: Optional[str]
+    :param chat_id: Telegram chat ID (external identifier).
+    :type chat_id: Optional[int]
     :param link: Optional public link to the chat.
     :type link: Optional[str]
-    :param type: Chat type (e.g., group, channel, private).
+    :param type: Chat type (group, channel, private).
     :type type: Optional[str]
-    :param joined: Join date in 'YYYY-MM-DD' format (optional).
+    :param joined: Join date in 'YYYY-MM-DD' format.
     :type joined: Optional[str]
-    :param is_active: Whether the chat is considered currently active.
+    :param is_active: Whether the chat is marked as active.
     :type is_active: bool
-    :param is_member: Whether the user is a current member of the chat.
+    :param is_member: Whether the user is currently a member of the chat.
     :type is_member: bool
-    :param notes: Optional notes or comments about the chat.
+    :param notes: Optional user-defined notes.
     :type notes: Optional[str]
     """
+    id: int  # Database primary key
     slug: str
     name: str
-    chat_id: Optional[str] = None
+    chat_id: Optional[int] = None  # Telegram chat id
     link: Optional[str] = None
     type: Optional[str] = None
     joined: Optional[str] = None
@@ -51,36 +52,36 @@ class Chat:
 @dataclass
 class Message:
     """
-    Represents an individual message within a specific chat.
+    Represents a single message stored in the database.
 
-    Stores message metadata, content, timestamp, media references,
-    and user annotations.
-
-    :param chat_slug: Slug of the chat to which the message belongs.
-    :type chat_slug: str
-    :param msg_id: Unique message identifier within the chat (sequential ID).
-    :type msg_id: str
-    :param link: Optional public link to the message.
-    :type link: Optional[str]
-    :param text: Text content of the message.
-    :type text: Optional[str]
-    :param timestamp: ISO 8601 UTC timestamp of when the message was sent.
+    :param id: Primary key in the local database.
+    :type id: int
+    :param chat_ref_id: Foreign key linking to parent chat (Chat.id).
+    :type chat_ref_id: int
+    :param msg_id: Telegram message ID (external identifier).
+    :type msg_id: Optional[int]
+    :param timestamp: UTC ISO 8601 timestamp of the message.
     :type timestamp: str
-    :param media_file: Path or URL to the attached media file (if any).
-    :type media_file: Optional[str]
-    :param screenshot: Path or URL to a screenshot (if any).
+    :param link: Optional permalink to the message.
+    :type link: Optional[str]
+    :param text: Textual content of the message.
+    :type text: Optional[str]
+    :param media: Path or URL to attached media.
+    :type media: Optional[str]
+    :param screenshot: Path or URL to associated screenshot.
     :type screenshot: Optional[str]
-    :param tags: List of tags associated with the message.
+    :param tags: List of user-defined tags.
     :type tags: List[str]
-    :param notes: Optional user-added notes or commentary.
+    :param notes: Optional user notes.
     :type notes: Optional[str]
     """
-    chat_slug: str
-    msg_id: str
+    id: int  # Database primary key
+    chat_ref_id: int  # FK to Chat.id
+    msg_id: Optional[int] = None  # Telegram msg_id
+    timestamp: str = ""
     link: Optional[str] = None
     text: Optional[str] = None
-    timestamp: str = ""
-    media_file: Optional[str] = None
+    media: Optional[str] = None
     screenshot: Optional[str] = None
     tags: List[str] = field(default_factory=list)
     notes: Optional[str] = None

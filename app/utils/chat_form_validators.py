@@ -1,94 +1,171 @@
 """
 Chat form validation utilities for the Arcanum application.
 
-Provides helpers for validating individual chat form fields, including:
-- chat name,
-- chat ID,
-- chat link (URL),
-- join date (cannot be in the future).
-
-Centralizes validation logic with structured logging for diagnostics.
+Provides field-level validation for chat forms.
 """
 
 import logging
-from datetime import date
-from urllib.parse import urlparse
-from typing import Tuple
-
-from app.utils.time_utils import parse_date
+import re
+from datetime import datetime
+from typing import Tuple, Optional
 
 logger = logging.getLogger(__name__)
 
 
-def is_valid_url(url: str) -> bool:
+def validate_name(name: str) -> str:
     """
-    Validate a URL to ensure it uses a valid HTTP(S) scheme.
+    Validate chat name field.
 
-    Supports only http and https protocols.
-    Logs a warning if validation fails due to invalid format.
+    :param name: Input name.
+    :type name: str
+    :returns: Normalized name.
+    :rtype: str
+    :raises ValueError: If validation fails.
+    """
+    name = (name or "").strip()
 
-    :param url: Input URL string.
-    :type url: str
-    :return: True if URL has a valid scheme and network location,
-             False otherwise.
+    if not name:
+        logger.warning("[FORM|VALIDATION] Chat name is required.")
+        raise ValueError("Chat name is required.")
+
+    logger.debug("[FORM|VALIDATION] Validated name: '%s'.", name)
+    return name.strip()
+
+
+def validate_chat_id(chat_id: Optional[str]) -> Optional[int]:
+    """
+    Validate chat ID field (optional).
+
+    :param chat_id: Input chat ID.
+    :type chat_id: str
+    :returns: Chat ID as integer, or None if empty.
+    :rtype: Optional[int]
+    :raises ValueError: If validation fails.
+    """
+    chat_id = (chat_id or "").strip()
+
+    if not chat_id:
+        logger.debug("[FORM|VALIDATION] Chat ID not provided (optional).")
+        return None
+
+    if not re.match(r"^\d+$", chat_id):
+        logger.warning("[FORM|VALIDATION] Invalid chat ID format: '%s'.",
+                       chat_id)
+        raise ValueError("Chat ID must be a positive integer.")
+
+    logger.debug("[FORM|VALIDATION] Validated chat ID: %s.", chat_id)
+    return int(chat_id)
+
+
+def validate_link(link: Optional[str]) -> str:
+    """
+    Validate chat link field (optional).
+
+    Accepts links starting with 'https://' or 'http://'.
+
+    :param link: Input link.
+    :type link: Optional[str]
+    :returns: Normalized link.
+    :rtype: str
+    :raises ValueError: If validation fails.
+    """
+    link = (link or "").strip()
+
+    if not link:
+        logger.debug("[FORM|VALIDATION] Link not provided (optional).")
+        return ""
+
+    if not (link.startswith("https://") or link.startswith("http://")):
+        logger.warning(
+            "[FORM|VALIDATION] Chat link must start with "
+            "'https://' or 'http://'."
+        )
+        raise ValueError("Chat link must start with 'https://' or 'http://'.")
+
+    logger.debug("[FORM|VALIDATION] Validated link: '%s'.", link)
+    return link
+
+
+def is_valid_join_date(joined: str) -> bool:
+    """
+    Check if join date is valid (not in the future).
+
+    :param joined: Join date as string.
+    :type joined: str
+    :returns: True if valid, False otherwise.
     :rtype: bool
     """
-    parsed = urlparse(url)
-    is_valid = parsed.scheme in ("http", "https") and bool(parsed.netloc)
-
-    if not is_valid:
+    try:
+        dt = datetime.fromisoformat(joined.replace("Z", "+00:00"))
+    except ValueError:
         logger.warning(
-            "[FORM-VALIDATION] Invalid link value: '%s' "
-            "(scheme='%s', netloc='%s')",
-            url, parsed.scheme, parsed.netloc
+            "[FORM|VALIDATION] Invalid join date format: '%s'.", joined
         )
+        return False
 
-    return is_valid
+    if dt.date() > datetime.utcnow().date():
+        logger.warning(
+            "[FORM|VALIDATION] Join date cannot be in the future: '%s'.",
+            joined
+        )
+        return False
+
+    return True
+
+
+def validate_join_date(joined: Optional[str]) -> str:
+    """
+    Validate join date field (optional).
+
+    :param joined: Input join date.
+    :type joined: Optional[str]
+    :returns: Normalized join date.
+    :rtype: str
+    :raises ValueError: If validation fails.
+    """
+    joined = (joined or "").strip()
+
+    if not joined:
+        logger.debug("[FORM|VALIDATION] Join date not provided (optional).")
+        return ""
+
+    if not is_valid_join_date(joined):
+        raise ValueError("Join date cannot be in the future.")
+
+    logger.debug("[FORM|VALIDATION] Validated join date: '%s'.", joined)
+    return joined
 
 
 def validate_chat_form(data: dict) -> Tuple[dict, dict]:
     """
-    Validate and clean specific fields from the chat form.
+    Validate entire chat form and collect errors.
 
-    Checks name presence, chat_id format, link URL validity, and join date.
-
-    :param data: Cleaned form input.
+    :param data: Raw form input.
     :type data: dict
-    :return: Tuple of (validated fields, error messages).
+    :returns: (fields, errors) - cleaned values and error messages.
     :rtype: Tuple[dict, dict]
     """
+    fields = {}
     errors = {}
-    result = {}
 
-    name = (data.get("name") or "").strip()
-    if not name:
-        errors["name"] = "Chat name is required."
-        logger.warning("[FORM-VALIDATION] Chat name is missing.")
-    result["name"] = name or None
+    try:
+        fields["name"] = validate_name(data.get("name", ""))
+    except ValueError as e:
+        errors["name"] = str(e)
 
-    chat_id = (data.get("chat_id") or "").strip()
-    if chat_id and not chat_id.isdigit():
-        errors["chat_id"] = "Chat ID must contain only digits."
-        logger.warning(
-            "[FORM-VALIDATION] Invalid chat_id value: '%s'.", chat_id
-        )
-    result["chat_id"] = chat_id or None
+    try:
+        fields["chat_id"] = validate_chat_id(data.get("chat_id", ""))
+    except ValueError as e:
+        errors["chat_id"] = str(e)
 
-    link = (data.get("link") or "").strip()
-    if link and not is_valid_url(link):
-        errors["link"] = (
-            "Please enter a valid URL (starting with http:// or https://)."
-        )
-    result["link"] = link or None
+    try:
+        fields["link"] = validate_link(data.get("link", ""))
+    except ValueError as e:
+        errors["link"] = str(e)
 
-    joined_raw = data.get("joined")
-    joined = parse_date(joined_raw) if joined_raw else None
-    result["joined"] = joined
+    try:
+        fields["joined"] = validate_join_date(data.get("joined", ""))
+    except ValueError as e:
+        errors["joined"] = str(e)
 
-    if joined and joined > date.today().isoformat():
-        errors["joined"] = "Join date cannot be in the future."
-        logger.warning(
-            "[FORM-VALIDATION] Join date is in the future: '%s'.", joined
-        )
-
-    return result, errors
+    return fields, errors

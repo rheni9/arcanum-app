@@ -1,19 +1,30 @@
 """
-Form utilities for cleaning raw input fields.
+Form utilities for the Arcanum application.
 
-This module provides helpers for processing form data,
-such as replacing empty strings with None.
+Provides:
+- helpers for cleaning raw form input,
+- normalization of empty values to None,
+- consistent handling of optional fields.
 """
 
+from typing import Dict, Optional
 
-def clean_form(data: dict) -> dict:
+
+def clean_form(data: Dict[str, Optional[str]]) -> Dict[str, Optional[str]]:
     """
-    Return a copy of the form data dictionary where empty strings
-    are replaced with None.
+    Clean raw form data by normalizing empty strings to None.
+
+    For each input field:
+    - strips leading/trailing whitespace,
+    - replaces empty strings with None,
+    - preserves actual values unchanged.
 
     :param data: Dictionary with raw form input values.
-    :type data: dict
-    :return: Cleaned dictionary with None instead of empty strings.
-    :rtype: dict
+    :type data: Dict[str, Optional[str]]
+    :return: Cleaned form data dictionary.
+    :rtype: Dict[str, Optional[str]]
     """
-    return {k: (v.strip() if v.strip() else None) for k, v in data.items()}
+    return {
+        key: (value.strip() if value and value.strip() else None)
+        for key, value in data.items()
+    }

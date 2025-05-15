@@ -19,7 +19,10 @@
       <nav class="auth-nav">
         {% if session.get('logged_in') %}
           <a href="{{ url_for('dashboard.dashboard') }}" class="nav-link">Dashboard</a>
-          <a href="{{ url_for('auth.logout') }}" class="nav-link">Logout</a>
+          <a href="{{ url_for('auth.logout') }}"
+            class="nav-link logout-link">
+            Logout
+          </a>
         {% else %}
           <a href="{{ url_for('auth.login') }}" class="nav-link">Login</a>
         {% endif %}
@@ -51,8 +54,6 @@
       </div>
     </div>
   </div>
-
-  <script type="module" src="{{ url_for('static', filename='js/csrf_fetch.js') }}"></script>
 
   {# === Global JavaScript === #}
   <script type="module" src="{{ url_for('static', filename='js/base.js') }}"></script>

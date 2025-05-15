@@ -53,6 +53,7 @@
         <img src="{{ url_for('static', filename='img/edit_icon.png') }}" alt="Edit"> Edit
       </a>
       <form action="{{ url_for('chats.delete_chat', slug=chat.slug) }}" method="post" class="inline-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="btn btn-danger"
                 data-type="chat" data-label="{{ chat.name }}"
                 data-msgcount="{{ chat.message_count }}" data-confirm="chat">

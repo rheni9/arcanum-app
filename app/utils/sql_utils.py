@@ -1,16 +1,16 @@
 """
 SQL utilities for safe and consistent query construction.
 
-Provides reusable helpers for composing SQL clauses such as ORDER BY
-with input validation to prevent injection and ensure consistency across
-database operations.
-The module also logs corrections of invalid sort parameters and
-constructed ORDER BY clauses.
+Provides:
+- OrderConfig dataclass for configuring sort behavior.
+- build_order_clause() for composing validated SQL ORDER BY clauses.
 """
 
 import logging
 from dataclasses import dataclass
 from typing import Optional, Set
+
+from app.utils.sort_utils import normalize_sort_params
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +22,9 @@ class OrderConfig:
 
     :param allowed_fields: Set of allowed fields for sorting.
     :type allowed_fields: Set[str]
-    :param default_field: Field to sort by if sort_by is invalid.
+    :param default_field: Fallback field if sort_by is invalid.
     :type default_field: str
-    :param default_order: Direction to sort if order is invalid.
+    :param default_order: Fallback direction if order is invalid.
     :type default_order: str
     :param prefix: Optional table alias or prefix (e.g., 'c.' or 'm.').
     :type prefix: Optional[str]
@@ -41,46 +41,30 @@ def build_order_clause(
     config: OrderConfig
 ) -> str:
     """
-    Construct a validated SQL ORDER BY clause from config parameters.
+    Construct a validated SQL ORDER BY clause.
+
+    Normalizes sort_by and order parameters based on config,
+    and returns a safe SQL ORDER BY clause string.
 
     :param sort_by: Requested sort field.
     :type sort_by: Optional[str]
     :param order: Requested sort direction ('asc' or 'desc').
     :type order: Optional[str]
-    :param config: Order configuration.
+    :param config: Sorting configuration object.
     :type config: OrderConfig
-    :return: SQL ORDER BY clause string.
+    :return: SQL ORDER BY clause (e.g., 'ORDER BY c.name asc').
     :rtype: str
     """
-
-    # Validate sort_by field
-    if sort_by in config.allowed_fields:
-        field = sort_by
-    else:
-        logger.warning(
-            "[SQL] Invalid sort field '%s'; defaulted to '%s'.",
-            sort_by, config.default_field
-        )
-        field = config.default_field
-
-    # Validate sort direction
-    if order and order.lower() in {"asc", "desc"}:
-        direction = order.lower()
-    else:
-        if order:
-            logger.warning(
-                "[SQL] Invalid sort order '%s'; defaulted to '%s'.",
-                order, config.default_order
-            )
-        direction = config.default_order
-
-    # Compose field reference with prefix if any
-    field_ref = f"{config.prefix}{field}" if config.prefix else field
-
-    # Log final ORDER BY clause
-    logger.debug(
-        "[SQL] ORDER BY clause constructed: ORDER BY %s %s",
-        field_ref, direction
+    sort_by, order = normalize_sort_params(
+        sort_by, order, config.allowed_fields,
+        config.default_field, config.default_order
     )
 
-    return f"ORDER BY {field_ref} {direction}"
+    field_ref = f"{config.prefix}{sort_by}" if config.prefix else sort_by
+
+    logger.debug(
+        "[SQL|ORDER] Final ORDER BY clause: ORDER BY %s %s",
+        field_ref, order
+    )
+
+    return f"ORDER BY {field_ref} {order}"

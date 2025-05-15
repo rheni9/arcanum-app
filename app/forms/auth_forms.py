@@ -1,7 +1,7 @@
 """
-app/forms/auth_forms.py
-
 WTForms definitions for authentication.
+
+Provides the login form for user authentication.
 """
 
 from flask_wtf import FlaskForm
@@ -14,11 +14,13 @@ class LoginForm(FlaskForm):
     User login form.
 
     Fields:
-        password: User's password.
-        submit:   Form submission button.
+        password (PasswordField): User's password input.
+        submit (SubmitField): Form submission button.
     """
     password = PasswordField(
         "Password",
-        validators=[DataRequired(message="Please enter your password.")]
+        validators=[
+            DataRequired(message="Please enter your password.")
+        ]
     )
     submit = SubmitField("Log In")

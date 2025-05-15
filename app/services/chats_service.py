@@ -1,14 +1,9 @@
 """
-Service module for managing chat data in the database.
+Chat service module for the Arcanum application.
 
-Provides functions to:
-- fetch chats with sorting,
-- retrieve a chat by slug,
-- insert and update chats,
-- delete chats and their messages,
-- check for existing slugs.
-
-Built on SQLite with structured logging and context-managed DB access.
+Provides database-level operations for chats:
+retrieval, insertion, updating, deletion.
+Relies on chat.id as primary key for relationships.
 """
 
 import logging
@@ -16,7 +11,7 @@ from sqlite3 import DatabaseError, IntegrityError
 from typing import List, Dict, Optional
 
 from app.models.models import Chat
-from app.utils.db_utils import get_connection
+from app.utils.db_utils import get_connection_lazy
 from app.utils.sql_utils import build_order_clause, OrderConfig
 
 logger = logging.getLogger(__name__)
@@ -24,17 +19,15 @@ logger = logging.getLogger(__name__)
 
 def get_chats(sort_by: str = "name", order: str = "asc") -> List[Dict]:
     """
-    Retrieve all chats from the database, sorted by the selected field.
+    Retrieve all chats with sorting options.
 
-    Supports sorting by name, number of messages, or time of last message.
-
-    :param sort_by: Field to sort by (e.g., 'name', 'last_message_at').
+    :param sort_by: Sort field ('name', 'message_count', 'last_message_at').
     :type sort_by: str
-    :param order: Sorting direction ('asc' or 'desc').
+    :param order: Sort direction ('asc' or 'desc').
     :type order: str
-    :return: List of chat records as dictionaries.
+    :return: List of chat records.
     :rtype: List[dict]
-    :raises DatabaseError: If retrieval fails due to a database error.
+    :raises DatabaseError: On retrieval failure.
     """
     config = OrderConfig(
         allowed_fields={"name", "message_count", "last_message_at"},
@@ -42,79 +35,107 @@ def get_chats(sort_by: str = "name", order: str = "asc") -> List[Dict]:
         default_order="desc"
     )
 
-    order_clause = build_order_clause(sort_by, order, config)
-    logger.debug("[DB] Chats have been fetched sorted by %s %s",
-                 sort_by, order)
-
-    query = f'''
-        SELECT c.slug, c.name,
-               COUNT(m.chat_slug) AS message_count,
+    sql = f'''
+        SELECT c.id, c.slug, c.name,
+               COUNT(m.id) AS message_count,
                MAX(m.timestamp) AS last_message_at
         FROM chats c
-        LEFT JOIN messages m ON m.chat_slug = c.slug
-        GROUP BY c.slug, c.name
-        {order_clause}
+        LEFT JOIN messages m ON m.chat_ref_id = c.id
+        GROUP BY c.id, c.slug, c.name
+        {build_order_clause(sort_by, order, config)}
     '''
 
-    with get_connection() as conn:
-        cursor = conn.execute(query)
-        return [dict(row) for row in cursor.fetchall()]
+    try:
+        conn = get_connection_lazy()
+        cursor = conn.execute(sql)
+        results = [dict(row) for row in cursor.fetchall()]
+    except DatabaseError as e:
+        logger.error("[DB|CHATS] Failed to list chats: %s", e)
+        raise
+
+    logger.debug("[CHATS|SERVICE] Retrieved %d chat record(s).", len(results))
+    return results
 
 
 def get_chat_by_slug(slug: str) -> Optional[Chat]:
     """
-    Retrieve a single chat record from the database using its slug.
+    Retrieve a chat by its slug.
 
-    If no matching chat is found, returns None. Ensures safe access
-    with structured logging and graceful handling of missing records.
+    Used for URL-based identification.
 
-    :param slug: Unique identifier of the chat.
+    :param slug: Chat slug identifier.
     :type slug: str
-    :return: Chat instance or None if not found.
+    :return: Chat instance or None.
     :rtype: Optional[Chat]
-    :raises DatabaseError: If the database query fails.
+    :raises DatabaseError: On query failure.
     """
     sql = "SELECT * FROM chats WHERE slug = ?"
 
     try:
-        with get_connection() as conn:
-            row = conn.execute(sql, (slug,)).fetchone()
+        conn = get_connection_lazy()
+        row = conn.execute(sql, (slug,)).fetchone()
     except DatabaseError as e:
-        logger.error("[DB] Failed to retrieve chat '%s': %s", slug, e)
+        logger.error("[DB|CHATS] Failed to fetch slug '%s': %s", slug, e)
         raise
 
     if not row:
-        logger.warning("[DB] Chat with slug '%s' was not found.", slug)
+        logger.warning("[CHATS|SERVICE] No chat found with slug '%s'.", slug)
         return None
 
-    joined = row["joined"]
-    joined_str = (
-        joined if isinstance(joined, str) and joined.count("-") == 2 else None
-    )
-
     return Chat(
+        id=row["id"],
         slug=row["slug"],
         name=row["name"],
         chat_id=row["chat_id"],
-        link=row["link"],
         type=row["type"],
-        joined=joined_str,
+        link=row["link"],
+        joined=row["joined"],
         is_active=bool(row["is_active"]),
         is_member=bool(row["is_member"]),
         notes=row["notes"]
     )
 
 
+def get_chats_by_ids(ids: set[int]) -> List[dict]:
+    """
+    Retrieve chats by a set of IDs.
+
+    Optimized for message grouping.
+
+    :param ids: Set of chat IDs.
+    :type ids: set[int]
+    :return: List of chat records (id, slug, name).
+    :rtype: List[dict]
+    :raises DatabaseError: On retrieval failure.
+    """
+    if not ids:
+        return []
+
+    placeholders = ", ".join("?" for _ in ids)
+    sql = f"SELECT id, slug, name FROM chats WHERE id IN ({placeholders})"
+
+    try:
+        conn = get_connection_lazy()
+        cursor = conn.execute(sql, tuple(ids))
+        results = [dict(row) for row in cursor.fetchall()]
+    except DatabaseError as e:
+        logger.error("[DB|CHATS] Failed to fetch chats by IDs: %s", e)
+        raise
+
+    logger.debug(
+        "[CHATS|SERVICE] Retrieved %d chat(s) by ID filter.", len(results)
+    )
+    return results
+
+
 def insert_chat(chat: Chat) -> None:
     """
     Insert a new chat record into the database.
 
-    Validates and stores all provided chat metadata. If a chat with the same
-    slug already exists, raises a ValueError with a descriptive message.
-
-    :param chat: Chat object to insert.
+    :param chat: Chat instance to insert.
     :type chat: Chat
-    :raises ValueError: If the chat slug already exists or insertion fails.
+    :raises ValueError: If slug is not unique.
+    :raises DatabaseError: On insertion failure.
     """
     sql = '''
         INSERT INTO chats (
@@ -129,92 +150,124 @@ def insert_chat(chat: Chat) -> None:
     )
 
     try:
-        with get_connection() as conn:
-            conn.execute(sql, values)
-            conn.commit()
-            logger.info("[INSERT] New chat '%s' has been inserted.", chat.slug)
+        conn = get_connection_lazy()
+        conn.execute(sql, values)
+        conn.commit()
     except IntegrityError as e:
-        logger.error(
-            "[INSERT] Chat insert failed due to integrity error: %s", e
-        )
-        raise ValueError(
-            f"Chat with slug '{chat.slug}' already exists."
-        ) from e
+        logger.error("[DB|CHATS] Insert failed: %s", e)
+        raise ValueError(f"Slug '{chat.slug}' already exists.") from e
     except DatabaseError as e:
-        logger.error("[INSERT] Database error during chat insert: %s", e)
+        logger.error("[DB|CHATS] Insert failed: %s", e)
         raise
+
+    logger.info("[CHATS|SERVICE] New chat inserted: '%s'.", chat.slug)
 
 
 def update_chat(chat: Chat) -> None:
     """
-    Update an existing chat record with new data.
+    Update an existing chat by its ID.
 
-    All editable fields are updated in the database. The chat is identified
-    by its slug. Changes are committed transactionally.
-
-    :param chat: Chat object containing updated fields.
+    :param chat: Chat instance with updated fields.
     :type chat: Chat
-    :raises DatabaseError: If the update operation fails.
+    :raises DatabaseError: On update failure.
     """
     sql = '''
         UPDATE chats SET
-            chat_id = ?, type = ?, name = ?, link = ?, joined = ?,
+            slug = ?, chat_id = ?, type = ?, name = ?, link = ?, joined = ?,
             is_active = ?, is_member = ?, notes = ?
-        WHERE slug = ?
+        WHERE id = ?
     '''
     values = (
-        chat.chat_id, chat.type, chat.name, chat.link, chat.joined,
-        int(chat.is_active), int(chat.is_member), chat.notes, chat.slug
+        chat.slug, chat.chat_id, chat.type, chat.name,
+        chat.link, chat.joined,
+        int(chat.is_active), int(chat.is_member), chat.notes, chat.id
     )
+
     try:
-        with get_connection() as conn:
-            conn.execute(sql, values)
-            conn.commit()
-            logger.info("[UPDATE] Chat '%s' has been updated.", chat.slug)
+        conn = get_connection_lazy()
+        conn.execute(sql, values)
+        conn.commit()
     except DatabaseError as e:
-        logger.error("[UPDATE] Database error during chat update: %s", e)
+        logger.error("[DB|CHATS] Update failed for chat '%s': %s",
+                     chat.slug, e)
         raise
+
+    logger.info(
+        "[CHATS|SERVICE] Chat updated (id=%d, slug='%s').", chat.id, chat.slug
+    )
 
 
 def delete_chat_and_messages(slug: str) -> None:
     """
-    Delete a chat and all associated messages from the database.
+    Delete a chat and its messages.
 
-    The operation is irreversible. The chat is identified by its slug
-    and removed along with its related messages using ON DELETE CASCADE.
-
-    :param slug: Slug of the chat to delete.
+    :param slug: Chat slug identifier.
     :type slug: str
-    :raises DatabaseError: If the deletion fails.
+    :raises DatabaseError: On deletion failure.
     """
-    sql = "DELETE FROM chats WHERE slug = ?"
+    chat_ref_id = get_chat_id_by_slug(slug)
+
     try:
-        with get_connection() as conn:
-            conn.execute(sql, (slug,))
-            conn.commit()
-            logger.info("[DELETE] Chat '%s' has been deleted.", slug)
+        conn = get_connection_lazy()
+        conn.execute(
+            "DELETE FROM messages WHERE chat_ref_id = ?", (chat_ref_id,)
+        )
+        conn.execute("DELETE FROM chats WHERE id = ?", (chat_ref_id,))
+        conn.commit()
     except DatabaseError as e:
-        logger.error("[DELETE] Database error during chat deletion: %s", e)
+        logger.error(
+            "[DB|CHATS] Deletion failed for id=%d: %s", chat_ref_id, e
+        )
         raise
+
+    logger.info(
+        "[CHATS|SERVICE] Chat removed from database (id=%d, slug='%s').",
+        chat_ref_id, slug
+    )
 
 
 def slug_exists(slug: str) -> bool:
     """
-    Check whether a chat slug already exists in the database.
+    Check if a chat slug exists.
 
-    Used to prevent duplicate chat creation or identify existing records
-    for update operations.
-
-    :param slug: Slug to check for existence.
+    :param slug: Slug to check.
     :type slug: str
-    :return: True if the slug exists, False otherwise.
+    :returns: True if slug exists, False otherwise.
     :rtype: bool
     """
     sql = "SELECT 1 FROM chats WHERE slug = ?"
 
-    with get_connection() as conn:
-        cur = conn.execute(sql, (slug,))
-        exists = cur.fetchone() is not None
+    conn = get_connection_lazy()
+    cur = conn.execute(sql, (slug,))
+    exists = cur.fetchone() is not None
 
-    logger.debug("[CHECK] Slug '%s' exists: %s", slug, exists)
+    logger.debug("[CHATS|SERVICE] Slug '%s' existence check: %s", slug, exists)
     return exists
+
+
+def get_chat_id_by_slug(slug: str) -> int:
+    """
+    Retrieve a chat's ID by its slug.
+
+    :param slug: Unique chat slug.
+    :type slug: str
+    :returns: Chat primary key.
+    :rtype: int
+    :raises ValueError: If chat with given slug not found.
+    :raises DatabaseError: On query failure.
+    """
+    sql = "SELECT id FROM chats WHERE slug = ?"
+
+    try:
+        conn = get_connection_lazy()
+        row = conn.execute(sql, (slug,)).fetchone()
+    except DatabaseError as e:
+        logger.error("[DB|CHATS] Failed to get ID for slug '%s': %s", slug, e)
+        raise
+
+    if not row:
+        logger.warning("[CHATS|SERVICE] No chat found with slug '%s'.", slug)
+        raise ValueError(f"Chat slug '{slug}' not found.")
+
+    logger.debug("[CHATS|SERVICE] Found id=%d for slug='%s'.", row["id"], slug)
+    return row["id"]

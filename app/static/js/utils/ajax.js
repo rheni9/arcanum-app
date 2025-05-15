@@ -5,15 +5,16 @@
  * Includes utilities for fetch with headers, HTML parsing, and safe DOM replacement.
  */
 
+import { csrfFetch } from "./csrf_fetch.js";
+
 /**
- * Fetch a URL and return a parsed HTML document.
+ * Fetch HTML fragment via AJAX, including CSRF token in headers.
  * @param {string} url
  * @returns {Promise<Document>}
  */
 export async function ajaxFetchHtml(url) {
-  const response = await fetch(url, {
-    headers: { "X-Requested-With": "XMLHttpRequest" },
-    credentials: "same-origin"
+  const response = await csrfFetch(url, {
+    headers: { "X-Requested-With": "XMLHttpRequest" }
   });
   const text = await response.text();
   return new DOMParser().parseFromString(text, "text/html");

@@ -72,17 +72,17 @@ export function bindMessageSortHandlers() {
 
       url.searchParams.set("sort", sortField);
       url.searchParams.set("order", newOrder);
-      url.searchParams.set("t", Date.now());
+      url.searchParams.set("t", Date.now());  // cache-buster
 
       const scrollY = window.scrollY;
 
       try {
         const doc = await ajaxFetchHtml(url.toString());
-        const replacement = doc.querySelector("#messages-table-container");
-        const container = document.querySelector("#messages-table-container");
+        const container = document.getElementById("messages-table-container");
+        const replacement = doc.getElementById("messages-table-container");
 
         if (container && replacement) {
-          container.replaceWith(replacement);
+          container.innerHTML = replacement.innerHTML;
           history.replaceState(null, "", url);
           rebindAfterAjax();
           window.scrollTo(0, scrollY);
@@ -105,7 +105,7 @@ export function attachSortHandlers() {
     const chatSlug = header.dataset.chat;
     const sortField = header.dataset.sort;
 
-    // 💡 Скип — якщо немає групового чату
+    // Skip - if there is no group chat
     if (!chatSlug || !sortField) return;
 
     header.onclick = async () => {

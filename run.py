@@ -1,16 +1,13 @@
 """
-run.py
-
 Application entry point for the Arcanum Flask application.
 
-- Initializes app via factory
-- Defines global error handlers (CSRF, 405, 404, 500)
-- Runs development server if script is main
+Initializes the Flask app using the factory pattern.
+Defines global error handlers (CSRF, 405, 404, 500).
+Runs the development server if executed as the main module.
 """
 
 import os
-from typing import Tuple
-from flask import flash, redirect, url_for, render_template, Response
+from flask import flash, redirect, url_for, render_template, request, Response
 from flask_wtf.csrf import CSRFError
 
 from app import create_app
@@ -21,11 +18,14 @@ app = create_app()
 @app.errorhandler(CSRFError)
 def handle_csrf_error(_e: CSRFError) -> Response:
     """
-    Handle missing or invalid CSRF token by redirecting to login.
+    Handle missing or invalid CSRF token.
+
+    Displays a flash message and redirects the user to the previous page
+    or to the homepage if referrer is not available.
 
     :param _e: CSRFError exception instance.
     :type _e: CSRFError
-    :return: Redirect response to the login page.
+    :returns: Redirect response with a flash message.
     :rtype: Response
     """
     flash(
@@ -33,18 +33,21 @@ def handle_csrf_error(_e: CSRFError) -> Response:
         "Please try again.",
         "error"
     )
-    return redirect(url_for("auth.login"))
+    target = request.referrer or url_for("home.home")
+    return redirect(target)
 
 
 @app.errorhandler(405)
-def method_not_allowed(_e: Exception) -> Tuple[str, int]:
+def handle_method_not_allowed(_e: Exception) -> Response:
     """
-    Handle 405 Method Not Allowed errors.
+    Handle HTTP 405 Method Not Allowed errors.
+
+    Renders an error page indicating the method is not allowed.
 
     :param _e: Exception instance.
     :type _e: Exception
-    :return: Rendered error page with 405 status.
-    :rtype: Tuple[str, int]
+    :returns: Rendered error page with 405 status code.
+    :rtype: Response
     """
     return render_template(
         "error.html",
@@ -53,27 +56,34 @@ def method_not_allowed(_e: Exception) -> Tuple[str, int]:
 
 
 @app.errorhandler(404)
-def not_found(_e: Exception) -> Tuple[str, int]:
+def handle_not_found(_e: Exception) -> Response:
     """
-    Handle 404 Not Found errors.
+    Handle HTTP 404 Not Found errors.
+
+    Renders an error page indicating the page was not found.
 
     :param _e: Exception instance.
     :type _e: Exception
-    :return: Rendered error page and with status.
-    :rtype: Tuple[str, int]
+    :returns: Rendered error page with 404 status code.
+    :rtype: Response
     """
-    return render_template("error.html", message="Page not found."), 404
+    return render_template(
+        "error.html",
+        message="The requested page was not found."
+    ), 404
 
 
 @app.errorhandler(500)
-def internal_server_error(_e: Exception) -> Tuple[str, int]:
+def handle_internal_server_error(_e: Exception) -> Response:
     """
-    Handle 500 Internal Server Error.
+    Handle HTTP 500 Internal Server errors.
+
+    Renders an error page indicating an unexpected error occurred.
 
     :param _e: Exception instance.
     :type _e: Exception
-    :return: Rendered error page with 500 status.
-    :rtype: Tuple[str, int]
+    :returns: Rendered error page with 500 status code.
+    :rtype: Response
     """
     return render_template(
         "error.html",
@@ -82,6 +92,6 @@ def internal_server_error(_e: Exception) -> Tuple[str, int]:
 
 
 if __name__ == "__main__":
-    # Default port 5000, override via PORT env var
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    debug_mode = app.config.get("DEBUG", False)
+    app.run(host="0.0.0.0", port=port, debug=debug_mode)
