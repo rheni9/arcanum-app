@@ -1,0 +1,157 @@
+{# ============================================================================
+  Message Form Template for the Arcanum Application
+  Provides a unified interface for creating or editing messages,
+  with integrated field validation and consistent application layout.
+============================================================================ #}
+
+{% extends "base.html" %}
+
+{% block title %}
+  {{ "Edit" if is_edit else "Add" }} Message | Arcanum
+{% endblock %}
+
+{% block content %}
+  <div class="page-container">
+    <section class="section">
+      <h1 class="section-title">
+        {{ "Edit" if is_edit else "Add" }} Message
+        {% if is_edit and message.id %}
+          <span class="muted">#{{ message.id }}</span>
+        {% endif %}
+      </h1>
+
+      {# === Form Container === #}
+      <div class="form-container wide-form">
+        <div class="form-box">
+          <form method="post"
+                action="{% if is_edit %}{{ url_for('messages.edit_message', chat_slug=chat.slug, pk=message.id) }}{% else %}{{ url_for('messages.add_message', chat_slug=chat_slug) }}{% endif %}"
+                class="form"
+                novalidate
+                autocomplete="off">
+
+            {{ form.hidden_tag() }}
+
+            {# === Telegram Message ID === #}
+            <div class="form-group">
+              <label for="{{ form.msg_id.id }}" class="form-label">
+                {{ form.msg_id.label.text }}
+              </label>
+              {{ form.msg_id(class="form-control" ~ (' input-error' if form.msg_id.errors else '')) }}
+              <small class="form-hint">Optional. Only digits. Example: 12345</small>
+              {% for error in form.msg_id.errors %}
+                <div class="error">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            {# === Date and Time  === #}
+            <div class="form-datetime-row">
+              <div class="form-group">
+                <label for="{{ form.date.id }}" class="form-label">
+                  {{ form.date.label.text }}<span class="form-required-mark">*</span>
+                </label>
+                {{ form.date(class="form-control form-date-input" ~ (' input-error' if form.date.errors else '')) }}
+              </div>
+
+              <div class="form-group">
+                <label for="{{ form.time.id }}" class="form-label">
+                  {{ form.time.label.text }}<span class="form-required-mark">*</span>
+                </label>
+                {{ form.time(class="form-control form-time-input" ~ (' input-error' if form.time.errors else ''), step="1") }}
+              </div>
+            </div>
+
+            {% if form.datetime_error %}
+              <div class="error">{{ form.datetime_error }}</div>
+            {% endif %}
+
+            {# === Link === #}
+            <div class="form-group">
+              <label for="{{ form.link.id }}" class="form-label">
+                {{ form.link.label.text }}
+              </label>
+              {{ form.link(class="form-control" ~ (' input-error' if form.link.errors else '')) }}
+              <small class="form-hint">Should start with http:// or https://</small>
+              {% for error in form.link.errors %}
+                <div class="error">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            {# === Message Text === #}
+            <div class="form-group">
+              <label for="{{ form.text.id }}" class="form-label">
+                {{ form.text.label.text }}<span class="form-required-mark">*</span>
+              </label>
+              {{ form.text(class="form-control" ~ (' input-error' if form.text.errors else ''), rows=3) }}
+              {% for error in form.text.errors %}
+                <div class="error">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            {# === Media === #}
+            <div class="form-group">
+              <label for="{{ form.media.id }}" class="form-label">
+                {{ form.media.label.text }}
+              </label>
+              {{ form.media(class="form-control" ~ (' input-error' if form.media.errors else '')) }}
+              <small class="form-hint">Optional. Path or URL.</small>
+              {% for error in form.media.errors %}
+                <div class="error">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            {# === Screenshot === #}
+            <div class="form-group">
+              <label for="{{ form.screenshot.id }}" class="form-label">
+                {{ form.screenshot.label.text }}
+              </label>
+              {{ form.screenshot(class="form-control" ~ (' input-error' if form.screenshot.errors else '')) }}
+              <small class="form-hint">Optional. Path or URL.</small>
+              {% for error in form.screenshot.errors %}
+                <div class="error">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            {# === Tags === #}
+            <div class="form-group">
+              <label for="{{ form.tags.id }}" class="form-label">
+                {{ form.tags.label.text }}
+              </label>
+              {{ form.tags(class="form-control" ~ (' input-error' if form.tags.errors else '')) }}
+              <small class="form-hint">Comma-separated (tag1, tag2, ...)</small>
+              {% for error in form.tags.errors %}
+                <div class="error">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            {# === Notes === #}
+            <div class="form-group">
+              <label for="{{ form.notes.id }}" class="form-label">
+                {{ form.notes.label.text }}
+              </label>
+              {{ form.notes(class="form-control", rows=3) }}
+            </div>
+
+            {# === Action Buttons === #}
+            <div class="form-actions-centered">
+              <button type="submit" class="btn btn-primary btn-icon">
+                <img src="{{ url_for('static', filename='img/save_icon.png') }}" alt="Save" class="icon-btn">
+                {{ "Update" if is_edit else "Save" }}
+              </button>
+              <a href="{% if is_edit %}{{ url_for('messages.view_message', chat_slug=chat.slug, pk=message.id) }}{% else %}{{ url_for('chats.view_chat', slug=chat_slug) }}{% endif %}"
+                class="btn btn-secondary">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <p class="form-required-note">
+        <span class="form-required-mark">*</span> Required field
+      </p>
+    </section>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  <script type="module" src="{{ url_for('static', filename='js/forms/formAutofocus.js') }}"></script>
+{% endblock %}
+

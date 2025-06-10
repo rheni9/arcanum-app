@@ -1,0 +1,73 @@
+{# ============================================================================
+  Message View Template for the Arcanum Application
+
+  Displays a single message with metadata, controls (edit/delete), and full text.
+============================================================================ #}
+
+{% extends "base.html" %}
+
+{% block title %}
+  Message #{{ message.id }} | Arcanum
+{% endblock %}
+
+{% block content %}
+
+  <div class="page-container">
+
+    <div class="meta-block">
+
+      {# === Message Metadata Section === #}
+      <section class="section">
+        <h1 class="section-title">Message #{{ message.id }}</h1>
+        {% include "messages/_message_summary_table.html" %}
+      </section>
+
+      {# === Navigation and Action Buttons === #}
+      <section class="section">
+        <div class="btn-bar">
+          <div class="btn-left">
+            <a href="{{ back_url }}" class="btn btn-primary btn-icon">
+              <img src="{{ url_for('static', filename='img/back_icon.png') }}" alt="Back">
+              <span>
+                Back{% if from_search %} to Search
+                    {% elif from_chats %} to Chats
+                    {% else %} to Chat{% endif %}
+              </span>
+            </a>
+          </div>
+
+          <div class="btn-right">
+            <a href="{{ url_for('messages.edit_message', chat_slug=chat.slug, pk=message.id) }}"
+              class="btn btn-secondary btn-icon">
+              <img src="{{ url_for('static', filename='img/edit_icon.png') }}" alt="Edit">
+              <span>Edit</span>
+            </a>
+            <form action="{{ url_for('messages.delete_message_route', chat_slug=chat.slug, pk=message.id) }}"
+                  method="post" class="inline-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-danger btn-icon"
+                      data-confirm data-type="message"
+                      data-label="{{ (message.text or '') | truncate(50, True) }}">
+                <img src="{{ url_for('static', filename='img/delete_icon.png') }}" alt="Delete">
+                <span>Delete</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      {# === Message Content Section === #}    
+      <section class="section">
+        <div class="message-box">
+          <div class="message-fulltext">
+            {% if message.text %}
+              {{ message.text | replace('\n', '<br>') | safe }}
+            {% else %}
+              <span class="muted">&mdash; No message content &mdash;</span>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+{% endblock %}

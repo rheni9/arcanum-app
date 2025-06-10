@@ -1,0 +1,95 @@
+{# ============================================================================
+  Message Metadata Table for Arcanum
+
+  Displays structured metadata for a single message, including chat name,
+  status, Telegram message ID with external link, timestamp, tags, and notes.
+============================================================================ #}
+
+<div class="table-wrapper meta-table">
+
+  {# === Chat Link with Status and Member Icon === #}
+  <div class="meta-table-row">
+    <div class="meta-label">Chat:</div>
+    <div class="meta-value">
+      <span class="meta-composite">
+        {% if chat.is_active %}
+          <a href="{{ url_for('chats.view_chat', slug=chat.slug) }}" class="meta-link meta-link-active">
+            {{ chat.name }}
+          </a>
+        {% else %}
+          <a href="{{ url_for('chats.view_chat', slug=chat.slug) }}" class="meta-link meta-link-inactive">
+            {{ chat.name }}
+          </a>
+        {% endif %}
+        <span class="meta-status-group">
+          <span class="meta-dot {{ 'online' if chat.is_active else 'offline' }}"
+                title="{{ 'Active' if chat.is_active else 'Inactive' }}"></span>
+          {% if chat.is_member %}
+            <img src="{{ url_for('static', filename='img/member_icon.png') }}"
+                 alt="Member" title="Member" class="meta-status-icon">
+          {% endif %}
+        </span>
+      </span>
+    </div>
+  </div>
+
+  {# === Telegram Message ID with Link === #}
+  <div class="meta-table-row">
+    <div class="meta-label">Message ID (chat):</div>
+    <div class="meta-value">
+      {% if message.msg_id and message.link %}
+        <a href="{{ message.link }}" target="_blank" rel="noopener noreferrer" class="meta-ext-link">
+          {{ message.msg_id }}
+          <img src="{{ url_for('static', filename='img/external_link.png') }}" alt="External link" class="meta-icon-ext">
+        </a>
+      {% elif message.msg_id %}
+        <span class="meta-id-inline">{{ message.msg_id }}</span>
+      {% else %}
+        <span class="muted">—</span>
+      {% endif %}
+    </div>
+  </div>
+
+  {# === Timestamp with Calendar and Clock Icons === #}
+  <div class="meta-table-row">
+    <div class="meta-label">Date and Time:</div>
+    <div class="meta-value">
+      {% if message.timestamp %}
+        <div class="meta-icon-group">
+          <span class="meta-icon-text">
+            <img src="{{ url_for('static', filename='img/calendar.png') }}" alt="Date">
+            <span class="meta-date">{{ message.timestamp | datetimeformat("long_date") }}</span>
+          </span>
+          <span class="meta-icon-text">
+            <img src="{{ url_for('static', filename='img/clock.png') }}" alt="Time">
+            <span class="meta-time">{{ message.timestamp | datetimeformat("time") }}</span>
+          </span>
+        </div>
+      {% else %}
+        <span class="muted">—</span>
+      {% endif %}
+    </div>
+  </div>
+
+  {# === Comma-separated Tags === #}
+  <div class="meta-table-row">
+    <div class="meta-label">Tags:</div>
+    <div class="meta-value">
+      {% if message.tags %}
+        {% for tag in message.tags %}
+          <a href="{{ url_for('search.global_search', tag=tag, action='tag') }}"
+            class="tag-link">#{{ tag }}</a>{% if not loop.last %}, {% endif %}
+        {% endfor %}
+      {% else %}
+        —
+      {% endif %}
+    </div>
+  </div>
+
+  {# === Notes === #}
+  <div class="meta-table-row">
+    <div class="meta-label">Notes:</div>
+    <div class="meta-value">{{ message.notes or '—' }}</div>
+  </div>
+
+</div>
