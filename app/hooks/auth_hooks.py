@@ -1,46 +1,35 @@
 """
-Request access control middleware for the Arcanum application.
+Access control hooks for the Arcanum Flask application.
 
-Defines a reusable `restrict_access()` function that protects authenticated
-routes using session-based authorization. Public and static routes are
-explicitly excluded from enforcement.
-
-Features:
-- Permits access to public routes and static assets.
-- Enforces session-based login via `session["logged_in"]`.
-- Designed for global use via Flask's `before_request` hook.
+Handles authentication and authorization checks for protected routes.
 """
 
 import logging
-from flask import request, redirect, session, url_for
+from flask import request, redirect, session, url_for, Response
 
 logger = logging.getLogger(__name__)
 
 
-def restrict_access():
+def restrict_access() -> Response | None:
     """
-    Restrict access to authenticated views based on session state.
+    Restrict access to authenticated views.
 
-    Redirects unauthenticated users to the login page, unless the
-    current route is explicitly allowed.
-
-    Allowed endpoints:
-    - 'home'
-    - 'auth.login'
-    - 'auth.logout'
-    - 'static'
+    Redirects the user to the login page if the session is unauthenticated
+    and the route is not in the allowed list.
 
     :return: Redirect response to login page if unauthorized, otherwise None.
-    :rtype: Optional[Response]
     """
     allowed_routes = {"home.home", "auth.login", "auth.logout", "static"}
 
+    # Do nothing if endpoint is missing (static file, etc)
     if request.endpoint is None:
         return None
 
+    # Verify if user is authenticated
     if not session.get("logged_in") and request.endpoint not in allowed_routes:
-        logger.warning(
-            "[AUTH] Unauthorized access attempt to '%s'", request.endpoint
+        logger.info(
+            "[AUTH|ACCESS] Unauthorized access attempted to '%s'",
+            request.endpoint
         )
         return redirect(url_for("auth.login"))
 
