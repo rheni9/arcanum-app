@@ -1,0 +1,96 @@
+/* ============================================================================
+   Arcanum – Button Styles
+   Defines base, primary, and icon button styles with consistent spacing,
+   alignment, accessibility, and hover feedback.
+============================================================================ */
+
+/* ======= Base Button ======= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.5rem;
+  padding: 0 1.25rem;
+  font-size: var(--font-base);
+  font-weight: var(--weight-medium);
+  border-radius: var(--radius-default);
+  border: none;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  line-height: 1.2;
+  box-sizing: border-box;
+  transition: background-color 0.3s ease, opacity 0.3s ease;
+}
+
+/* ======= Variants ======= */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--base-white);
+}
+
+.btn-secondary {
+  background-color: var(--color-secondary);
+  color: var(--base-white);
+}
+
+.btn-danger {
+  background-color: var(--color-danger);
+  color: var(--base-white);
+}
+
+/* ======= Icon Button Support ======= */
+.btn-icon img,
+.btn-icon svg {
+  display: inline-block;
+  height: 1em;
+  width: auto;
+  filter: brightness(0) invert(1);
+}
+
+/* ======= Centering Utility ======= */
+.btn.centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: fit-content;
+  margin-inline: auto;
+}
+
+/* ======= Inside Elements Non-Interactive ======= */
+.btn * {
+  pointer-events: none;
+}
+
+a.btn:hover,
+a.btn:focus {
+  color: var(--base-white);
+  text-decoration: none;
+}
+
+/* ======= Hover and Focus States ======= */
+.btn:hover,
+.btn:focus {
+  opacity: 0.85;
+}
+
+.btn:visited {
+  color: inherit;
+}
+
+@media (max-width: 768px) {
+  .btn {
+    height: 2.25rem;
+    font-size: var(--font-detail);
+    padding: 0.5rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn {
+    height: 2.15rem;
+    font-size: var(--font-sm);
+    padding: 0.5rem 0.75rem;
+  }
+}

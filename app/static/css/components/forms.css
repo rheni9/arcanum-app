@@ -1,0 +1,220 @@
+/* ============================================================================
+   Arcanum – Form Styles
+   Provides base styling for form layout, labels, inputs, validation feedback,
+   and consistent spacing and appearance across forms.
+============================================================================ */
+
+/* ======= Form Container ======= */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* ======= Labels and Hints ======= */
+.form-label {
+  font-weight: var(--weight-medium);
+  font-size: var(--font-base);
+}
+
+.inline-label {
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+.form-hint {
+  font-size: var(--font-detail);
+  color: var(--text-muted);
+  margin-top: -0.25rem;
+}
+
+/* ======= Required Marks ======= */
+.form-required-mark {
+  color: var(--color-error);
+  font-weight: var(--weight-medium);
+  margin-left: 0.15rem;
+}
+
+.form-required-note {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+/* ======= Input Fields ======= */
+.form-control {
+  font-size: var(--font-detail);
+  padding: 0 0.75rem;
+  width: auto;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-default);
+  background-color: var(--base-white);
+  color: var(--text-color);
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+input.form-control {
+  height: 2.5rem;
+  box-sizing: border-box;
+}
+
+input[type="date"].form-control {
+  height: 2.5rem;
+  line-height: 1.25;
+}
+
+input[type="text"].form-control,
+input[type="url"].form-control,
+input[type="number"].form-control {
+  height: 2.5rem;
+}
+
+.form-control:focus {
+  outline: none;
+  border: 1px solid var(--color-primary);
+  background-color: var(--base-white);
+}
+
+/* ======= Textarea Styling ======= */
+textarea.form-control {
+  min-height: 6rem;
+  padding: 0.5rem 0.75rem;
+  resize: vertical;
+  line-height: 1.5;
+  transition: min-height 0.2s ease;
+}
+
+.hidden {
+  display: none;
+}
+
+/* ======= Error styling ======= */
+.form-control.input-error {
+  border-color: var(--color-error);
+  background-color: var(--bg-error-light);
+}
+
+.form-container.wide-form {
+  max-width: 560px;
+}
+
+.form-date-input,
+.form-time-input {
+  max-width: 200px;
+  width: 100%;
+}
+
+.form-datetime-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.inline-value {
+  font-size: var(--font-base);
+  color: var(--text-color);
+  word-break: break-word;
+}
+
+/* ======= Validation Feedback ======= */
+.error {
+  color: var(--color-error);
+  font-size: var(--font-detail);
+}
+
+/* ======= Responsive Adjustments ======= */
+@media (max-width: 768px) {
+  .form {
+    gap: 0.75rem;
+  }
+
+  .form-label {
+    font-size: var(--font-detail);
+  }
+
+  .form-control {
+    font-size: var(--font-detail);
+    width: auto;
+  }
+
+  input.form-control,
+  .search-group input.form-control {
+    height: 2.25rem;
+  }
+
+  input[type="text"].form-control,
+  input[type="url"].form-control,
+  input[type="number"].form-control,
+  input[type="date"].form-control {
+    height: 2.25rem;
+  }
+
+  textarea.form-control {
+    min-height: 5rem;
+  }
+
+  .form-hint,
+  .error,
+  .form-required-note {
+    font-size: var(--font-sm);
+  }
+
+  .inline-value {
+    font-size: var(--font-detail);
+  }
+}
+
+@media (max-width: 480px) {
+  .form {
+    gap: 0.5rem;
+  }
+
+  .form-label {
+    font-size: var(--font-sm);
+  }
+
+  .form-control {
+    font-size: var(--font-sm);
+    padding: 0 0.6rem;
+    width: 100%;
+  }
+
+  input.form-control,
+  .search-group input.form-control {
+    height: 2.15rem;
+  }
+
+  input[type="text"].form-control,
+  input[type="url"].form-control,
+  input[type="number"].form-control,
+  input[type="date"].form-control {
+    height: 2.15rem;
+  }
+
+  .form-date-input,
+  .form-time-input {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  textarea.form-control {
+    min-height: 4.5rem;
+  }
+
+  .inline-value {
+    font-size: var(--font-sm);
+  }
+
+  .form-hint,
+  .error {
+    font-size: var(--font-xs);
+  }
+}

@@ -1,0 +1,56 @@
+/* ==========================================================
+   Arcanum – Flash Messages
+   Styled alerts for success, error, and notification states
+   ========================================================== */
+
+.flash-messages {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto 1rem;
+  padding: 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.alert {
+  border-radius: var(--radius-default);
+  padding: 0.75rem 1.25rem;
+  font-size: var(--font-detail);
+  font-weight: var(--weight-regular);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid transparent;
+}
+
+/* Success message */
+.alert-success {
+  background-color: var(--bg-success-light);
+  color: var(--color-success);
+  border: 1px solid var(--color-success);
+}
+
+/* Error message */
+.alert-error {
+  background-color: var(--bg-error-light);
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+}
+
+@media (max-width: 768px) {
+  .flash-messages {
+    gap: 0.5rem;
+  }
+
+  .alert {
+    font-size: var(--font-sm);
+    padding: 0.75rem 1rem;    
+  }
+}
+
+@media (max-width: 480px) {
+  .alert {
+    font-size: var(--font-xs);
+    padding: 0.6rem 0.9rem;
+  }
+}
