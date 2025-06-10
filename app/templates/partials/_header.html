@@ -1,0 +1,21 @@
+{# ============================================================================
+  Arcanum – Header Partial
+  Defines the global site header with logo, title, and auth navigation
+============================================================================ #}
+
+<header class="site-header">
+  <div class="header-content">
+    <a href="{{ url_for('home.home') }}" class="logo-link" aria-label="Arcanum Home">
+      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="site-logo" />
+      <span class="site-title">Arcanum</span>
+    </a>
+    <nav class="auth-nav">
+      {% if session.get('logged_in') %}
+        <a href="{{ url_for('dashboard.dashboard') }}" class="nav-link">Dashboard</a>
+        <a href="{{ url_for('auth.logout') }}" class="nav-link logout-link">Sign out</a>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}" class="nav-link">Sign in</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>

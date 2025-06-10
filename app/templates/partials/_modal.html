@@ -1,0 +1,16 @@
+{# ==========================================================
+  Arcanum – Modal Partial
+  Global confirmation modal. Hidden by default. Controlled via JS.
+   ========================================================== #}
+
+<div id="confirm-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-overlay"></div>
+  <div class="modal-content" role="document">
+    <h2 class="modal-title" id="modal-title">Confirm</h2>
+    <div class="modal-body" id="modal-body">Are you sure you want to proceed?</div>
+    <div class="modal-actions">
+      <button id="modal-confirm" class="btn btn-danger">Confirm</button>
+      <button id="modal-cancel" class="btn btn-secondary">Cancel</button>
+    </div>
+  </div>
+</div>

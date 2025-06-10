@@ -1,0 +1,12 @@
+{# ============================================================================
+  Arcanum – Footer Partial
+  Renders site copyright text
+============================================================================ #}
+
+{% if request.endpoint == 'home.home' or request.endpoint == 'auth.login' %}
+  <div class="footer-content">
+    <p class="footer-text">
+      © {{ current_year }} Arcanum. All rights reserved.
+    </p>
+  </div>
+{% endif %}
