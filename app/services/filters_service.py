@@ -1,222 +1,195 @@
 """
-Filters service module for the Arcanum application.
+Message filter/search service for the Arcanum application.
 
-Provides high-level search and filtering logic for messages.
-Handles validation, normalization, and query dispatching.
+Provides search and filter logic for messages both globally and within a chat.
+Handles input validation, logging, grouping for UI, and safe database access.
 """
 
 import logging
-from typing import Optional, List, Tuple
 from sqlite3 import DatabaseError
 
 from app.models.filters import MessageFilters
-from app.utils.db_utils import get_connection_lazy
-from app.utils.sql_utils import build_order_clause, OrderConfig
-from app.utils.filters_utils import validate_search_filters
-from app.services.chats_service import get_chat_id_by_slug
+from app.services.dao.filters_dao import fetch_filtered_messages
+from app.utils.filters_utils import (
+    normalize_filter_action,
+    validate_search_filters,
+    group_messages_by_chat
+)
 
 logger = logging.getLogger(__name__)
 
 
-def search_messages_by_text(
-    filters: MessageFilters,
-    sort_by: str = "timestamp",
-    order: str = "desc",
-    chat_slug: Optional[str] = None
-) -> List[dict]:
+def preprocess_filters(filters: MessageFilters) -> tuple[str, str | None]:
     """
-    Search messages by query string.
+    Normalize and validate the given filters.
 
-    :param filters: MessageFilters instance with query.
-    :type filters: MessageFilters
-    :param sort_by: Sort field ('timestamp', 'msg_id').
-    :type sort_by: str
-    :param order: Sort direction ('asc' or 'desc').
-    :type order: str
-    :param chat_slug: Optional chat slug.
-    :type chat_slug: Optional[str]
-    :returns: List of matching message dicts.
-    :rtype: List[dict]
-    :raises DatabaseError: On search failure.
+    :param filters: Filter instance to preprocess.
+    :return: Tuple (status, message).
     """
-    filters.normalize()
-    if not filters.query:
-        return []
+    normalize_filter_action(filters)
 
-    sql = """
-        SELECT m.*, c.name AS chat_name
-        FROM messages m
-        JOIN chats c ON m.chat_ref_id = c.id
-        WHERE m.text LIKE ?
-    """
-    params = [f"%{filters.query}%"]
+    if filters.action == "search":
+        if filters.query and filters.query.strip().startswith("#"):
+            filters.tag = filters.query.strip().lstrip("#")
+            filters.query = None
+            filters.action = "tag"
+        else:
+            filters.tag = None
+            filters.date_mode = None
+            filters.start_date = None
+            filters.end_date = None
+    elif filters.action == "tag":
+        if not filters.tag:
+            return "invalid", "Please specify a tag."
+        filters.query = None
+        filters.date_mode = None
+        filters.start_date = None
+        filters.end_date = None
+    elif filters.action == "filter":
+        filters.query = None
+        filters.tag = None
 
-    if chat_slug:
-        chat_ref_id = get_chat_id_by_slug(chat_slug)
-        sql += " AND m.chat_ref_id = ?"
-        params.append(chat_ref_id)
+    if filters.action == "filter" and not filters.date_mode:
+        return "invalid", "Please select a date filter mode."
 
-    config = OrderConfig(
-        allowed_fields={"timestamp", "msg_id"},
-        default_field="timestamp",
-        default_order="desc",
-        prefix="m."
-    )
-    sql += build_order_clause(sort_by, order, config)
+    if filters.action == "search" and not filters.query:
+        return "invalid", "Please enter a search query."
 
-    try:
-        conn = get_connection_lazy()
-        results = conn.execute(sql, params).fetchall()
-    except DatabaseError as e:
-        logger.error("[DB|MESSAGES] Search query failed: %s", e)
-        raise
+    if not filters.has_active() and not filters.action:
+        return "cleared", None
+
+    if filters.action is None:
+        return "invalid", "Please enter a search query or select date filters."
+
+    valid, error_msg = validate_search_filters(filters)
+    if not valid:
+        return "invalid", error_msg
 
     logger.debug(
-        "[FILTERS|SERVICE] Found %d message(s) matching query '%s'%s.",
-        len(results), filters.query,
-        f" in chat '{chat_slug}'" if chat_slug else ""
+        "[FILTERS|PRE] action=%s | query=%s | tag=%s "
+        "| date_mode=%r | has_active=%s",
+        filters.action, filters.query, filters.tag,
+        filters.date_mode, filters.has_active()
     )
 
-    return [dict(row) for row in results]
+    return "valid", None
+
+# def preprocess_filters(filters: MessageFilters) -> tuple[str, str | None]:
+#     """
+#     Normalize and validate the given filters.
+
+#     :param filters: Filter instance to preprocess.
+#     :return: Tuple (status, message).
+#     """
+#     normalize_filter_action(filters)
+
+#     if not filters.has_active():
+#         return "cleared", None
+
+#     valid, error_msg = validate_search_filters(filters)
+#     if not valid:
+#         return "invalid", error_msg
+
+#     return "valid", None
 
 
-def filter_messages(
-    filters: MessageFilters,
-    sort_by: str = "timestamp",
-    order: str = "desc",
-    chat_slug: Optional[str] = None
-) -> List[dict]:
-    """
-    Filter messages by date mode.
-
-    :param filters: MessageFilters instance.
-    :type filters: MessageFilters
-    :param sort_by: Sort field ('timestamp', 'msg_id').
-    :type sort_by: str
-    :param order: Sort direction ('asc' or 'desc').
-    :type order: str
-    :param chat_slug: Optional chat slug.
-    :type chat_slug: Optional[str]
-    :returns: List of filtered message dicts.
-    :rtype: List[dict]
-    :raises DatabaseError: On query failure.
-    """
-    filters.normalize()
-
-    sql = """
-        SELECT m.*, c.name AS chat_name
-        FROM messages m
-        JOIN chats c ON m.chat_ref_id = c.id
-        WHERE 1 = 1
-    """
-    params = []
-
-    if chat_slug:
-        chat_ref_id = get_chat_id_by_slug(chat_slug)
-        sql += " AND m.chat_ref_id = ?"
-        params.append(chat_ref_id)
-
-    valid_filter = False
-
-    if filters.date_mode == "on" and filters.start_date:
-        sql += " AND DATE(m.timestamp) = DATE(?)"
-        params.append(filters.start_date)
-        valid_filter = True
-    elif filters.date_mode == "before" and filters.start_date:
-        sql += " AND DATE(m.timestamp) < DATE(?)"
-        params.append(filters.start_date)
-        valid_filter = True
-    elif filters.date_mode == "after" and filters.start_date:
-        sql += " AND DATE(m.timestamp) > DATE(?)"
-        params.append(filters.start_date)
-        valid_filter = True
-    elif filters.date_mode == "between" and filters.end_date:
-        sql += " AND DATE(m.timestamp) BETWEEN DATE(?) AND DATE(?)"
-        params.extend([filters.start_date, filters.end_date])
-        valid_filter = True
-
-    if not valid_filter:
-        logger.warning(
-            "[FILTERS|SERVICE] Invalid or incomplete filter: %s", filters
-        )
-
-    config = OrderConfig(
-        allowed_fields={"timestamp", "msg_id"},
-        default_field="timestamp",
-        default_order="desc",
-        prefix="m."
-    )
-    sql += build_order_clause(sort_by, order, config)
-
-    try:
-        conn = get_connection_lazy()
-        results = conn.execute(sql, params).fetchall()
-    except DatabaseError as e:
-        logger.error("[DB|MESSAGES] Filter query failed: %s", e)
-        raise
-
-    logger.debug(
-        "[FILTERS|SERVICE] Found %d message(s) for chat '%s' "
-        "| mode=%s | start=%s%s.",
-        len(results), chat_slug or "<all>",
-        filters.date_mode, filters.start_date,
-        f", end={filters.end_date}" if filters.date_mode == "between" else ""
-    )
-
-    return [dict(row) for row in results]
-
-
-def resolve_search_action(
+def resolve_message_query(
     filters: MessageFilters,
     sort_by: str,
-    order: str,
-    chat_slug: Optional[str] = None
-) -> Tuple[List[dict], Optional[str], MessageFilters]:
+    order: str
+) -> dict:
     """
-    Resolve search or filter action based on filters.
+    Search or filter messages using the specified filters.
 
-    :param filters: MessageFilters instance.
-    :type filters: MessageFilters
-    :param sort_by: Sort field ('timestamp', 'msg_id').
-    :type sort_by: str
+    Supports both global and chat-local modes. Returns grouped messages
+    for UI, total count, applied filters, and info message for the user.
+
+    :param filters: MessageFilters instance (normalized).
+    :param sort_by: Sort field ('timestamp' or 'msg_id').
     :param order: Sort direction ('asc' or 'desc').
-    :type order: str
-    :param chat_slug: Optional chat slug.
-    :type chat_slug: Optional[str]
-    :returns: Tuple of (messages, optional info message, normalized filters).
-    :rtype: Tuple[List[dict], Optional[str], MessageFilters]
+    :return: Result dict with keys: messages, count, grouped,
+                                    info_message, filters, cleared.
+    :raises DatabaseError: If the query fails.
     """
-    filters.normalize()
+    status, message = preprocess_filters(filters)
 
-    is_valid, info_message = validate_search_filters(filters)
-
-    if not is_valid:
-        if filters.is_empty():
-            logger.info("[FILTERS|SERVICE] No filters or query provided.")
-            info_message = "No filters or search query applied."
-        else:
-            logger.warning(
-                "[FILTERS|SERVICE] Invalid parameters: %s", filters
-            )
-        return [], info_message, filters
-
-    if filters.action == "search" and filters.query:
-        logger.debug(
-            "[FILTERS|SERVICE] Search action | query='%s' | chat='%s'",
-            filters.query, chat_slug or "<all>"
+    if status == "cleared":
+        logger.info(
+            "[FILTERS|SERVICE] No filters to apply — skipping execution."
         )
-        results = search_messages_by_text(filters, sort_by, order, chat_slug)
-        return results, None, filters
+        return _result_cleared(filters)
 
-    if filters.action == "filter" and filters.start_date:
-        logger.debug(
-            "[FILTERS|SERVICE] Filter action | mode=%s | start=%s | end=%s "
-            "| chat='%s'",
-            filters.date_mode, filters.start_date, filters.end_date,
-            chat_slug or "<all>"
+    if status == "invalid":
+        logger.warning("[FILTERS|SERVICE] Invalid filters: %s", message)
+        return _result_invalid(filters, message)
+
+    try:
+        messages = fetch_filtered_messages(filters, sort_by, order)
+        count = len(messages)
+        grouped = group_messages_by_chat(messages)
+
+        logger.info(
+            "[FILTERS|SERVICE] Retrieved %d message(s) | scope=%s",
+            count, "global" if filters.is_global() else filters.chat_slug
         )
-        results = filter_messages(filters, sort_by, order, chat_slug)
-        return results, None, filters
+        return _result_valid(filters, messages, grouped, count)
 
-    logger.info("[FILTERS|SERVICE] No valid action resolved.")
-    return [], info_message, filters
+    except DatabaseError as e:
+        logger.error("[FILTERS|SERVICE] Query failed: %s", e)
+        return _result_error(filters, e)
+
+
+def _result_cleared(filters: MessageFilters) -> tuple[str, dict]:
+    """Return a result dict for cleared filters (no input provided)."""
+    info_message = "Use the search bar or date filters above to find messages."
+    return "cleared", {
+        "messages": [],
+        "count": 0,
+        "grouped": {},
+        "info_message": info_message,
+        "filters": filters,
+        "cleared": True,
+    }
+
+
+def _result_invalid(filters: MessageFilters, message: str) -> tuple[str, dict]:
+    """Return a result dict for structurally invalid filters."""
+    return "invalid", {
+        "messages": [],
+        "count": 0,
+        "grouped": {},
+        "info_message": message,
+        "filters": filters,
+        "cleared": False,
+    }
+
+
+def _result_valid(
+    filters: MessageFilters,
+    messages: list[dict],
+    grouped: dict,
+    count: int
+) -> tuple[str, dict]:
+    return "valid", {
+        "messages": messages,
+        "count": count,
+        "grouped": grouped,
+        "info_message": None,
+        "filters": filters,
+        "cleared": False,
+    }
+
+
+def _result_error(
+    filters: MessageFilters,
+    error: Exception
+) -> tuple[str, dict]:
+    """Return a result dict for database failure with error message."""
+    return "error", {
+        "messages": [],
+        "count": 0,
+        "grouped": {},
+        "info_message": f"Database error: {error}",
+        "filters": filters,
+        "cleared": False,
+    }

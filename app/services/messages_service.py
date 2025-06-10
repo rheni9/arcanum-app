@@ -1,240 +1,167 @@
 """
-Messages service module for the Arcanum application.
+Message service operations for the Arcanum application.
 
-Provides database-level operations for messages:
-retrieval, search, filtering, creation, updating, deletion.
+Provides logic for message retrieval, creation, updating,
+and deletion. Handles validation, logs context, and delegates
+low-level operations to DAO.
 """
 
 import logging
-import json
-from typing import List, Tuple
-from sqlite3 import DatabaseError, IntegrityError
+from sqlite3 import IntegrityError
 
-from app.models.models import Message
-from app.utils.db_utils import get_connection_lazy
-from app.utils.sql_utils import build_order_clause, OrderConfig
-from app.services.chats_service import get_chat_id_by_slug
+from app.models.message import Message
+from app.services.dao.messages_dao import (
+    fetch_message_by_id, fetch_messages_by_chat,
+    insert_message_record, update_message_record,
+    delete_message_record, check_message_exists,
+    count_messages_for_chat
+)
 
 logger = logging.getLogger(__name__)
 
 
-def get_chat_data(
-    slug: str, sort_by: str, order: str
-) -> Tuple[int, List[Message]]:
+def get_message_by_id(pk: int) -> Message | None:
     """
-    Retrieve messages for a chat with total count.
+    Retrieve a message by its primary key ID.
 
-    :param slug: Chat slug identifier.
-    :type slug: str
-    :param sort_by: Sort field ('timestamp', 'msg_id').
-    :type sort_by: str
+    :param pk: Message ID.
+    :return: Message instance if found, else None.
+    :raises sqlite3.DatabaseError: If DAO fails.
+    """
+    logger.debug("[MESSAGES|SERVICE] Retrieving message ID=%d.", pk)
+    message = fetch_message_by_id(pk)
+    if not message:
+        logger.warning("[MESSAGES|SERVICE] No message found with ID=%d.", pk)
+        return None
+    return message
+
+
+def get_messages_by_chat_slug(
+    chat_slug: str,
+    sort_by: str,
+    order: str
+) -> list[dict]:
+    """
+    Retrieve all messages for a chat with sorting.
+
+    :param chat_slug: Chat slug.
+    :param sort_by: Field to sort by.
     :param order: Sort direction ('asc' or 'desc').
-    :type order: str
-    :returns: Tuple of (message count, list of Message instances).
-    :rtype: Tuple[int, List[Message]]
-    :raises DatabaseError: On query failure.
+    :return: List of message row dicts.
+    :raises sqlite3.DatabaseError: If DAO fails.
     """
-    config = OrderConfig(
-        allowed_fields={"timestamp", "msg_id"},
-        default_field="timestamp",
-        default_order="desc"
-    )
-
-    chat_ref_id = get_chat_id_by_slug(slug)
-
-    sql = f'''
-        SELECT m.*, COUNT(*) OVER() as total_count
-        FROM messages m
-        WHERE m.chat_ref_id = ?
-        {build_order_clause(sort_by, order, config)}
-    '''
-
-    try:
-        conn = get_connection_lazy()
-        rows = conn.execute(sql, (chat_ref_id,)).fetchall()
-    except DatabaseError as e:
-        logger.error("[DB|MESSAGES] Failed to retrieve chat '%s': %s",
-                     slug, e)
-        raise
-
-    messages = [
-        Message(
-            id=row["id"],
-            chat_ref_id=row["chat_ref_id"],
-            msg_id=row["msg_id"],
-            timestamp=row["timestamp"],
-            link=row["link"],
-            text=row["text"],
-            media=row["media"],
-            screenshot=row["screenshot"],
-            tags=json.loads(row["tags"]) if row["tags"] else [],
-            notes=row["notes"]
-        )
-        for row in rows
-    ]
-
-    count = rows[0]["total_count"] if rows else 0
-
     logger.debug(
-        "[MESSAGES|SERVICE] Retrieved %d message(s) for chat '%s'.",
-        count, slug
+        "[MESSAGES|SERVICE] Retrieving messages for chat '%s' "
+        "sorted by '%s' (%s).", chat_slug, sort_by, order
     )
-    return count, messages
+    return fetch_messages_by_chat(chat_slug, sort_by, order)
 
 
-def get_message_by_id(db_id: int) -> Message:
+def insert_message(message: Message) -> int:
     """
-    Retrieve a single message by its ID.
+    Insert a new message.
 
-    :param db_id: Message primary key.
-    :type db_id: int
-    :returns: Message instance.
-    :rtype: Message
-    :raises ValueError: If message not found.
-    :raises DatabaseError: On retrieval failure.
+    :param message: Message instance.
+    :return: New message ID.
+    :raises sqlite3.IntegrityError: If msg_id is not unique per chat.
+    :raises sqlite3.DatabaseError: If DAO fails.
     """
-    sql = "SELECT * FROM messages WHERE id = ?"
+    if message.msg_id is not None:
+        if check_message_exists(message.chat_ref_id, message.msg_id):
+            logger.warning(
+                "[MESSAGES|SERVICE] msg_id=%s already exists "
+                "in chat_ref_id=%d.",
+                str(message.msg_id), message.chat_ref_id
+            )
+            raise IntegrityError("Duplicate msg_id in this chat.")
 
-    try:
-        conn = get_connection_lazy()
-        row = conn.execute(sql, (db_id,)).fetchone()
-    except DatabaseError as e:
-        logger.error(
-            "[DB|MESSAGES] Failed to retrieve message with id=%d: %s",
-            db_id, e
-        )
-        raise
-
-    if not row:
-        logger.warning(
-            "[MESSAGES|SERVICE] No message found with id=%d.", db_id
-        )
-        raise ValueError(f"Message with id {db_id} not found.")
-
-    logger.debug("[MESSAGES|SERVICE] Retrieved message id=%d.", db_id)
-
-    return Message(
-        id=row["id"],
-        chat_ref_id=row["chat_ref_id"],
-        msg_id=row["msg_id"],
-        timestamp=row["timestamp"],
-        link=row["link"],
-        text=row["text"],
-        media=row["media"],
-        screenshot=row["screenshot"],
-        tags=json.loads(row["tags"]) if row["tags"] else [],
-        notes=row["notes"]
-    )
-
-
-def insert_message(chat_slug: str, data: dict) -> None:
-    """
-    Insert a new message linked to a chat.
-
-    :param chat_slug: Chat slug for lookup.
-    :type chat_slug: str
-    :param data: Message fields.
-    :type data: dict
-    :raises DatabaseError: On insertion failure.
-    """
-    chat_ref_id = get_chat_id_by_slug(chat_slug)
-
-    sql = '''
-        INSERT INTO messages (
-            msg_id, chat_ref_id, timestamp, link, text,
-            media, screenshot, tags, notes
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    '''
-    values = (
-        data.get("msg_id"),
-        chat_ref_id,
-        data.get("timestamp"),
-        data.get("link"),
-        data.get("text"),
-        data.get("media"),
-        data.get("screenshot"),
-        data.get("tags"),
-        data.get("notes")
-    )
-
-    try:
-        conn = get_connection_lazy()
-        conn.execute(sql, values)
-        conn.commit()
-    except IntegrityError as e:
-        logger.error("[DB|MESSAGES] Integrity constraint failed: %s", e)
-        raise
-    except DatabaseError as e:
-        logger.error("[DB|MESSAGES] Insert failed: %s", e)
-        raise
-
+    pk = insert_message_record(message)
     logger.info(
-        "[MESSAGES|SERVICE] New message inserted into chat '%s'.", chat_slug
+        "[MESSAGES|SERVICE] Message created (ID=%d, chat_ref_id=%d).",
+        pk, message.chat_ref_id
     )
+    return pk
 
 
-def update_message(db_id: int, data: dict) -> None:
+def update_message(message: Message) -> None:
     """
     Update an existing message.
 
-    :param db_id: Message primary key.
-    :type db_id: int
-    :param data: Updated fields.
-    :type data: dict
-    :raises DatabaseError: On update failure.
+    :param message: Message instance with updated data.
+    :raises ValueError: If ID is missing.
+    :raises sqlite3.IntegrityError: If msg_id is not unique per chat.
+    :raises sqlite3.DatabaseError: If DAO fails.
     """
-    sql = '''
-        UPDATE messages
-        SET msg_id = ?, text = ?, timestamp = ?, link = ?,
-            media = ?, screenshot = ?, tags = ?, notes = ?
-        WHERE id = ?
-    '''
-    values = (
-        data.get("msg_id"),
-        data.get("text"),
-        data.get("timestamp"),
-        data.get("link"),
-        data.get("media"),
-        data.get("screenshot"),
-        data.get("tags"),
-        data.get("notes"),
-        db_id
-    )
-
-    try:
-        conn = get_connection_lazy()
-        conn.execute(sql, values)
-        conn.commit()
-    except DatabaseError as e:
-        logger.error(
-            "[DB|MESSAGES] Update failed for message with id=%d: %s", db_id, e
+    if not message.id:
+        logger.error("[MESSAGES|SERVICE] Update failed: no ID.")
+        raise ValueError("Message ID is required for update.")
+    if message.msg_id is not None:
+        existing = fetch_message_by_id(message.id)
+        if not existing:
+            logger.warning(
+                "[MESSAGES|SERVICE] Message with ID=%d not found.", message.id
+            )
+            raise ValueError("Message not found for update.")
+        if (
+            existing.msg_id != message.msg_id and
+            check_message_exists(message.chat_ref_id, message.msg_id)
+        ):
+            logger.warning(
+                "[MESSAGES|SERVICE] msg_id update rejected (%s -> %s): "
+                "duplicate in chat_ref_id=%d.",
+                str(existing.msg_id), str(message.msg_id),
+                message.chat_ref_id
+            )
+            raise IntegrityError(
+                "Message with this msg_id already exists in the chat."
+            )
+    else:
+        logger.debug(
+            "[MESSAGES|SERVICE] msg_id is None — skipping conflict check."
         )
-        raise
+    update_message_record(message)
+    logger.info("[MESSAGES|SERVICE] Message updated (ID=%d).", message.id)
 
-    logger.info("[MESSAGES|SERVICE] Message updated (id=%d).", db_id)
 
-
-def delete_message_record(db_id: int) -> None:
+def delete_message(pk: int) -> None:
     """
-    Delete a message by its ID.
+    Delete a message by its primary key ID.
 
-    :param db_id: Message primary key.
-    :type db_id: int
-    :raises DatabaseError: On deletion failure.
+    :param pk: Message ID.
+    :raises sqlite3.DatabaseError: If DAO fails.
     """
-    sql = "DELETE FROM messages WHERE id = ?"
+    delete_message_record(pk)
+    logger.info("[MESSAGES|SERVICE] Message deleted (ID=%d).", pk)
 
-    try:
-        conn = get_connection_lazy()
-        conn.execute(sql, (db_id,))
-        conn.commit()
-    except DatabaseError as e:
-        logger.error(
-            "[DB|MESSAGES] Deletion failed for message with id=%d: %s",
-            db_id, e
-        )
-        raise
 
-    logger.info(
-        "[MESSAGES|SERVICE] Message removed from database (id=%d).", db_id
+def message_exists(chat_ref_id: int, msg_id: int) -> bool:
+    """
+    Check if a message with the given msg_id exists in the chat.
+
+    :param chat_ref_id: Foreign key ID of the chat.
+    :param msg_id: Telegram message ID.
+    :return: True if exists, else False.
+    :raises sqlite3.DatabaseError: If DAO fails.
+    """
+    result = check_message_exists(chat_ref_id, msg_id)
+    logger.debug(
+        "[MESSAGES|SERVICE] msg_id=%s exists in chat_ref_id=%d: %s",
+        str(msg_id), chat_ref_id, result
     )
+    return result
+
+
+def count_messages_in_chat(chat_ref_id: int) -> int:
+    """
+    Count the number of messages in a chat.
+
+    :param chat_ref_id: Foreign key ID of the chat.
+    :return: Number of messages.
+    :raises sqlite3.DatabaseError: If DAO fails.
+    """
+    count = count_messages_for_chat(chat_ref_id)
+    logger.debug(
+        "[MESSAGES|SERVICE] Counted total %d message(s) in chat_ref_id=%d.",
+        count, chat_ref_id
+    )
+    return count
