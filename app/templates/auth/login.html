@@ -48,3 +48,7 @@
 {% endblock %}
 
 {% block extra_footer %}{% endblock %}
+
+{% block scripts %}
+  <script type="module" src="{{ url_for('static', filename='js/forms/formAutofocus.js') }}"></script>
+{% endblock %}
