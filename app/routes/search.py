@@ -1,192 +1,137 @@
 """
 Search routes for the Arcanum application.
 
-Provides global search and filtering of chat messages.
-Supports queries, date filters, grouped results, sorting,
-and AJAX updates.
+Handles global and per-chat search and filter for messages.
+Supports AJAX updates and grouped results for UI.
 """
 
 import logging
 from sqlite3 import DatabaseError
-from flask import Blueprint, render_template, request
-
+from flask import (
+    Blueprint, render_template, request, redirect, flash, url_for
+)
 from app.models.filters import MessageFilters
-from app.services.filters_service import resolve_search_action
-from app.utils.messages_utils import group_messages_by_chat
-from app.utils.filters_utils import normalize_filters
-from app.utils.sort_utils import get_sort_order
+from app.services.filters_service import resolve_message_query
 
-search_bp = Blueprint("search", __name__)
+search_bp = Blueprint("search", __name__, url_prefix="/search")
 logger = logging.getLogger(__name__)
 
 
-def _log_search_summary(filters: MessageFilters, total: int) -> None:
+@search_bp.route("/", methods=["GET"])
+def global_search() -> str:
     """
-    Log a summary of the search or filter operation.
+    Handle global or per-chat message search/filter request.
 
-    :param filters: Applied search or filter parameters.
-    :type filters: MessageFilters
-    :param total: Total number of retrieved messages.
-    :type total: int
+    Processes filters from query parameters, executes the resolved
+    query, and renders the result (AJAX or full page).
+
+    :return: Rendered HTML response.
     """
-    if filters.action == "search":
-        logger.info(
-            "[SEARCH|QUERY] Retrieved %d result(s) for '%s'.",
-            total, filters.query
+    logger.debug("[FILTERS|DEBUG] Args received: %s", dict(request.args))
+    filters = MessageFilters.from_request(request)
+    sort_by = request.args.get("sort", "timestamp")
+    order = request.args.get("order", "desc")
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+    try:
+        status, context = resolve_message_query(filters, sort_by, order)
+    except DatabaseError as e:
+        logger.error("[SEARCH|DATABASE] Query failed: %s", e)
+        flash("Database error occurred. Please try again.", "error")
+        return render_template("error.html", message=str(e))
+
+    if request.args.get("action") == "search" and filters.action == "tag":
+        new_args = request.args.to_dict(flat=True)
+        new_args.pop("query", None)
+        new_args["action"] = "tag"
+        new_args["tag"] = filters.tag
+        return redirect(url_for("search.global_search", **new_args))
+
+    if "tag" in request.args and not filters.tag:
+        clean_args = request.args.to_dict(flat=True)
+        clean_args.pop("tag", None)
+        return redirect(url_for("search.global_search", **clean_args))
+
+    _log_search_outcome(status, filters, context)
+
+    if is_ajax:
+        return _render_ajax_response(
+            filters.chat_slug, context, sort_by, order
         )
-    elif filters.action == "filter":
-        mode = filters.date_mode
-        start = filters.start_date
-        end = filters.end_date
-        range_desc = (
-            f"from {start} to {end}" if mode == "between" and end else start
+
+    context.update({
+        "filters": filters,
+        "sort_by": sort_by,
+        "order": order,
+        "has_filters": filters.has_active(),
+        "search_action": url_for("search.global_search"),
+        "clear_url": url_for("search.global_search"),
+        "chat_slug": None,
+    })
+    return render_template("search/results.html", **context)
+
+
+def _log_search_outcome(
+    status: str,
+    filters: MessageFilters,
+    context: dict
+) -> None:
+    if status == "cleared":
+        logger.info(
+            "[SEARCH|ROUTER] Filters cleared — no operation performed."
+        )
+    elif status == "invalid":
+        logger.warning(
+            "[SEARCH|ROUTER] Invalid filter input — no search performed."
+        )
+    elif status == "error":
+        logger.error(
+            "[SEARCH|ROUTER] Query failed: %s", context.get("info_message")
+        )
+    elif status == "valid":
+        scope = (
+            f"Chat '{filters.chat_slug}', " if filters.chat_slug else "Global "
         )
         logger.info(
-            "[SEARCH|FILTER] Retrieved %d result(s) | mode=%s (%s).",
-            total, mode, range_desc
+            "[SEARCH|ROUTER] %ssearch: %d message(s), filters: %s",
+            scope, context["count"], filters.to_dict()
         )
 
 
 def _render_ajax_response(
-    chat_slug: str,
-    grouped: dict[str, dict],
+    chat_slug: str | None,
+    context: dict,
     sort_by: str,
     order: str
 ) -> str:
-    """
-    Render AJAX fragment with updated messages for a single chat.
-
-    :param chat_slug: Target chat slug.
-    :type chat_slug: str
-    :param grouped: Messages grouped by chat slug.
-    :type grouped: dict[str, dict]
-    :param sort_by: Field used for sorting.
-    :type sort_by: str
-    :param order: Sort direction ('asc' or 'desc').
-    :type order: str
-    :returns: Rendered HTML fragment.
-    :rtype: str
-    """
-    chat_data = grouped.get(chat_slug)
-    if not chat_data:
-        logger.warning("[SEARCH|AJAX] No data found for chat '%s'.", chat_slug)
-        return ""
-
-    logger.debug(
-        "[SEARCH|AJAX] Updated chat '%s' | sorted by %s %s.",
-        chat_slug, sort_by, order
-    )
-    return render_template(
-        "search/_grouped_msg_table.html",
-        slug=chat_slug,
-        messages=chat_data["messages"],
-        chat_name=chat_data["chat_name"],
-        sort_by=sort_by,
-        order=order
-    )
-
-
-def _render_full_results_page(
-    grouped: dict[str, dict],
-    filters: MessageFilters,
-    sort_by: str,
-    order: str,
-    info_message: str | None
-) -> str:
-    """
-    Render full search/filter results page with grouped messages.
-
-    :param grouped: Messages grouped by chat slug.
-    :type grouped: dict[str, dict]
-    :param filters: Applied search or filter parameters.
-    :type filters: MessageFilters
-    :param sort_by: Field used for sorting.
-    :type sort_by: str
-    :param order: Sort direction ('asc' or 'desc').
-    :type order: str
-    :param info_message: Optional informational message.
-    :type info_message: str | None
-    :returns: Rendered results page.
-    :rtype: str
-    """
-    total = sum(len(data["messages"]) for data in grouped.values())
-
-    logger.info(
-        "[SEARCH|RESULTS] Displayed %d message(s) sorted by %s %s.",
-        total, sort_by, order
-    )
-    return render_template(
-        "search/results.html",
-        results=grouped,
-        query=filters.query,
-        date_mode=filters.date_mode,
-        start_date=filters.start_date,
-        end_date=filters.end_date,
-        sort_by=sort_by,
-        order=order,
-        total_messages=total,
-        info_message=info_message
-    )
-
-
-@search_bp.route("/search")
-def search_messages() -> str:
-    """
-    Handle global search and filter requests for messages.
-
-    Processes query parameters, retrieves matching messages,
-    and returns either an AJAX fragment or a full results page.
-
-    :returns: Rendered HTML response.
-    :rtype: str
-    :raises DatabaseError: On database retrieval failure.
-    """
-    sort_by, order = get_sort_order(
-        request.args.get("sort"),
-        request.args.get("order"),
-        allowed_fields={"timestamp", "msg_id", "text"},
-        default_field="timestamp",
-        default_order="desc"
-    )
-
-    filters = normalize_filters(
-        action=request.args.get("action"),
-        query=request.args.get("query"),
-        mode=request.args.get("date_mode"),
-        start=request.args.get("start_date"),
-        end=request.args.get("end_date")
-    )
-    logger.debug(
-        "[SEARCH|FILTERS] Using action='%s' | query='%s' "
-        "| mode='%s' | start='%s' | end='%s'",
-        filters.action, filters.query, filters.date_mode,
-        filters.start_date, filters.end_date
-    )
-
-    chat_slug = request.args.get("chat")
-
-    try:
-        messages, info_message, filters = resolve_search_action(
-            filters=filters,
+    grouped = context["grouped"]
+    filters = context["filters"]
+    if chat_slug:
+        chat_data = grouped.get(chat_slug)
+        if not chat_data:
+            logger.warning("[SEARCH|AJAX] No data for chat '%s'.", chat_slug)
+            return render_template(
+                "search/_grouped_msg_table.html",
+                slug=chat_slug,
+                messages=[],
+                chat_name="Unknown",
+                sort_by=sort_by,
+                order=order,
+                filters=filters,
+            )
+        return render_template(
+            "search/_grouped_msg_table.html",
+            slug=chat_slug,
+            messages=chat_data["messages"],
+            chat_name=chat_data["chat_name"],
             sort_by=sort_by,
             order=order,
-            chat_slug=chat_slug
+            filters=filters,
         )
-    except DatabaseError as e:
-        logger.error("[DATABASE|SEARCH] Retrieval failed: %s", e)
-        return render_template("error.html", message=f"Database error: {e}")
-
-    _log_search_summary(filters, len(messages))
-
-    grouped = group_messages_by_chat(messages)
-    logger.debug("[SEARCH|GROUP] Prepared %d grouped block(s).", len(grouped))
-
-    if (
-        request.headers.get("X-Requested-With") == "XMLHttpRequest"
-        and chat_slug
-    ):
-        return _render_ajax_response(chat_slug, grouped, sort_by, order)
-
-    return _render_full_results_page(
-        grouped, filters, sort_by, order, info_message
+    return render_template(
+        "search/_results_table.html",
+        grouped=grouped,
+        sort_by=sort_by,
+        order=order,
+        filters=filters,
     )

@@ -1,7 +1,7 @@
 """
 Dashboard route for the Arcanum application.
 
-Provides the user dashboard page for authenticated users.
+Provides the authenticated user dashboard page with navigation to key sections.
 """
 
 import logging
@@ -16,8 +16,7 @@ def dashboard() -> str:
     """
     Render the dashboard page.
 
-    :returns: Rendered dashboard HTML page.
-    :rtype: str
+    :return: Rendered dashboard HTML page.
     """
     logger.info("[DASHBOARD|VIEW] Dashboard page displayed.")
     return render_template("dashboard.html")

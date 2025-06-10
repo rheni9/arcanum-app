@@ -1,7 +1,7 @@
 """
 Home route for the Arcanum application.
 
-Provides the public landing page.
+Provides the public landing page and application access notice.
 """
 
 import logging
@@ -16,8 +16,7 @@ def home() -> str:
     """
     Render the landing page.
 
-    :returns: Rendered homepage HTML.
-    :rtype: str
+    :return: Rendered homepage HTML.
     """
     logger.info("[HOME|VIEW] Landing page displayed.")
     return render_template("index.html")
