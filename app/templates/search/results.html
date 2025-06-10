@@ -1,125 +1,121 @@
+{# ============================================================================
+  Search Results Template for the Arcanum Application
+  Displays grouped messages by chat with filters and summary information.
+============================================================================ #}
+
 {% extends "base.html" %}
 
 {% block title %}Search Results | Arcanum{% endblock %}
 
 {% block content %}
-  <h1 class="page-title">Search Results</h1>
+  <div class="page-container">
 
-  {# === Search and Filter Form === #}
-  <div class="chat-filters-bar">
-    <form method="get" class="chat-filter-form" action="{{ url_for('search.search_messages') }}">
-      <input type="text" name="query" placeholder="Search messages..."
-             class="form-control search-input" value="{{ query or '' }}">
-      <button type="submit" name="action" value="search" class="btn">
-        <img src="{{ url_for('static', filename='img/search_icon.png') }}" alt="Search">
-        <span>Search</span>
-      </button>
+    {# === Metadata Section === #}
+    <div class="meta-block">
+      <section class="section">
+        <h1 class="section-title">Search Results</h1>
+      </section>
+    </div>
 
-      <div class="date-group">
-        <div class="date-select-wrapper">
-          <select name="date_mode" class="date-mode-select">
-            <option value="on" {% if date_mode == 'on' %}selected{% endif %}>On</option>
-            <option value="before" {% if date_mode == 'before' %}selected{% endif %}>Before</option>
-            <option value="after" {% if date_mode == 'after' %}selected{% endif %}>After</option>
-            <option value="between" {% if date_mode == 'between' %}selected{% endif %}>Between</option>
-          </select>
-          <input type="date" name="start_date" class="form-control date-input"
-                 value="{{ start_date if start_date else '' }}">
+    {# === Main Content Section === #}
+    <div class="content-wrapper">
+
+      {# === Search/Filter Block === #}
+      <section class="section">
+        {% include "components/_search_filter_block.html" with context %}
+      </section>
+
+      {# === Info Message === #}
+      {% if info_message %}
+        <section class="section">
+          <div class="results-box no-results">
+            <p class="results-summary">{{ info_message }}</p>
+          </div>
+        </section>
+      {% endif %}
+
+      {# === Back Button === #}
+      <section class="section">
+        <div class="btn-left">
+          <a href="{{ url_for('chats.list_chats') }}" class="btn btn-primary btn-icon">
+            <img src="{{ url_for('static', filename='img/back_icon.png') }}" alt="Back">
+            <span>Back to Chats</span>
+          </a>
         </div>
-        <input type="date" name="end_date" class="form-control date-input" id="end_date"
-               value="{{ end_date if end_date else '' }}">
-        <button type="submit" name="action" value="filter" class="btn">
-          <img src="{{ url_for('static', filename='img/calendar_icon.png') }}" alt="Filter">
-          <span>Filter by date</span>
-        </button>
-      </div>
+      </section>
 
-      <a href="{{ url_for('search.search_messages') }}" class="btn btn-light">
-        <img src="{{ url_for('static', filename='img/reset_icon.png') }}" alt="Reset">
-        Clear filters
-      </a>
-    </form>
-  </div>
-
-  {# === Filter Summary and Results Info === #}
-  {% if query or start_date %}
-    <div class="filter-summary-box">
-      <p class="filter-summary {{ 'no-results' if not results }}">
-        {# === Results Summary (if found) === #}
-        {% if results %}
-          {% if query %}
-            Search results for “<strong>{{ query }}</strong>”
-          {% endif %}
-
-          {% if date_mode == 'on' and start_date %}
-            {% if query %} — {% endif %}
-            Messages on <strong>{{ start_date|dateonlyformat }}</strong>
-          {% elif date_mode == 'before' and start_date %}
-            {% if query %} — {% endif %}
-            Messages before <strong>{{ start_date|dateonlyformat }}</strong>
-          {% elif date_mode == 'after' and start_date %}
-            {% if query %} — {% endif %}
-            Messages after <strong>{{ start_date|dateonlyformat }}</strong>
-          {% elif date_mode == 'between' and start_date and end_date %}
-            {% if query %} — {% endif %}
-            Messages between <strong>{{ start_date|dateonlyformat }}</strong>
-            and <strong>{{ end_date|dateonlyformat }}</strong>
-          {% endif %}
-
-          <br>
-          <span>
-           — <strong>{{ total_messages }}</strong> message{{ 's' if total_messages != 1 else '' }} found across chats.
-          </span>
-        {% else %}
-          {# === No Results Message === #}
-          <span>
-            {% if query %}
-              No messages found for “<strong>{{ query }}</strong>”.
-            {% elif start_date %}
-              No messages found
-              {% if date_mode == 'on' %}
-                on <strong>{{ start_date|dateonlyformat }}</strong>.
-              {% elif date_mode == 'before' %}
-                before <strong>{{ start_date|dateonlyformat }}</strong>.
-              {% elif date_mode == 'after' %}
-                after <strong>{{ start_date|dateonlyformat }}</strong>.
-              {% elif date_mode == 'between' and end_date %}
-                between <strong>{{ start_date|dateonlyformat }}</strong>
-                and <strong>{{ end_date|dateonlyformat }}</strong>.
+      {# === Summary Block (Search/Filter description) === #}
+      {% if grouped and filters.action %}
+        <section class="section">
+          <div class="results-box">
+            <p class="results-summary">
+              {% if filters.action == 'search' and filters.query %}
+                Search results for “<strong>{{ filters.query }}</strong>”
+              {% elif filters.tag %}
+                Results for tag <strong>#{{ filters.tag }}</strong>
+              {% elif filters.action == 'filter' and filters.date_mode and filters.start_date %}
+                {% if filters.date_mode == 'on' %}
+                  Messages on <strong>{{ filters.start_date | dateonlyformat }}</strong>
+                {% elif filters.date_mode == 'before' %}
+                  Messages before <strong>{{ filters.start_date | dateonlyformat }}</strong>
+                {% elif filters.date_mode == 'after' %}
+                  Messages after <strong>{{ filters.start_date | dateonlyformat }}</strong>
+                {% elif filters.date_mode == 'between' and filters.end_date %}
+                  Messages between <strong>{{ filters.start_date | dateonlyformat }}</strong>
+                  and <strong>{{ filters.end_date | dateonlyformat }}</strong>
+                {% endif %}
               {% endif %}
-            {% else %}
-              No messages found.
-            {% endif %}
-          </span>
-        {% endif %}
-      </p>
-    </div>
-  {% endif %}
+              <br>
+              <span>— <strong>{{ count }}</strong> message{{ 's' if count != 1 else '' }} found across chats.</span>
+            </p>
+          </div>
+        </section>
+      {% endif %}
 
-  {# === Empty State Message for Initial View === #}
-  {% if not query and not start_date and not results %}
-    <div class="filter-summary-box">
-      <p class="filter-summary no-results">
-        Use the search bar or date filters above to find messages.
-      </p>
-    </div>
-  {% endif %}
+      {# === No Results Message === #}
+      {% if count == 0 and not cleared and not info_message %}
+        <section class="section">
+          <div class="results-box no-results">
+            <p class="results-summary">
+              {% if filters.query %}
+                No messages found for “<strong>{{ filters.query }}</strong>”.
+              {% elif filters.start_date %}
+                No messages found
+                {% if filters.date_mode == 'on' %}
+                  on <strong>{{ filters.start_date | dateonlyformat }}</strong>.
+                {% elif filters.date_mode == 'before' %}
+                  before <strong>{{ filters.start_date | dateonlyformat }}</strong>.
+                {% elif filters.date_mode == 'after' %}
+                  after <strong>{{ filters.start_date | dateonlyformat }}</strong>.
+                {% elif filters.date_mode == 'between' and filters.end_date %}
+                  between <strong>{{ filters.start_date | dateonlyformat }}</strong>
+                  and <strong>{{ filters.end_date | dateonlyformat }}</strong>.
+                {% else %}.
+                {% endif %}
+              {% else %}
+                No messages found.
+              {% endif %}
+            </p>
+          </div>
+        </section>
+      {% endif %}
 
-  {# === Back to Chats Button === #}
-  <div class="back-to-chats">
-    <a href="{{ url_for('chats.list_chats') }}" class="btn">
-      <img src="{{ url_for('static', filename='img/back_icon.png') }}" alt="Back">
-      <span>Back to Chats</span>
-    </a>
-  </div>
+      {# === Results Tables (Grouped by Chat) === #}
+      {% if grouped %}
+        <div id="results-table-container">
+          {% for slug, group in grouped.items() %}
+            {% with slug=slug,
+                    messages=group.messages,
+                    chat_name=group.chat_name,
+                    filters=filters,
+                    sort_by=sort_by,
+                    order=order %}
+              {% include "search/_grouped_msg_table.html" %}
+            {% endwith %}
+          {% endfor %}
+        </div>
+      {% endif %}
 
-  {# === Grouped Results Tables (if any) === #}
-  <div id="results-table-container">
-    {% for slug, data in results.items() %}
-      {% with slug=slug, messages=data.messages, chat_name=data.chat_name, sort_by=sort_by, order=order %}
-        {% include "search/_grouped_msg_table.html" %}
-      {% endwith %}
-    {% endfor %}
-  </div>
-
+    </div> {# end .content-wrapper #}
+  </div> {# end .page-container #}
 {% endblock %}

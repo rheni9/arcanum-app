@@ -1,0 +1,16 @@
+{# ============================================================================
+  Search Results Table Template for Arcanum
+
+  Renders grouped message tables for global search or filter results.
+  Each group corresponds to a specific chat.
+============================================================================ #}
+
+{% if grouped %}
+  <div id="results-table-container">
+    {% for slug, group in grouped.items() %}
+      {% with messages=group.messages, chat_name=group.chat_name, slug=slug, filters=filters, sort_by=sort_by, order=order %}
+        {% include "search/_grouped_msg_table.html" %}
+      {% endwith %}
+    {% endfor %}
+  </div>
+{% endif %}
