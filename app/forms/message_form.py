@@ -115,8 +115,6 @@ class MessageForm(FlaskForm):
         """
         Run all validators and custom datetime validation.
 
-        Logs all validation errors if validation fails.
-
         :param extra_validators: Optional list of extra validator callables.
         :return: True if form passes all validation, False otherwise.
         """
@@ -127,13 +125,10 @@ class MessageForm(FlaskForm):
             )
             return False
 
-        date_field = self.date.data
-        time_field = self.time.data
-        if date_field and time_field:
-            local_dt = datetime.combine(date_field, time_field)
+        if self.date.data and self.time.data:
+            local_dt = datetime.combine(self.date.data, self.time.data)
             local_dt = DEFAULT_TZ.localize(local_dt)
-            now_local = datetime.now(DEFAULT_TZ)
-            if local_dt > now_local:
+            if local_dt > datetime.now(DEFAULT_TZ):
                 logger.debug(
                     "[MESSAGES|FORM] Date/time in future: %s", local_dt
                 )
@@ -153,10 +148,7 @@ class MessageForm(FlaskForm):
         """
         if field.errors or not field.data:
             return
-        if not (
-            field.data.startswith("http://")
-            or field.data.startswith("https://")
-        ):
+        if not field.data.startswith(("http://", "https://")):
             logger.debug("[MESSAGES|FORM] Invalid link: %s", field.data)
             raise ValidationError(
                 "Message link must start with 'http://' or 'https://'."
@@ -190,9 +182,9 @@ class MessageForm(FlaskForm):
         self.chat_ref_id.data = message.chat_ref_id
         self.msg_id.data = message.msg_id
         if message.timestamp:
-            dt = message.timestamp.astimezone(DEFAULT_TZ)
-            self.date.data = dt.date()
-            self.time.data = dt.time()
+            local_dt = message.timestamp.astimezone(DEFAULT_TZ)
+            self.date.data = local_dt.date()
+            self.time.data = local_dt.time()
         else:
             self.date.data = None
             self.time.data = None
@@ -207,14 +199,13 @@ class MessageForm(FlaskForm):
         """
         Convert the form data to a dictionary suitable for the Message model.
 
-        :return: Dictionary of form data mapped to Message model fields.
+        :return: Dictionary of form data.
         """
+        timestamp = None
         if self.date.data and self.time.data:
             local_dt = datetime.combine(self.date.data, self.time.data)
             local_dt = DEFAULT_TZ.localize(local_dt)
             timestamp = to_utc_iso(local_dt)
-        else:
-            timestamp = None
 
         data = {
             "id": to_int_or_none(self.id.data),

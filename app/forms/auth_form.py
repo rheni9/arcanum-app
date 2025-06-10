@@ -9,7 +9,7 @@ from wtforms import PasswordField, SubmitField
 from wtforms.validators import DataRequired
 
 
-class LoginForm(FlaskForm):
+class AuthForm(FlaskForm):
     """
     Represents the user login form.
 
@@ -19,4 +19,4 @@ class LoginForm(FlaskForm):
         "Password",
         validators=[DataRequired(message="Please enter your password.")]
     )
-    submit = SubmitField("Log In")
+    submit = SubmitField("Sign In")

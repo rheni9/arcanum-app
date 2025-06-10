@@ -59,8 +59,8 @@ class ChatForm(FlaskForm):
 
     joined = DateField(
         "Joined Date",
-        validators=[Optional()],
-        format="%Y-%m-%d"
+        format="%Y-%m-%d",
+        validators=[Optional()]
     )
 
     is_active = BooleanField("Active")
@@ -81,7 +81,7 @@ class ChatForm(FlaskForm):
         """
         Run all validators and log validation errors.
 
-        :param extra_validators: Optional list of extra validator callables.
+        :param extra_validators: Optional list of extra validators.
         :return: True if form passes all validation, False otherwise.
         """
         is_valid = super().validate(extra_validators)
@@ -97,10 +97,7 @@ class ChatForm(FlaskForm):
         """
         if field.errors or not field.data:
             return
-        if not (
-            field.data.startswith("http://")
-            or field.data.startswith("https://")
-        ):
+        if not field.data.startswith(("http://", "https://")):
             logger.debug("[CHATS|FORM] Invalid link: %s", field.data)
             raise ValidationError(
                 "Chat link must start with 'http://' or 'https://'."
@@ -137,7 +134,7 @@ class ChatForm(FlaskForm):
         """
         Convert the form data to a dictionary suitable for the Chat model.
 
-        :return: Dictionary of form data mapped to Chat model fields.
+        :return: Dictionary of form data.
         """
         data = {
             "id": to_int_or_none(self.id.data),
