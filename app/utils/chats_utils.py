@@ -8,46 +8,48 @@ Provides:
 
 import logging
 
-from app.models.models import Chat
+from app.models.chat import Chat
+from app.forms.chat_form import ChatForm
+from app.utils.time_utils import parse_date_to_dateobject
 
 logger = logging.getLogger(__name__)
 
 
 def build_chat_object(
-    data: dict,
+    form: ChatForm,
     slug: str,
     chat_ref_id: int | None = None
 ) -> Chat:
     """
-    Construct a Chat model instance from validated form data.
+    Build a Chat model instance from form data.
 
-    :param data: Cleaned form data fields.
-    :type data: dict
-    :param slug: Unique slug identifier for the chat.
-    :type slug: str
-    :param chat_ref_id: Existing database ID for update (None for insert).
-    :type chat_ref_id: int | None
-    :return: Chat model instance ready for database operation.
-    :rtype: Chat
+    :param form: ChatForm instance.
+    :param slug: Chat slug.
+    :param chat_ref_id: Existing chat ID (for update).
+    :return: Chat instance.
     """
-    chat = Chat(
+    joined = form.joined.data
+    return Chat(
         id=chat_ref_id,
         slug=slug,
-        name=data.get("name"),
-        chat_id=data.get("chat_id"),
-        link=data.get("link"),
-        type=data.get("type"),
-        joined=data.get("joined"),
-        is_active="is_active" in data,
-        is_member="is_member" in data,
-        notes=data.get("notes"),
+        name=form.name.data,
+        chat_id=form.chat_id.data if form.chat_id.data else None,
+        type=form.type.data.strip() if form.type.data else None,
+        link=form.link.data.strip() if form.link.data else None,
+        joined=joined.isoformat() if joined else None,
+        is_active=form.is_active.data,
+        is_member=form.is_member.data,
+        is_public=form.is_public.data,
+        notes=form.notes.data.strip() if form.notes.data else None
     )
 
-    logger.debug(
-        "[CHATS|UTILS] Built Chat object: "
-        "%s | slug='%s' | name='%s' | chat_id=%s",
-        "new (id=None)" if chat.id is None else f"existing (id={chat.id})",
-        chat.slug, chat.name, chat.chat_id
-    )
 
+def prepare_chat_for_form(chat):
+    """
+    Prepare chat for WTForms usage.
+
+    Ensures 'joined' is a datetime.date if stored as str in the database.
+    """
+    if chat and chat.joined and isinstance(chat.joined, str):
+        chat.joined = parse_date_to_dateobject(chat.joined)
     return chat
