@@ -1,11 +1,8 @@
 """
-Database utilities for Arcanum SQLite connections.
+Database utilities for the Arcanum Flask application.
 
-Handles:
-- Request-scoped lazy connections via g.
-- Standalone connections for services.
-- Context-managed connections for scripts.
-- Database existence checks.
+Provides SQLite connection helpers, request-scoped and standalone
+connections, context-managed usage, and database presence check.
 """
 
 import os
@@ -21,15 +18,17 @@ logger = logging.getLogger(__name__)
 
 def get_db_path() -> str:
     """
-    Resolve SQLite database file path from DATABASE_URL or config.
+    Resolve the SQLite database file path.
+
+    Determines the path from Flask configuration
+    or the DATABASE_URL environment variable.
 
     :return: Absolute path to SQLite database file.
-    :rtype: str
-    :raises ValueError: If DATABASE_URL is invalid.
+    :raises ValueError: If the database path is invalid or missing.
     """
     db_url = (
-        os.getenv("DATABASE_URL")
-        or current_app.config.get("SQLALCHEMY_DATABASE_URI")
+        current_app.config.get("SQLALCHEMY_DATABASE_URI")
+        or os.getenv("DATABASE_URL")
     )
     if not db_url:
         raise ValueError("DATABASE_URL is not configured.")
@@ -52,58 +51,58 @@ def get_db_path() -> str:
 
 def get_connection_lazy() -> sqlite3.Connection:
     """
-    Get request-level SQLite connection (lazy-loaded).
+    Get a request-scoped SQLite connection.
 
-    Opens a new connection only if needed for current request.
-    Reuses existing connection within the same request context.
+    Opens a new connection for the current request context if needed,
+    or reuses the existing one.
 
     :return: SQLite connection object.
-    :rtype: sqlite3.Connection
+    :raises ValueError: If the database path is invalid or missing.
+    :raises sqlite3.DatabaseError: If the connection fails.
     """
     if "db_conn" not in g:
         db_path = get_db_path()
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys = ON")
-
         g.db_conn = conn
-
         logger.debug(
-            "[DB|REQUEST] Lazily opened request connection to '%s'.", db_path
+            "[DATABASE|REQUEST] Opened request-scoped connection to '%s'.",
+            db_path
         )
     else:
-        logger.debug("[DB|REQUEST] Reusing existing request connection.")
-
+        logger.debug("[DATABASE|REQUEST] Reusing existing request connection.")
     return g.db_conn
 
 
-def close_request_connection(_exception=None):
+def close_request_connection(_exception: Exception | None = None) -> None:
     """
-    Close request-level SQLite connection after request ends.
+    Close the request-scoped SQLite connection after request ends.
 
-    :param _error: Optional exception info from Flask teardown.
-    :type _error: Exception | None
+    :param _exception: Exception from Flask teardown (ignored).
     """
     conn = g.pop("db_conn", None)
     if conn is not None:
         conn.close()
-        logger.debug("[DB|REQUEST] Closed request connection.")
+        logger.debug("[DATABASE|REQUEST] Closed request connection.")
 
 
 def get_connection_standalone() -> sqlite3.Connection:
     """
-    Get standalone SQLite connection (not request-bound).
+    Get a standalone SQLite connection.
 
-    :return: SQLite connection.
-    :rtype: sqlite3.Connection
+    This connection is not tied to a Flask request context.
+
+    :return: SQLite connection object.
+    :raises ValueError: If the database path is invalid or missing.
+    :raises sqlite3.DatabaseError: If the connection fails.
     """
     db_path = get_db_path()
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
-
     logger.debug(
-        "[DB|STANDALONE] Opened standalone connection to '%s'.", db_path
+        "[DATABASE|STANDALONE] Opened standalone connection to '%s'.", db_path
     )
     return conn
 
@@ -111,56 +110,82 @@ def get_connection_standalone() -> sqlite3.Connection:
 @contextmanager
 def get_connection() -> Generator[sqlite3.Connection, None, None]:
     """
-    Context-managed standalone SQLite connection (for scripts/tasks).
+    Provide a context-managed standalone SQLite connection.
 
-    Enables foreign keys and dict row access. Ensures proper closure.
+    Yields a connection with foreign keys enabled and Row factory set.
 
-    :yields: SQLite connection.
-    :rtype: Generator[sqlite3.Connection, None, None]
+    :yields: SQLite connection object.
+    :raises ValueError: If the database path is invalid or missing.
+    :raises sqlite3.DatabaseError: If the connection fails.
     """
     db_path = get_db_path()
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
-
     logger.debug(
-        "[DB|STANDALONE] Opened standalone connection to '%s'.", db_path
+        "[DATABASE|STANDALONE] Opened standalone connection to '%s'.",
+        db_path
     )
-
     try:
         yield conn
     finally:
         conn.close()
         logger.debug(
-            "[DB|STANDALONE] Closed standalone connection to '%s'.", db_path
+            "[DATABASE|STANDALONE] Closed standalone connection to '%s'.",
+            db_path
         )
 
 
 def ensure_db_exists() -> None:
     """
-    Ensure that the configured SQLite database file exists and is accessible.
+    Check if the configured SQLite database file exists and is accessible.
 
-    Logs warning if file is missing or inaccessible.
-    Logs info if file exists.
+    Logs a warning if the database is missing or inaccessible.
+    Logs an info message if the file exists and is readable.
+
+    :raises ValueError: If the database path is invalid or missing.
+    :raises sqlite3.Error: If the database file is unreachable or broken.
     """
     db_path = get_db_path()
-
     if not os.path.isfile(db_path):
         logger.warning(
-            "[DB|CHECK] Database file '%s' does not exist.", db_path
+            "[DATABASE|CHECK] Database file '%s' does not exist.", db_path
         )
         return
-
     try:
         conn = sqlite3.connect(db_path)
         conn.execute("PRAGMA schema_version;")
         conn.close()
     except sqlite3.Error as e:
         logger.warning(
-            "[DB|CHECK] Database '%s' is not accessible: %s", db_path, e
+            "[DATABASE|CHECK] Database '%s' is not accessible: %s", db_path, e
         )
         return
-
     logger.info(
-        "[DB|CHECK] Database '%s' exists and is accessible.", db_path
+        "[DATABASE|CHECK] Database '%s' exists and is accessible.", db_path
     )
+
+
+def execute_and_commit(query: str, params: tuple) -> None:
+    """
+    Execute a parameterized query and commit the transaction.
+
+    Rolls back and raises if execution fails.
+
+    :param query: SQL query string.
+    :param params: Query parameters.
+
+    :raises ValueError: If the database path is invalid or missing.
+    :raises sqlite3.DatabaseError: If the query fails and cannot be committed.
+    """
+    conn = get_connection_lazy()
+    try:
+        conn.execute(query, params)
+        conn.commit()
+        logger.debug("[DATABASE|EXECUTE] Query committed successfully.")
+    except sqlite3.DatabaseError as e:
+        conn.rollback()
+        logger.error(
+            "[DATABASE|ERROR] Failed to execute and commit query: %s", e
+        )
+        raise
