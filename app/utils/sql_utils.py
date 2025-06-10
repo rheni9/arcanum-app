@@ -1,16 +1,14 @@
 """
-SQL utilities for safe and consistent query construction.
+SQL utilities for the Arcanum application.
 
-Provides:
-- OrderConfig dataclass for configuring sort behavior.
-- build_order_clause() for composing validated SQL ORDER BY clauses.
+Provides safe ORDER BY clause generation using validated parameters
+and sorting configuration objects.
 """
 
 import logging
 from dataclasses import dataclass
-from typing import Optional, Set
 
-from app.utils.sort_utils import normalize_sort_params
+from app.utils.sort_utils import get_sort_order
 
 logger = logging.getLogger(__name__)
 
@@ -20,44 +18,35 @@ class OrderConfig:
     """
     Configuration for sorting logic used in SQL clause construction.
 
-    :param allowed_fields: Set of allowed fields for sorting.
-    :type allowed_fields: Set[str]
-    :param default_field: Fallback field if sort_by is invalid.
-    :type default_field: str
-    :param default_order: Fallback direction if order is invalid.
-    :type default_order: str
-    :param prefix: Optional table alias or prefix (e.g., 'c.' or 'm.').
-    :type prefix: Optional[str]
+    :param allowed_fields: Allowed fields for sorting.
+    :param default_field: Fallback field if sort_by is invalid or missing.
+    :param default_order: Fallback direction if order is invalid or missing.
+    :param prefix: Optional prefix or table alias (e.g., 'm.').
     """
-    allowed_fields: Set[str]
+    allowed_fields: set[str]
     default_field: str = "timestamp"
     default_order: str = "desc"
-    prefix: Optional[str] = None
+    prefix: str | None = None
 
 
 def build_order_clause(
-    sort_by: Optional[str],
-    order: Optional[str],
+    sort_by: str | None,
+    order: str | None,
     config: OrderConfig
 ) -> str:
     """
-    Construct a validated SQL ORDER BY clause.
+    Construct a safe SQL ORDER BY clause from validated inputs.
 
-    Normalizes sort_by and order parameters based on config,
-    and returns a safe SQL ORDER BY clause string.
-
-    :param sort_by: Requested sort field.
-    :type sort_by: Optional[str]
-    :param order: Requested sort direction ('asc' or 'desc').
-    :type order: Optional[str]
-    :param config: Sorting configuration object.
-    :type config: OrderConfig
-    :return: SQL ORDER BY clause (e.g., 'ORDER BY c.name asc').
-    :rtype: str
+    :param sort_by: Requested field to sort by.
+    :param order: Requested sort direction.
+    :param config: Sorting configuration.
+    :return: SQL ORDER BY clause string.
     """
-    sort_by, order = normalize_sort_params(
-        sort_by, order, config.allowed_fields,
-        config.default_field, config.default_order
+    sort_by, order = get_sort_order(
+        sort_by, order,
+        config.allowed_fields,
+        config.default_field,
+        config.default_order
     )
 
     field_ref = f"{config.prefix}{sort_by}" if config.prefix else sort_by
@@ -67,4 +56,4 @@ def build_order_clause(
         field_ref, order
     )
 
-    return f"ORDER BY {field_ref} {order}"
+    return f"{field_ref} {order}"
