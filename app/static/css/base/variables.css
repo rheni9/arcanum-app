@@ -1,0 +1,69 @@
+/* ==========================================================
+  Arcanum – Base Variables
+  Defines global design tokens: colors, typography,
+  spacing, borders, shadows, and effects
+  ========================================================== */
+
+:root {
+  /* ========== Brand & Theme ========== */
+  --color-primary:      #0c1a3e;
+  --color-secondary:    #6b778d;
+
+    /* ========== Basic Colors ========== */
+  --base-white:         #ffffff;
+
+    /* ========== Text Colors ========== */
+  --text-color:         #1a1a1a;
+  --text-muted:         #8f8d8d;
+
+  /* ========== Link Colors ========== */
+  --link-default:         #153061;
+  --link-hover:           #3066be;  
+
+  /* ========== Status Colors ========== */
+  --color-success:      #27b846;
+  --color-error:        #d80032;
+  --color-danger:       #db2b39;
+
+  /* ========== Background Colors ========== */
+  --bg-default:         #f5f7fa;
+  --bg-surface:         #ffffff;
+  --bg-hover:           #e5ecf4;
+  --bg-hover-soft:      #f2f6fa;
+  --bg-section:         #eef5fb;
+  --bg-highlight:       #dce4f2;
+  --bg-success-light:   #e6f8ea;
+  --bg-error-light:     #fff6f6;
+  --toggle-bg-off:      #dedede;
+
+  /* ========== Border & Accent Colors ========== */
+  --border-default:     #ccd1d1;
+  --accent-soft:        #c9d6ed;
+
+  /* ========== Shadows ========== */
+  --shadow-default:     0 2px 6px rgba(0, 0, 0, 0.1);
+  --shadow-soft:        0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-lg:          0 8px 28px rgba(0, 0, 0, 0.25);
+
+  /* ========== Radius ========== */
+  --radius-default:       4px;
+
+  /* ========== Typography – Font Family ========== */
+  --font-family-base:   'Roboto', sans-serif;
+  /* --font-family-base: "Segoe UI", sans-serif; */
+
+  /* ========== Typography – Font Sizes ========== */
+  --font-xs:            0.75rem;
+  --font-sm:            0.85rem;
+  --font-detail:        0.9rem;
+  --font-base:          1rem;
+  --font-md:            1.2rem;
+  --font-lg:            1.4rem;
+  --font-xl:            2rem;
+
+  /* ========== Typography – Font Weights ========== */
+  --weight-regular:     400;
+  --weight-medium:      500;
+  --weight-semibold:    600;
+  --weight-bold:        700;
+}

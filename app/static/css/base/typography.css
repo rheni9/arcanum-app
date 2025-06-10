@@ -1,0 +1,142 @@
+/* ==========================================================
+  Arcanum – Typography Styles
+  Handles text rendering: body text, headings, links, lists,
+  inline elements, and typographic blocks
+  ========================================================== */
+
+/* ========== Body Base ========== */
+body {
+  font-family: var(--font-family-base);
+  font-size: var(--font-base);
+  font-weight: var(--weight-regular);
+  line-height: 1.5;
+  color: var(--text-color);
+  background-color: var(--bg-default);
+}
+
+html.disable-scroll,
+body.disable-scroll {
+  scroll-behavior: auto !important;
+}
+
+/* ========== Headings ========== */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family-base);
+  font-weight: var(--weight-bold);
+  line-height: 1.4;
+  color: var(--text-color);
+}
+
+h1 { font-size: var(--font-xl); }
+h2 { font-size: var(--font-lg); }
+h3 { font-size: var(--font-md); }
+h4 { font-size: var(--font-base); }
+h5 { font-size: var(--font-detail); }
+h6 {
+  font-size: var(--font-sm);
+  font-weight: var(--weight-medium);
+}
+
+/* ========== Paragraphs ========== */
+p {
+  margin: 0;
+  font-size: var(--font-base);
+  line-height: 1.6;
+}
+
+/* ========== Links ========== */
+a {
+  color: var(--link-default);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+a:hover,
+a:focus {
+  color: var(--link-hover);
+  text-decoration: none;
+}
+
+/* ========== Lists ========== */
+ul, ol {
+  padding-left: 1.5rem;
+  margin: 1rem 0;
+}
+
+li {
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+/* ========== Inline Elements ========== */
+strong {
+  font-weight: var(--weight-bold);
+}
+
+em {
+  font-style: italic;
+}
+
+code {
+  font-family: monospace;
+  font-size: var(--font-detail);
+  background-color: var(--bg-hover-soft);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  overflow-wrap: break-word;
+}
+
+/* ========== Blockquote ========== */
+blockquote {
+  margin: 1rem 0;
+  padding-left: 1rem;
+  border-left: 4px solid var(--accent-soft);
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.6;
+}
+
+/* ========== Horizontal Rule ========== */
+hr {
+  border: none;
+  border-top: 1px solid var(--border-default);
+  margin: 2rem 0;
+}
+
+/* ========== Footer ========== */
+footer {
+  text-align: center;
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+  padding: 1rem 0 0.5rem;
+}
+
+@media (max-width: 768px) {
+  h1 { font-size: var(--font-lg); }
+  h2 { font-size: var(--font-md); }
+  h3 { font-size: var(--font-base); }
+  h4 { font-size: var(--font-detail); }
+  h5 { font-size: var(--font-sm); }
+  h6 { font-size: var(--font-xs); }
+
+  p { font-size: var(--font-detail); }
+
+  ul, ol { padding-left: 1.2rem; }
+
+  code { font-size: var(--font-sm); }
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: var(--font-md); }
+  h2 { font-size: var(--font-detail); }
+  h3 { font-size: var(--font-sm); }
+  h4, h5, h6 { font-size: var(--font-xs); }
+
+  p { font-size: var(--font-sm); }
+
+  ul, ol { padding-left: 1rem; }
+
+  code { font-size: var(--font-xs); }
+}
+
