@@ -1,34 +1,24 @@
-/**
- * @file state.js
- * @description
- * Handles logical dependencies between form fields.
- * Includes toggling, enabling/disabling, and value adjustments.
- */
-
-/**
- * Bind dependency between #is_active and #is_member checkboxes.
- * If #is_active is unchecked:
- * - disables #is_member
- * - unchecks #is_member
- * 
- * When #is_active is checked again:
- * - re-enables #is_member
- */
-export function bindActiveMemberDependency() {
+export function bindActiveMemberPublicDependency() {
   const activeCheckbox = document.getElementById("is_active");
   const memberCheckbox = document.getElementById("is_member");
+  const publicCheckbox = document.getElementById("is_public");
 
-  if (!activeCheckbox || !memberCheckbox) return;
+  if (!activeCheckbox) return;
 
-  const updateMemberState = () => {
-    if (!activeCheckbox.checked) {
-      memberCheckbox.checked = false;
-      memberCheckbox.disabled = true;
-    } else {
-      memberCheckbox.disabled = false;
+  const update = () => {
+    const enabled = activeCheckbox.checked;
+
+    if (memberCheckbox) {
+      memberCheckbox.disabled = !enabled;
+      if (!enabled) memberCheckbox.checked = false;
+    }
+
+    if (publicCheckbox) {
+      publicCheckbox.disabled = !enabled;
+      if (!enabled) publicCheckbox.checked = false;
     }
   };
 
-  activeCheckbox.addEventListener("change", updateMemberState);
-  updateMemberState(); // initial state
+  activeCheckbox.addEventListener("change", update);
+  update();
 }

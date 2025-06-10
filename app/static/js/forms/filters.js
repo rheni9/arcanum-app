@@ -122,81 +122,182 @@ export function validateFilterForm(e) {
 
   removeInlineMessage(form);
 
-  const query = form.query?.value.trim();
-  const start = form.start_date?.value.trim();
-  const end = form.end_date?.value.trim();
-  const mode = form.date_mode?.value;
+  const queryField = form.query;
+  const startField = form.start_date;
+  const endField = form.end_date;
+  const modeField = form.date_mode;
 
-  if (!query && !start && !end) {
-    e.preventDefault();
-    hidePreviousResults();
-    insertInlineMessage(
-      form,
-      "Please enter a search query or select a date filter."
-    );
-    return;
-  }
+  const query = queryField?.value.trim();
+  const start = startField?.value.trim();
+  const end = endField?.value.trim();
+  const mode = modeField?.value;
+
+  [queryField, startField, endField].forEach(field => {
+    field?.classList.remove("input-error");
+  });
+
+  // if (!query && !start && !end) {
+  //   e.preventDefault();
+  //   hidePreviousResults();
+  //   insertInlineMessage(form, "JS: Please enter a search query or select a date filter.");
+  //   return;
+  // }
 
   if (action === "search") {
     if (!query) {
       e.preventDefault();
+      queryField?.classList.add("input-error");
       hidePreviousResults();
-      insertInlineMessage(form, "Please enter a search query.");
+      insertInlineMessage(form, "JS: Please enter a search query.");
       return;
     }
 
-    form.start_date.value = "";
-    form.end_date.value = "";
+    startField.value = "";
+    endField.value = "";
     return;
   }
 
   if (action === "filter") {
+    if (!mode) {
+      e.preventDefault();
+      hidePreviousResults();
+      insertInlineMessage(form, "JS: Please select a date filter mode.");
+      return;
+    }
+
     if (mode === "between") {
       if (!start && !end) {
         e.preventDefault();
+        startField?.classList.add("input-error");
+        endField?.classList.add("input-error");
         hidePreviousResults();
-        insertInlineMessage(
-          form,
-          "Please provide both start and end dates."
-        );
+        insertInlineMessage(form, "JS: Please provide both start and end dates.");
         return;
-      } else if (!start) {
+      }
+      if (!start) {
         e.preventDefault();
+        startField?.classList.add("input-error");
         hidePreviousResults();
-        insertInlineMessage(form, "Start date is required.");
+        insertInlineMessage(form, "JS: Start date is required.");
         return;
-      } else if (!end) {
+      }
+      if (!end) {
         e.preventDefault();
+        endField?.classList.add("input-error");
         hidePreviousResults();
-        insertInlineMessage(form, "End date is required.");
+        insertInlineMessage(form, "JS: End date is required.");
         return;
-      } else if (start > end) {
+      }
+      if (start > end) {
         e.preventDefault();
+        startField?.classList.add("input-error");
+        endField?.classList.add("input-error");
         hidePreviousResults();
-        insertInlineMessage(
-          form,
-          "Start date must be before or equal to end date."
-        );
+        insertInlineMessage(form, "JS: Start date must be before or equal to end date.");
         return;
       }
     } else {
       if (!start) {
         e.preventDefault();
+        startField?.classList.add("input-error");
         hidePreviousResults();
-        insertInlineMessage(form, "Please provide a valid start date.");
+        insertInlineMessage(form, "JS: Please provide a valid start date.");
         return;
       }
     }
 
-    form.query.value = "";
+    queryField.value = "";
     return;
   }
 
-  // Unknown action fallback
+  // Fallback
   e.preventDefault();
   hidePreviousResults();
   insertInlineMessage(form, "Unknown action. Please try again.");
 }
+
+// export function validateFilterForm(e) {
+//   const form = e.target;
+//   const submitter = document.activeElement;
+//   const action = submitter?.name === "action" ? submitter.value : "";
+
+//   removeInlineMessage(form);
+
+//   const query = form.query?.value.trim();
+//   const start = form.start_date?.value.trim();
+//   const end = form.end_date?.value.trim();
+//   const mode = form.date_mode?.value;
+
+//   if (!query && !start && !end) {
+//     e.preventDefault();
+//     hidePreviousResults();
+//     insertInlineMessage(
+//       form,
+//       "Please enter a search query or select a date filter."
+//     );
+//     return;
+//   }
+
+//   if (action === "search") {
+//     if (!query) {
+//       e.preventDefault();
+//       hidePreviousResults();
+//       insertInlineMessage(form, "Please enter a search query.");
+//       return;
+//     }
+
+//     form.start_date.value = "";
+//     form.end_date.value = "";
+//     return;
+//   }
+
+//   if (action === "filter") {
+//     if (mode === "between") {
+//       if (!start && !end) {
+//         e.preventDefault();
+//         hidePreviousResults();
+//         insertInlineMessage(
+//           form,
+//           "Please provide both start and end dates."
+//         );
+//         return;
+//       } else if (!start) {
+//         e.preventDefault();
+//         hidePreviousResults();
+//         insertInlineMessage(form, "Start date is required.");
+//         return;
+//       } else if (!end) {
+//         e.preventDefault();
+//         hidePreviousResults();
+//         insertInlineMessage(form, "End date is required.");
+//         return;
+//       } else if (start > end) {
+//         e.preventDefault();
+//         hidePreviousResults();
+//         insertInlineMessage(
+//           form,
+//           "Start date must be before or equal to end date."
+//         );
+//         return;
+//       }
+//     } else {
+//       if (!start) {
+//         e.preventDefault();
+//         hidePreviousResults();
+//         insertInlineMessage(form, "Please provide a valid start date.");
+//         return;
+//       }
+//     }
+
+//     form.query.value = "";
+//     return;
+//   }
+
+//   // Unknown action fallback
+//   e.preventDefault();
+//   hidePreviousResults();
+//   insertInlineMessage(form, "Unknown action. Please try again.");
+// }
 
 /**
  * Bind dynamic behaviors to all forms with class 'chat-filter-form':
@@ -205,7 +306,7 @@ export function validateFilterForm(e) {
  */
 export function bindFilterForms() {
   document.querySelectorAll("form.chat-filter-form").forEach((form) => {
-    form.addEventListener("submit", validateFilterForm);
+    // form.addEventListener("submit", validateFilterForm);
     toggleEndDateVisibility();
 
     const mode = form.querySelector(".date-mode-select");
