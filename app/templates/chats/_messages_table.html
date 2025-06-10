@@ -1,0 +1,63 @@
+{# =============================================================================
+  Message Table Partial for Arcanum
+
+  Displays a sortable table of messages for a single chat.
+=============================================================================#}
+
+<div class="table-wrapper messages-table">
+  <table class="table messages-table">
+
+    {# === Table Header === #}
+    <thead>
+      <tr>
+        <th class="col-index">#</th>
+        <th class="sortable {% if sort_by == 'msg_id' %}active-sort{% endif %}" data-sort="msg_id">
+          <div class="sort-wrapper">
+            <span class="header-label">ID</span>
+            <span class="sort-arrow">
+              {{ '▲' if sort_by == 'msg_id' and order == 'asc' else '▼' if sort_by == 'msg_id' else '' }}
+            </span>
+          </div>
+        </th>
+        <th>Text</th>
+        <th class="sortable {% if sort_by == 'timestamp' %}active-sort{% endif %}" data-sort="timestamp">
+          <div class="sort-wrapper">
+            <span class="header-label">Sent</span>
+            <span class="sort-arrow">
+              {{ '▲' if sort_by == 'timestamp' and order == 'asc' else '▼' if sort_by == 'timestamp' else '' }}
+            </span>
+          </div>
+        </th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {# === Message Rows === #}
+      {% for msg in messages %}
+      <tr class="clickable-row" data-href="{{ url_for('messages.view_message', chat_slug=chat.slug, pk=msg['id'], **extra_args) }}">
+        <td class="col-index">{{ loop.index }}</td>
+        <td>
+          {% if msg["msg_id"] and msg["link"] %}
+            <a href="{{ msg['link'] }}" target="_blank" rel="noopener noreferrer" class="msg-id-link">
+              {{ msg["msg_id"] }}
+            </a>
+          {% elif msg["msg_id"] %}
+            <span class="msg-id-no-link">{{ msg["msg_id"] }}</span>
+          {% else %}
+            <span class="msg-id-no-link">&mdash;</span>
+          {% endif %}
+        </td>
+        <td>
+          <div class="msg-text">{{ msg["text"] or '' }}</div>
+        </td>
+        <td>
+          <div class="table-timestamp">
+            <div class="date">{{ msg["timestamp"] | datetimeformat("long_date") }}</div>
+            <div class="time">{{ msg["timestamp"] | datetimeformat("time") }}</div>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

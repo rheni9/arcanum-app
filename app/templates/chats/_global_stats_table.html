@@ -1,0 +1,64 @@
+{# ============================================================================
+  Global Statistics Table for Arcanum
+
+  Displays summary information about all chats and messages,
+  including totals, most active chat, and last message timestamp.
+============================================================================ #}
+
+<div class="table-wrapper meta-table">
+
+  {# === Total Counts === #}
+  <div class="meta-table-row">
+    <div class="meta-label">Total chats:</div>
+    <div class="meta-value">{{ stats.total_chats }}</div>
+  </div>
+
+  <div class="meta-table-row">
+    <div class="meta-label">Total messages:</div>
+    <div class="meta-value">{{ stats.total_messages }}</div>
+  </div>
+
+  <div class="meta-table-row">
+    <div class="meta-label">Messages with media:</div>
+    <div class="meta-value">{{ stats.media_messages }}</div>
+  </div>
+
+  {# === Most Active Chat === #}
+  <div class="meta-table-row">
+    <div class="meta-label">Most active chat:</div>
+    <div class="meta-value">
+      {% if stats.most_active_chat_name %}
+        <a href="{{ url_for('chats.view_chat', slug=stats.most_active_chat_slug) }}" class="meta-link meta-link-active">
+          {{ stats.most_active_chat_name }}
+        </a>
+        <span class="meta-count">({{ stats.most_active_chat_count }} messages)</span>
+      {% else %}
+        <span class="muted">—</span>
+      {% endif %}
+    </div>
+  </div>
+
+  {# === Last Message Timestamp === #}
+  <div class="meta-table-row">
+    <div class="meta-label">Last message timestamp:</div>
+    <div class="meta-value">
+      {% if stats.last_message_timestamp and stats.last_message_id %}
+        <a href="{{ url_for('messages.view_message', chat_slug=stats.last_message_chat_slug, pk=stats.last_message_id, from_chats=1) }}">
+          <div class="meta-icon-group">
+            <span class="meta-icon-text">
+              <img src="{{ url_for('static', filename='img/calendar.png') }}" alt="Date">
+              <span class="meta-date">{{ stats.last_message_timestamp | datetimeformat("long_date") }}</span>
+            </span>
+            <span class="meta-icon-text">
+              <img src="{{ url_for('static', filename='img/clock.png') }}" alt="Time">
+              <span class="meta-time">{{ stats.last_message_timestamp | datetimeformat("time") }}</span>
+            </span>
+          </div>
+        </a>
+      {% else %}
+        <span class="muted">—</span>
+      {% endif %}
+    </div>
+  </div>
+
+</div>

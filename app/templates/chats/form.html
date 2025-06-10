@@ -1,142 +1,156 @@
+{# ============================================================================
+  Chat Form Template for the Arcanum Application
+  Provides an interface for creating or editing chat metadata,
+  including status toggles, validation, and consistent layout.
+============================================================================ #}
+
 {% extends "base.html" %}
 
-{% block title %}{{ "Edit" if is_edit else "Add" }} Chat | Arcanum{% endblock %}
+{% block title %}
+  {{ "Edit" if is_edit else "Add" }} Chat | Arcanum
+{% endblock %}
 
 {% block content %}
-<h1 class="page-title">{{ "Edit" if is_edit else "Add" }} Chat</h1>
+  <div class="page-container">
+    <section class="section">
+      <h1 class="section-title">{{ "Edit" if is_edit else "New" }} Chat</h1>
 
-{# === Flash Messages === #}
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    <div class="flash-messages">
-      {% for category, message in messages %}
-        <div class="alert {{ 'alert-success' if category == 'success' else 'alert-error' }}">
-          {{ message }}
+      {# === Form Container === #}
+      <div class="form-container wide-form">
+        <div class="form-box">
+          <form method="post"
+                action="{{ url_for('chats.edit_chat', slug=chat.slug) if is_edit else url_for('chats.new_chat') }}"
+                class="form"
+                novalidate
+                autocomplete="off">
+            {{ form.hidden_tag() }}
+
+            {# === Slug (View-only, Edit Mode) === #}
+            {% if is_edit and chat %}
+              <div class="form-group">
+                <label class="form-label">Slug:</label>
+                <span class="inline-value">{{ chat.slug }}</span>
+              </div>
+            {% endif %}
+
+            {# === Name === #}
+            <div class="form-group">
+              <label for="{{ form.name.id }}" class="form-label">
+                {{ form.name.label.text }}<span class="form-required-mark">*</span>
+              </label>
+              {{ form.name(class="form-control" ~ (' input-error' if form.name.errors else '')) }}
+              {% for error in form.name.errors %}
+                <div class="error">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            {# === Type === #}
+            <div class="form-group">
+              <label for="{{ form.type.id }}" class="form-label">
+                {{ form.type.label.text }}
+              </label>
+              {{ form.type(class="form-control" ~ (' input-error' if form.type.errors else '')) }}
+              {% for error in form.type.errors %}
+                <div class="error">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            {# === Link === #}
+            <div class="form-group">
+              <label for="{{ form.link.id }}" class="form-label">
+                {{ form.link.label.text }}
+              </label>
+              {{ form.link(class="form-control" ~ (' input-error' if form.link.errors else '')) }}
+              <small class="form-hint">Must start with http:// or https://</small>
+              {% for error in form.link.errors %}
+                <div class="error">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            {# === Telegram Chat ID === #}
+            <div class="form-group">
+              <label for="{{ form.chat_id.id }}" class="form-label">
+                {{ form.chat_id.label.text }}
+              </label>
+              {{ form.chat_id(class="form-control" ~ (' input-error' if form.chat_id.errors else '')) }}
+              <small class="form-hint">Only digits, like 1234567890</small>
+              {% for error in form.chat_id.errors %}
+                <div class="error">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            {# === Join Date === #}
+            <div class="form-group">
+              <label for="{{ form.joined.id }}" class="form-label">
+                {{ form.joined.label.text }}
+              </label>
+              {{ form.joined(class="form-control form-date form-date-input" ~ (' input-error' if form.joined.errors else '')) }}
+              {% for error in form.joined.errors %}
+                <div class="error">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            {# === Toggle Switches: Is Active, Is Member, Is Public === #}
+            <div class="form-group toggle-group">
+              <label class="switch-label-block" for="is_active">
+                <span class="form-label toggle-label">Active</span>
+                <div class="switch">
+                  <input type="checkbox" id="is_active" name="is_active"
+                        {% if form.is_active.data %}checked{% endif %}
+                        aria-label="Mark chat as active">
+                  <span class="slider"></span>
+                </div>
+              </label>
+
+              <label class="switch-label-block" for="is_member">
+                <span class="form-label toggle-label">Member</span>
+                <div class="switch">
+                  <input type="checkbox" id="is_member" name="is_member"
+                        {% if form.is_member.data %}checked{% endif %}
+                        aria-label="Mark chat as joined">
+                  <span class="slider"></span>
+                </div>
+              </label>
+
+              <label class="switch-label-block" for="is_public">
+                <span class="form-label toggle-label">Public</span>
+                <div class="switch">
+                  <input type="checkbox" id="is_public" name="is_public"
+                        {% if form.is_public.data %}checked{% endif %}
+                        aria-label="Mark chat as public">
+                  <span class="slider"></span>
+                </div>
+              </label>
+            </div>
+
+            {# === Notes === #}
+            <div class="form-group">
+              <label for="{{ form.notes.id }}" class="form-label">
+                {{ form.notes.label.text }}
+              </label>
+              {{ form.notes(class="form-control", rows=3) }}
+            </div>
+
+            {# === Action Buttons === #}
+            <div class="form-actions-centered">
+              <button type="submit" class="btn btn-primary btn-icon">
+                <img src="{{ url_for('static', filename='img/save_icon.png') }}" alt="Save" class="icon-btn">
+                {% if is_edit %}Update{% else %}Create{% endif %}
+              </button>
+              <a href="{{ url_for('chats.view_chat', slug=chat.slug) if is_edit else url_for('chats.list_chats') }}"
+                class="btn btn-secondary">Cancel</a>
+            </div>
+
+          </form>
         </div>
-      {% endfor %}
-    </div>
-  {% endif %}
-{% endwith %}
-
-{# === Chat Form === #}
-<form method="post" class="chat-form" action="{{ url_for('chats.save_chat') }}">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-  {# Hidden original slug if present #}
-  {% if chat and chat.slug %}
-    <input type="hidden" name="original_slug" value="{{ chat.slug }}">
-  {% endif %}
-  {% if original_slug %}
-    <input type="hidden" name="original_slug" value="{{ original_slug }}">
-  {% endif %}
-
-  {# Display slug if editing #}
-  {% if chat %}
-    <div class="form-section form-inline-row">
-      <label>Slug:</label>
-      <span class="inline-value">{{ chat.slug }}</span>
-    </div>
-  {% endif %}
-
-  {# === Form Fields === #}
-  <div class="form-section">
-    <label for="name">Chat Name<span class="required-asterisk">*</span></label>
-    <input type="text" id="name" name="name"
-           class="form-control {% if errors is defined and errors.name %}input-error{% endif %}"
-           value="{{ chat.name or '' }}">
-    {% if errors is defined and errors.name %}
-      <div class="alert alert-error">{{ errors.name }}</div>
-    {% endif %}
-  </div>
-
-  <div class="form-section">
-    <label for="type">Type:</label>
-    <input type="text" id="type" name="type" class="form-control" value="{{ chat.type or '' }}">
-  </div>
-
-  <div class="form-section">
-    <label for="link">Link:</label>
-    <input type="text" id="link" name="link"
-           class="form-control {% if errors is defined and errors.link %}input-error{% endif %}"
-           value="{{ chat.link or '' }}"
-           placeholder="e.g. https://t.me/mygroup">
-    <small class="form-hint">Must be a valid link starting with http:// or https://</small>
-    {% if errors is defined and errors.link %}
-      <div class="alert alert-error">{{ errors.link }}</div>
-    {% endif %}
-  </div>
-
-  <div class="form-section">
-    <label for="chat_id">Chat ID:</label>
-    <input type="text" id="chat_id" name="chat_id"
-           class="form-control {% if errors is defined and errors.chat_id %}input-error{% endif %}"
-           value="{{ chat.chat_id or '' }}"
-           placeholder="e.g. 1234567890">
-    <small class="form-hint">Only digits, like 1234567890</small>
-    {% if errors is defined and errors.chat_id %}
-      <div class="alert alert-error">{{ errors.chat_id }}</div>
-    {% endif %}
-</div>
-
-
-  <div class="form-section">
-    <label for="joined">Joined Date:</label>
-    <input type="date" id="joined" name="joined"
-           class="form-control {% if errors is defined and errors.joined %}input-error{% endif %}"
-           value="{{ chat.joined if chat.joined else '' }}">
-    {% if errors is defined and errors.joined %}
-      <div class="alert alert-error">{{ errors.joined }}</div>
-    {% endif %}
-  </div>
-
-  <div class="form-section">
-    <label for="notes">Notes:</label>
-    <textarea id="notes" name="notes" class="form-control" rows="3">{{ chat.notes or '' }}</textarea>
-  </div>
-
-  {# === Toggle Controls === #}
-  <div class="toggle-group">
-    <label>Active:
-      <label class="switch">
-        <input type="checkbox" id="is_active" name="is_active" {% if chat and chat.is_active %}checked{% endif %}>
-        <span class="slider"></span>
-      </label>
-    </label>
-    <label>Member:
-      <label class="switch">
-        <input type="checkbox" id="is_member" name="is_member"
-               {% if chat and chat.is_member %}checked{% endif %}
-               {% if chat and not chat.is_active %}disabled{% endif %}>
-        <span class="slider"></span>
-      </label>
-    </label>
-  </div>
-
-  {# === Conflict Resolution === #}
-  {% if conflict %}
-    <div class="conflict-box">
-      <p class="conflict-text">Chat with this slug already exists. Choose what to do:</p>
-      <div class="conflict-actions">
-        <button type="submit" name="action" value="create_copy" class="btn btn-dark">Create Copy</button>
-        <button type="submit" name="action" value="overwrite" class="btn btn-danger">Overwrite</button>
       </div>
-    </div>
-  {% endif %}
-
-  {# === Form Footer === #}
-  <div class="form-footer">
-    <button type="submit" class="btn btn-primary">
-      <img src="{{ url_for('static', filename='img/save_icon.png') }}" alt="Save">
-      Save
-    </button>
-
-    {% set cancel_url = url_for('chats.view_chat', slug=chat.slug) if chat and chat.slug else url_for('chats.list_chats') %}
-    <a href="{{ cancel_url }}" class="btn btn-secondary">Cancel</a>
+      <p class="form-required-note">
+        <span class="form-required-mark">*</span> Required field
+      </p>
+    </section>
   </div>
+{% endblock %}
 
-</form>
-
-{# === Required Field Note === #}
-<p class="form-note"><span class="required-asterisk">*</span> Required field</p>
-
+{% block scripts %}
+  <script type="module" src="{{ url_for('static', filename='js/forms/formAutofocus.js') }}"></script>
 {% endblock %}

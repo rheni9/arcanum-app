@@ -1,6 +1,15 @@
-<!-- templates/chats/_chats_table.html -->
-<div id="chat-table-container">
-  <table class="table chat-table">
+{# ============================================================================
+  Chats Table for Arcanum
+
+  Displays a sortable table of all chats with message count
+  and timestamp of the last message.
+============================================================================ #}
+
+{# === Chat Table Wrapper === #}
+<div id="chats-table-container">
+  <table class="table chats-table">
+
+    {# --- Sortable table headers: name, message count, last message --- #}
     <thead>
       <tr>
         <th>#</th>
@@ -13,31 +22,30 @@
         <th class="sortable {% if sort_by == 'message_count' %}active-sort{% endif %}" data-sort="message_count">
           <div class="sort-wrapper">
             <span class="header-label">Messages</span>
-            <span class="sort-arrow">
-              {{ '▲' if sort_by == 'message_count' and order == 'asc'
-                 else '▼' if sort_by == 'message_count' else '' }}
-            </span>
+            <span class="sort-arrow">{{ '▲' if sort_by == 'message_count' and order == 'asc' else '▼' if sort_by == 'message_count' else '' }}</span>
           </div>
         </th>
-        <th class="sortable {% if sort_by == 'last_message_at' %}active-sort{% endif %}" data-sort="last_message_at">
+        <th class="sortable {% if sort_by == 'last_message' %}active-sort{% endif %}" data-sort="last_message">
           <div class="sort-wrapper">
             <span class="header-label">Last Message</span>
-            <span class="sort-arrow">{{ '▲' if sort_by == 'last_message_at' and order == 'asc' else '▼' if sort_by == 'last_message_at' else '' }}</span>
+            <span class="sort-arrow">{{ '▲' if sort_by == 'last_message' and order == 'asc' else '▼' if sort_by == 'last_message' else '' }}</span>
           </div>
         </th>
       </tr>
     </thead>
+
     <tbody>
+      {# --- Render each chat row --- #}
       {% for chat in chats %}
       <tr class="clickable-row" data-href="{{ url_for('chats.view_chat', slug=chat.slug) }}">
         <td>{{ loop.index }}</td>
         <td>{{ chat.name }}</td>
         <td>{{ chat.message_count }}</td>
         <td>
-          {% if chat.last_message_at %}
+          {% if chat.last_message %}
             <div class="table-timestamp">
-              <div class="date">{{ chat.last_message_at | datetimeformat("long_date") }}</div>
-              <div class="time">{{ chat.last_message_at | datetimeformat("time") }}</div>
+              <div class="date">{{ chat.last_message | datetimeformat("long_date") }}</div>
+              <div class="time">{{ chat.last_message | datetimeformat("time") }}</div>
             </div>
           {% else %}
             <div class="table-timestamp"><em>No messages</em></div>
