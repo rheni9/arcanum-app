@@ -1,0 +1,179 @@
+/* ============================================================================
+   Arcanum – Filters and Search Layout
+   Shared layout styles for search and date filtering across pages
+============================================================================ */
+
+/* === Wrapper around all filter/search block === */
+.chat-filters-wrapper {
+  background-color: var(--bg-surface);
+  padding: 1.5rem;
+  border-radius: var(--radius-default);
+  box-shadow: var(--shadow-default);
+  width: 100%;
+  max-width: 100%;
+}
+
+/* === Base form structure === */
+.chat-filter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  row-gap: 1rem;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.filters-row > form.search-form {
+  flex: 1 1 auto;
+  min-width: 320px;
+}
+
+.filters-row > form.filter-form {
+  flex: 0 0 auto;
+}
+
+/* === Search Group === */
+.search-group {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0.5rem;
+  flex-grow: 1;
+  min-width: 0;
+  flex: 1 1 0;
+}
+
+.search-group .form-control {
+  flex: 1 1 auto;
+  min-width: 180px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.search-input {
+  flex: 1 1 auto;
+  min-width: 160px;
+  max-width: 100%;
+  width: auto;
+}
+
+.search-group .btn {
+  flex-shrink: 0;
+  flex-grow: 0;
+  white-space: nowrap;
+}
+
+/* === Date Group === */
+.date-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.date-select-wrapper {
+  position: relative;
+  width: 185px;
+}
+
+.date-select-wrapper select.date-mode-select {
+  position: absolute;
+  top: 50%;
+  left: 0.5rem;
+  transform: translateY(-50%);
+  font-size: var(--font-xs);
+  background: transparent;
+  border: none;
+  appearance: none;
+  z-index: 2;
+  pointer-events: auto;
+  width: 4rem;
+  padding: 0;
+  color: var(--text-color);
+}
+
+.date-select-wrapper input.date-input {
+  padding-left: 4rem;
+  width: 100%;
+  height: 2.5rem;
+}
+
+#end_date {
+  width: 135px;
+  height: 2.5rem;
+}
+
+.btn-reset {
+  white-space: nowrap;
+  margin-left: 0.65rem;
+}
+
+/* === Responsive === */
+@media (max-width: 768px) {
+  .chat-filters-wrapper {
+    padding: 1.25rem;
+  }
+
+  .filters-row,
+  .search-group,
+  .date-group {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .filters-row {
+    row-gap: 1rem;
+  }
+
+  .search-group .form-control,
+  .search-input,
+  .date-select-wrapper,
+  #end_date,
+  .form-control,
+  .btn-reset {
+    width: 100%;
+  }
+
+  #end_date,
+  .search-input {
+    height: 2.25rem;
+    font-size: var(--font-sm);
+    padding: 0 0.75rem;
+    box-sizing: border-box;
+  }
+
+  .date-select-wrapper input.date-input {
+    height: 2.25rem;
+    font-size: var(--font-sm);
+    padding-left: 4rem;
+    padding-right: 0.75rem;
+    box-sizing: border-box;
+  }
+
+  .btn-reset {
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-filters-wrapper {
+    padding: 1.15rem;
+  }
+
+  .search-input,
+  .date-select-wrapper input.date-input,
+  #end_date {
+    height: 2.15rem;
+    font-size: var(--font-sm);
+  }
+}

@@ -1,0 +1,75 @@
+/* ============================================================================
+   Arcanum – Dashboard Feature Cards
+   Styles for reusable navigation cards in the user dashboard grid.
+============================================================================ */
+
+/* === Grid layout for cards === */
+body.dashboard-page .card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  justify-content: center;
+}
+
+/* === Individual card box === */
+body.dashboard-page .card-box {
+  width: 100%;
+  max-width: 240px;
+  margin-inline: auto;
+  padding: 1.25rem;
+  text-align: center;
+  text-decoration: none;
+  color: var(--text-color);
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-default);
+  box-shadow: var(--shadow-default);
+  transition: background-color 0.2s ease;
+}
+
+/* === Hover effect === */
+body.dashboard-page .card-box:hover {
+  background-color: var(--bg-hover);
+}
+
+/* === Icon in card === */
+body.dashboard-page .card-box img {
+  display: block;
+  height: 80px;
+  margin: 0 auto 1rem;
+}
+
+/* === Tablet === */
+@media (max-width: 768px) {
+  body.dashboard-page .card-grid {
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  body.dashboard-page .card-box {
+    max-width: 180px;
+    padding: 1rem;
+  }
+
+  body.dashboard-page .card-box img {
+    height: 60px;
+    margin-bottom: 0.75rem;
+  }
+}
+
+/* === Mobile === */
+@media (max-width: 480px) {
+  body.dashboard-page .card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.75rem;
+  }
+
+  body.dashboard-page .card-box {
+    max-width: 160px;
+    padding: 0.75rem;
+  }
+
+  body.dashboard-page .card-box img {
+    height: 52px;
+    margin-bottom: 0.6rem;
+  }
+}

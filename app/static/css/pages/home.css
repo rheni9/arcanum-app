@@ -1,0 +1,72 @@
+/* ==========================================================
+   Arcanum – Home Page Styles
+   Specific enhancements for the landing page content and layout
+   ========================================================== */
+
+body.home-page section + section {
+  margin-top: 3rem;
+}
+
+/* Motto */
+body.home-page .motto {
+  font-size: var(--font-md);
+  font-style: italic;
+  color: #c2a765;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+/* Guest notice block */
+body.home-page .auth-notice.full-width {
+  width: 100vw;
+  margin: 0;
+  padding: 1rem 2rem;
+  background-color: #ffe0e0;
+  color: var(--color-error);
+  text-align: center;
+  font-size: var(--font-detail);
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  body.home-page section + section {
+    margin-top: 6rem;
+  }
+
+  body.home-page .logo-illustration img {
+    max-width: 70px;
+    height: auto;
+  }
+
+  body.home-page .motto {
+    font-size: var(--font-base);
+  }
+
+  body.home-page .auth-notice.full-width {
+    font-size: var(--font-sm);
+    padding: 0.75rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  body.home-page section + section {
+    margin-top: 8rem;
+  }
+
+  body.home-page .logo-illustration img {
+    max-width: 52px;
+    height: auto;
+  }
+
+  body.home-page .motto {
+    font-size: var(--font-detail);
+  }
+
+  body.home-page .auth-notice.full-width {
+    font-size: var(--font-xs);
+  }
+
+  footer .footer-text {
+    font-size: var(--font-xs);
+  }
+}
