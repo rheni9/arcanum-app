@@ -1,7 +1,7 @@
 """
-Access control hooks for the Arcanum Flask application.
+Access control hook for the Arcanum application.
 
-Handles authentication and authorization checks for protected routes.
+Restricts access to protected routes based on authentication state.
 """
 
 import logging
@@ -14,8 +14,8 @@ def restrict_access() -> Response | None:
     """
     Restrict access to authenticated views.
 
-    Redirects the user to the login page if the session is unauthenticated
-    and the route is not in the allowed list.
+    Redirects the user to the login page if not logged in and attempting to
+    access a route outside the public allowlist.
 
     :return: Redirect response to login page if unauthorized, otherwise None.
     """

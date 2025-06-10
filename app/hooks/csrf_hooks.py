@@ -1,7 +1,7 @@
 """
-CSRF error handler hook for the Arcanum Flask application.
+CSRF error hook for the Arcanum application.
 
-Handles global handling of CSRF validation errors.
+Handles CSRF validation errors globally with logging and redirection.
 """
 
 import logging
@@ -13,10 +13,10 @@ logger = logging.getLogger(__name__)
 
 def handle_csrf_error(exception: CSRFError) -> Response:
     """
-    Handle CSRF token validation errors.
+    Handle CSRF validation errors globally.
 
-    Logs the error, flashes a user-friendly message, and redirects the user
-    to the referrer or the home page.
+    Logs the error, flashes a user message, and redirects the user to
+    the referring page or home if unavailable.
 
     :param exception: CSRFError exception instance.
     :return: Redirect response with a flash message.

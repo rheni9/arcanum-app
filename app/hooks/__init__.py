@@ -1,5 +1,8 @@
 """
-Request and session-level hooks for the Arcanum Flask application.
+Authentication hook package for the Arcanum application.
 
-Provides global request management and session control hooks.
+Imports request lifecycle handlers for authentication checks and CSRF errors.
 """
+
+from .auth_hooks import restrict_access  # noqa: F401
+from .csrf_hooks import handle_csrf_error  # noqa: F401
