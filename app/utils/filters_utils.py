@@ -1,161 +1,225 @@
 """
-Filtering utilities for message search in Arcanum application.
+Filter and search utilities for the Arcanum application.
 
-Handles:
-- normalization of raw request parameters into MessageFilters,
-- validation of filter combinations and logical consistency,
-- structured logging for debugging and diagnostics.
+Centralizes validation and SQL clause construction. Ensures consistent
+usage and logging across search and filter entrypoints.
 """
 
 import logging
-from typing import Optional, Tuple
+from typing import Any
 
-from app.utils.time_utils import parse_date
 from app.models.filters import MessageFilters
+from app.utils.time_utils import parse_date
 
 logger = logging.getLogger(__name__)
 
 
-def normalize_filters(
-    action: Optional[str],
-    query: Optional[str],
-    mode: Optional[str],
-    start: Optional[str],
-    end: Optional[str]
-) -> MessageFilters:
+def is_valid_date_mode(mode: str | None) -> bool:
+    return mode in {"on", "before", "after", "between"}
+
+
+def normalize_filter_action(filters: MessageFilters) -> None:
     """
-    Create and normalize a MessageFilters object from raw input.
+    Determine and set the appropriate action for the filters.
 
-    Performs trimming, blank-to-None coercion, and applies defaults.
-    Logs the normalized values for diagnostics.
-
-    :param action: Requested action ('search' or 'filter').
-    :type action: Optional[str]
-    :param query: Search query string.
-    :type query: Optional[str]
-    :param mode: Date filter mode ('on', 'before', 'after', 'between').
-    :type mode: Optional[str]
-    :param start: Start date (YYYY-MM-DD).
-    :type start: Optional[str]
-    :param end: End date (YYYY-MM-DD).
-    :type end: Optional[str]
-    :return: Normalized MessageFilters instance.
-    :rtype: MessageFilters
+    Modifies filters in place:
+    - Sets action to 'search' or 'filter' based on input.
+    - Clears incompatible fields.
     """
-    filters = MessageFilters(
-        action=action,
-        query=query,
-        date_mode=mode or "on",
-        start_date=start,
-        end_date=end
-    )
-    filters.normalize(verbose=True)
-    return filters
+    if filters.action in {"search", "tag", "filter"}:
+        return
 
-
-def _validate_search_query(query: str) -> Tuple[bool, Optional[str]]:
-    """
-    Validate a search query string.
-
-    :param query: Search query string.
-    :type query: str
-    :return: Tuple (is_valid, error_message).
-    :rtype: Tuple[bool, Optional[str]]
-    """
-    if not query:
-        message = "Please enter a search query or select a date filter."
-        logger.warning("[FILTERS|VALIDATE] Search failed: %s", message)
-        return False, message
-
-    logger.debug("[FILTERS|VALIDATE] Search passed | query='%s'.", query)
-    return True, None
-
-
-def _validate_filter_dates(
-    mode: str,
-    start: str,
-    end: str
-) -> Tuple[bool, Optional[str]]:
-    """
-    Validate date-based filtering parameters.
-
-    Checks for required start/end dates, logical date ranges,
-    and correct formats.
-
-    :param mode: Date filter mode ('on', 'before', 'after', 'between').
-    :type mode: str
-    :param start: Start date string (YYYY-MM-DD).
-    :type start: str
-    :param end: End date string (YYYY-MM-DD).
-    :type end: str
-    :return: Tuple (is_valid, error_message).
-    :rtype: Tuple[bool, Optional[str]]
-    """
-    if not start and not end:
-        message = "Please provide a valid start date."
-        logger.warning("[FILTERS|VALIDATE] Filter failed: %s", message)
-        return False, message
-
-    message = None
-
-    if mode == "between":
-        if not start and not end:
-            message = "Please provide both start and end dates."
-        elif not start:
-            message = "Start date is required."
-        elif not end:
-            message = "End date is required."
-        elif parse_date(start) and parse_date(end):
-            if start > end:
-                message = "Start date must be before or equal to end date."
-        else:
-            message = "Invalid date format provided."
+    if filters.is_tag_search():
+        filters.action = "tag"
+        filters.query = filters.tag
+        filters.date_mode = None
+        filters.start_date = None
+        filters.end_date = None
+    elif filters.query:
+        # Text query overrides date filtering
+        filters.action = "search"
+        filters.date_mode = None
+        filters.start_date = None
+        filters.end_date = None
+    elif (
+        is_valid_date_mode(filters.date_mode)
+        and (filters.start_date or filters.end_date)
+    ):
+        # Valid date mode and at least one date provided
+        filters.action = "filter"
+        filters.query = None
     else:
-        if not start:
-            message = "Please provide a valid start date."
-        elif not parse_date(start):
-            message = "Invalid start date format."
-
-    is_valid = message is None
-
-    if is_valid:
-        logger.debug(
-            "[FILTERS|VALIDATE] Filter passed | mode=%s | start=%s | end=%s",
-            mode, start, end
-        )
-    else:
-        logger.warning("[FILTERS|VALIDATE] Filter failed: %s", message)
-
-    return is_valid, message
+        # Neither query nor valid date filter: consider invalid
+        filters.action = None
 
 
 def validate_search_filters(
     filters: MessageFilters
-) -> Tuple[bool, Optional[str]]:
+) -> tuple[bool, str | None]:
     """
-    Validate a MessageFilters instance for logical consistency.
-
-    Ensures that required fields are present based on the selected action
-    and date_mode. Returns a boolean flag and optional error message.
+    Validate message filters for search and date-based filtering.
 
     :param filters: Normalized MessageFilters instance.
-    :type filters: MessageFilters
     :return: Tuple (is_valid, error_message).
-    :rtype: Tuple[bool, Optional[str]]
     """
-    if not filters.action:
+    filters.normalize()
+
+    def _validate_search(query: str | None) -> tuple[bool, str | None]:
+        if not (filters.query or filters.tag):
+            msg = "Please enter a search query or tag."
+            logger.warning("[FILTERS|VALIDATE] Search failed: %s", msg)
+            return False, msg
         logger.debug(
-            "[FILTERS|VALIDATE] No action specified, skipping validation."
+            "[FILTERS|VALIDATE] Search passed | query='%s'.", query
         )
         return True, None
 
+    def _validate_tag(tag: str | None) -> tuple[bool, str | None]:
+        if not tag:
+            msg = "Please specify a tag."
+            logger.warning("[FILTERS|VALIDATE] Tag search failed: %s", msg)
+            return False, msg
+        logger.debug("[FILTERS|VALIDATE] Tag search passed | tag='%s'.", tag)
+        return True, None
+
+    def _validate_simple_date(start: str | None) -> tuple[bool, str | None]:
+        if not start:
+            msg = "Please provide a valid date."
+            logger.warning("[FILTERS|VALIDATE] Filter failed: %s", msg)
+            return False, msg
+        if not parse_date(start):
+            msg = "Invalid start date format."
+            logger.warning("[FILTERS|VALIDATE] Filter failed: %s", msg)
+            return False, msg
+        logger.debug(
+            "[FILTERS|VALIDATE] Filter passed | mode=%s | start=%s.",
+            filters.date_mode, start
+        )
+        return True, None
+
+    def _validate_between_dates(
+        start: str | None, end: str | None
+    ) -> tuple[bool, str | None]:
+        if not start and not end:
+            msg = "Please provide both start and end dates."
+            logger.warning("[FILTERS|VALIDATE] Filter failed: %s", msg)
+            return False, msg
+        if not start:
+            msg = "Start date is required."
+            logger.warning("[FILTERS|VALIDATE] Filter failed: %s", msg)
+            return False, msg
+        if not end:
+            msg = "End date is required."
+            logger.warning("[FILTERS|VALIDATE] Filter failed: %s", msg)
+            return False, msg
+        if not (parse_date(start) and parse_date(end)):
+            msg = "Invalid date format provided."
+            logger.warning("[FILTERS|VALIDATE] Filter failed: %s", msg)
+            return False, msg
+        if start > end:
+            msg = "Start date must be before or equal to end date."
+            logger.warning("[FILTERS|VALIDATE] Filter failed: %s", msg)
+            return False, msg
+        logger.debug(
+            "[FILTERS|VALIDATE] Filter passed | mode=between | "
+            "start=%s | end=%s.", start, end
+        )
+        return True, None
+
+    # valid, message = False, None
+
     if filters.action == "search":
-        return _validate_search_query(filters.query)
+        return _validate_search(filters.query)
+
+    if filters.action == "tag":
+        return _validate_tag(filters.tag)
 
     if filters.action == "filter":
-        return _validate_filter_dates(
-            filters.date_mode, filters.start_date or "", filters.end_date or ""
-        )
+        mode = filters.date_mode
+        if not is_valid_date_mode(mode):
+            message = "Invalid date filter mode."
+            logger.warning("[FILTERS|VALIDATE] Filter failed: %s", message)
+            return False, message
+        if mode in {"on", "before", "after"}:
+            return _validate_simple_date(filters.start_date)
+        elif mode == "between":
+            return _validate_between_dates(
+                filters.start_date, filters.end_date
+            )
+    return False, "Please enter a search query, tag, or select a date filter."
 
-    logger.warning("[FILTERS|VALIDATE] Unknown action '%s'.", filters.action)
-    return False, "Please enter a search query or select a date filter."
+
+def build_sql_clause(
+    filters: MessageFilters,
+    chat_slug: str | None = None
+) -> tuple[str, list]:
+    """
+    Build a SQL WHERE clause and parameters from the given filters.
+
+    :param filters: MessageFilters instance.
+    :param chat_slug: If provided, restrict to this chat_slug.
+    :return: Tuple (where_clause, params).
+    """
+    clause = []
+    params = []
+
+    if chat_slug:
+        clause.append("c.slug = ?")
+        params.append(chat_slug)
+
+    if filters.action == "search":
+        if filters.query and filters.tag:
+            clause.append("(m.text LIKE ? OR m.tags LIKE ? OR m.tags LIKE ?)")
+            q_param = f"%{filters.query}%"
+            t_param = f"%{filters.tag}%"
+            params.extend([q_param, q_param, t_param])
+        elif filters.query:
+            clause.append("(m.text LIKE ? OR m.tags LIKE ?)")
+            q_param = f"%{filters.query}%"
+            params.extend([q_param, q_param])
+        elif filters.tag:
+            clause.append("m.tags LIKE ?")
+            params.append(f"%{filters.tag}%")
+
+    if filters.action == "tag":
+        clause.append("m.tags LIKE ?")
+        params.append(f"%{filters.tag}%")
+
+    if filters.action == "filter":
+        date_clause = filters.get_date_clause()
+        if date_clause:
+            clause.append(date_clause)
+            params.extend(filters.get_date_params())
+
+    where_sql = "WHERE " + " AND ".join(clause) if clause else ""
+    logger.debug(
+        "[FILTERS|SQL] %s | params: %s", where_sql or "<no clause>", params
+    )
+    return where_sql, params
+
+
+def group_messages_by_chat(
+    messages: list[dict]
+) -> dict[str, dict[str, Any]]:
+    """
+    Group message dicts by chat_slug for global search/filter UI.
+
+    :param messages: List of message dicts with 'chat_slug' and 'chat_name'.
+    :return: Dict {chat_slug: {"messages": [...], "chat_name": ...}, ...}
+    """
+    grouped: dict[str, dict[str, Any]] = {}
+
+    for msg in messages:
+        slug = msg.get("chat_slug")
+        if not slug:
+            continue
+        name = msg.get("chat_name", slug)
+        if slug not in grouped:
+            grouped[slug] = {
+                "messages": [],
+                "chat_name": name,
+            }
+        grouped[slug]["messages"].append(msg)
+
+    logger.debug("[FILTERS|GROUP] Grouped %d chat(s)", len(grouped))
+    return grouped
