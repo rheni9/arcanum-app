@@ -1,65 +1,80 @@
+{# ============================================================================
+  Base Template for the Arcanum Application
+  Provides global page structure, header, navigation, flash messages,
+  and extension blocks for child templates.
+============================================================================ #}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>{% block title %}Arcanum{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}Arcanum{% endblock %}</title>
+
+  <!-- Favicons  -->
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- Main Styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <!-- Per-page Extra Styles -->
+  {% block extra_styles %}{% endblock %}  
 </head>
-<body>
 
-  {# === Site Header === #}
-  <header class="site-header">
-    <div class="header-content">
-      <a href="{{ url_for('home.home') }}" class="logo-link">
-        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="logo">
-        <span class="site-title">Arcanum</span>
-      </a>
-      <nav class="auth-nav">
-        {% if session.get('logged_in') %}
-          <a href="{{ url_for('dashboard.dashboard') }}" class="nav-link">Dashboard</a>
-          <a href="{{ url_for('auth.logout') }}"
-            class="nav-link logout-link">
-            Logout
-          </a>
-        {% else %}
-          <a href="{{ url_for('auth.login') }}" class="nav-link">Login</a>
-        {% endif %}
-      </nav>
-    </div>
-  </header>
+<body class="{% block body_class %}{% endblock %}">
+  <div class="page-wrapper">
 
-  {# === Main Content === #}
-  <main class="main-content">
-    <div class="container">
+    <!-- Global Header -->
+    {% include "partials/_header.html" %}
+
+    <!-- Main Content -->
+    <main class="layout-container">
+
+      <!-- Global flash message block -->
+      {% block flash %}
+        <div class="flash-messages-container">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              <div class="flash-messages">
+                {% for category, message in messages %}
+                  <div class="alert {{ 'alert-success' if category == 'success' else 'alert-error' }}">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endwith %}
+        </div>
+      {% endblock %}
+
+      <!-- Page content block – overridden in each specific page -->
       {% block content %}{% endblock %}
-    </div>
-  </main>
+    </main>
 
-  {# === Extra Footer (optional per-page block) === #}
-  <footer>
-    {% block extra_footer %}{% endblock %}
-  </footer>
-
-  {# === Global Confirm Modal === #}
-  <div id="confirm-modal" class="modal hidden">
-    <div class="modal-overlay"></div>
-    <div class="modal-content">
-      <h2 id="confirm-title">Are you sure?</h2>
-      <p id="confirm-message">This action cannot be undone.</p>
-      <div class="modal-actions">
-        <button id="confirm-yes" class="btn btn-danger">Yes, delete</button>
-        <button id="confirm-no" class="btn btn-light">Cancel</button>
+    <!-- Global footer block -->
+    <footer>
+      {% block extra_footer %}{% endblock %}
+      <div class="layout-container">
+        {% include "partials/_footer.html" %}
       </div>
-    </div>
+    </footer>
+
+    <!-- Global modal  -->
+    {% include "partials/_modal.html" %}
+
+    <!-- Global scripts -->
+    <script type="module" src="{{ url_for('static', filename='js/base.js') }}"></script>
+
+    <!-- Per-page scripts -->
+    {% block scripts %}{% endblock %}
+  
   </div>
-
-  {# === Global JavaScript === #}
-  <script type="module" src="{{ url_for('static', filename='js/base.js') }}"></script>
-
-  {# === Optional per-page scripts === #}
-  {% block scripts %}{% endblock %}
-
 </body>
 </html>
