@@ -41,7 +41,7 @@ def group_messages_by_chat(messages: List[dict]) -> Dict[str, dict]:
 
     chats = get_chats_by_ids(chat_ref_ids)
     chat_ref_id_map = {
-        chat["id"]: {"slug": chat["slug"], "name": chat["name"]}
+        chat.id: {"slug": chat.slug, "name": chat.name}
         for chat in chats
     }
 
