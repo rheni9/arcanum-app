@@ -12,6 +12,7 @@
 export function bindClickableRows() {
   document.querySelectorAll(".clickable-row").forEach((row) => {
     row.addEventListener("click", () => {
+      if (event.target.tagName.toLowerCase() === 'a') return;
       const href = row.dataset.href;
       if (href) {
         window.location.href = href;

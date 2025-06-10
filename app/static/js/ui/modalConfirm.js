@@ -12,31 +12,47 @@
  * @param {string} message - Message content shown in the modal body.
  * @param {Function} onConfirm - Function to execute if user confirms.
  */
-export function showConfirmModal(title, message, onConfirm) {
+let currentHandler = null;
+
+export function showModal(title, message, onConfirm) {
   const modal = document.getElementById("confirm-modal");
-  const titleEl = document.getElementById("confirm-title");
-  const messageEl = document.getElementById("confirm-message");
-  const yesBtn = document.getElementById("confirm-yes");
-  const noBtn = document.getElementById("confirm-no");
+  const titleEl = document.getElementById("modal-title");
+  const bodyEl = document.getElementById("modal-body");
+  const confirmBtn = document.getElementById("modal-confirm");
+  const cancelBtn = document.getElementById("modal-cancel");
+  const overlay = modal.querySelector(".modal-overlay");
+
+  if (!modal || !titleEl || !bodyEl || !confirmBtn || !cancelBtn) {
+    console.warn("[Modal] Required elements not found in DOM.");
+    return;
+  }
 
   titleEl.textContent = title;
-  messageEl.textContent = message;
+  bodyEl.textContent = message;
   modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden", "false");
+
+  const handler = () => {
+    cleanup();
+    if (typeof onConfirm === "function") onConfirm();
+  };
+
+  const handleOverlayClick = () => {
+    cleanup();
+  };
 
   const cleanup = () => {
     modal.classList.add("hidden");
-    yesBtn.removeEventListener("click", onYes);
-    noBtn.removeEventListener("click", onNo);
+    modal.setAttribute("aria-hidden", "true");
+    confirmBtn.removeEventListener("click", handler);
+    cancelBtn.removeEventListener("click", cleanup);
+    overlay.removeEventListener("click", handleOverlayClick);
+    currentHandler = null;
   };
 
-  const onYes = () => {
-    cleanup();
-    onConfirm();
-  };
-  
-  const onNo = cleanup;
+  confirmBtn.addEventListener("click", handler);
+  cancelBtn.addEventListener("click", cleanup);
+  overlay.addEventListener("click", handleOverlayClick);
 
-  yesBtn.addEventListener("click", onYes);
-  noBtn.addEventListener("click", onNo);
+  currentHandler = handler;
 }
-  

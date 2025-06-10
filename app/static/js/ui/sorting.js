@@ -122,10 +122,16 @@ export function attachSortHandlers() {
       const newOrder = currentOrder === "asc" ? "desc" : "asc";
 
       const url = new URL(window.location.href);
-      url.searchParams.set("chat", chatSlug);
-      url.searchParams.set("sort", sortField);
-      url.searchParams.set("order", newOrder);
-      url.searchParams.set("t", Date.now());
+      const params = new URLSearchParams(url.search);
+
+      params.set("chat", chatSlug);
+      params.set("sort", sortField);
+      params.set("order", newOrder);
+      params.set("t", Date.now());  // cache-buster
+
+      url.search = params.toString();
+
+      console.log(`[grouped sort] Chat=${chatSlug}, Sort=${sortField}, Order=${newOrder}`);
 
       try {
         const doc = await ajaxFetchHtml(url.toString());
@@ -143,4 +149,3 @@ export function attachSortHandlers() {
     };
   });
 }
-
