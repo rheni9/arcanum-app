@@ -1,0 +1,167 @@
+/* ============================================================
+   Arcanum – Header Styles
+   Defines layout and appearance of the site header, logo,
+   title, and authentication navigation
+   ============================================================ */
+
+/* ======= Header Container ======= */
+.site-header {
+  background-color: var(--color-primary);
+  color: var(--base-white);
+  padding: 1rem 4rem;
+  box-shadow: var(--shadow-default);
+}
+
+/* ======= Content Flex Wrapper ======= */
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 1rem;
+  margin: 0 auto;
+}
+
+/* ======= Logo Link ======= */
+.logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  gap: 0.75rem;
+  max-width: 100%;
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.site-logo {
+  height: auto;
+  width: clamp(20px, 3vw, 28px);
+  flex-shrink: 0;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.logo-link:hover .site-logo {
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 6px var(--accent-soft));
+}
+
+/* ======= Site Title ======= */
+.site-title {
+  color: var(--base-white);
+  font-size: var(--font-lg);
+  font-weight: var(--weight-bold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.2s ease, text-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.site-title:hover {
+  text-shadow: 0 0 6px var(--accent-soft);
+  transform: translateY(-1px);
+}
+
+.site-title:hover,
+.site-title:focus {
+  color: var(--base-white);
+  text-decoration: none;
+  text-shadow: 0 0 6px var(--accent-soft);
+  transform: translateY(-1px);
+}
+
+/* ======= Auth Navigation ======= */
+.auth-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.auth-nav .nav-link {
+  color: var(--base-white);
+  text-decoration: none;
+  font-weight: var(--weight-medium);
+  position: relative;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.auth-nav .nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--base-white);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.auth-nav .nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+.auth-nav .nav-link:hover {
+  text-shadow: 0 0 4px var(--accent-soft);
+  filter: brightness(1.1);
+}
+
+@media (max-width: 768px) {
+  .site-header {
+    padding: 1rem 2rem;
+  }
+
+  .site-title {
+    font-size: var(--font-base);
+  }
+
+  .auth-nav {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.75rem;
+  }
+
+  .auth-nav .nav-link {
+    font-size: var(--font-detail);
+  }
+}
+
+@media (max-width: 480px) {
+  .site-header {
+    padding: 1rem;
+  }
+
+  .logo-link {
+    gap: 0.5rem;
+  }
+
+  .site-title {
+    font-size: var(--font-detail);
+    max-width: 100%;
+  }
+
+  .header-content {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .logo-link {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 60%;
+  }
+
+  .auth-nav {
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    flex-shrink: 0;
+  }
+
+  .auth-nav .nav-link {
+    font-size: var(--font-sm);
+    white-space: nowrap;
+  }
+}

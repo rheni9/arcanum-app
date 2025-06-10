@@ -1,0 +1,16 @@
+/* ==========================================================
+   Arcanum – Footer Styles
+   Styles for the bottom site section
+   ========================================================== */
+
+.footer-content {
+  padding: 1rem 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.footer-text {
+  font-size: var(--font-sm);
+  margin: 0;
+  opacity: 0.8;
+}

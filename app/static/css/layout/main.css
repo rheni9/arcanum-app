@@ -1,0 +1,161 @@
+/* ==========================================================
+   Arcanum – Main Content Layout
+   Defines the primary content wrapper, section structure,
+   and reusable layout elements
+   ========================================================== */
+
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.page-container {
+  width: 100%;
+  max-width: 1024px;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  box-sizing: border-box;
+}
+
+main.layout-container {
+  flex-grow: 1;
+}
+
+/* ======= Main layout block ======= */
+.layout-container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 1rem;
+  box-sizing: border-box;
+}
+
+.meta-block {
+  max-width: 640px;
+  width: 100%;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.content-wrapper {
+  width: fit-content;
+  margin-inline: auto;
+  max-width: 100%;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Main page section wrapper */
+.section {
+  width: 100%;
+  max-width: 1024px;
+  margin-block: 1.5rem;
+  margin-inline: auto;
+  outline: 1px dashed red;
+}
+
+/* Section titles (e.g. headings inside sections) */
+.section-title {
+  font-size: var(--font-xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-primary);
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* Section content area */
+.section-content {
+  font-size: var(--font-base);
+  color: var(--text-color);
+  text-align: center;
+}
+
+/* ===================== Utility ===================== */
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.mt-1 {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.mt-2 {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.mt-3 {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.mt-4 {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.p-1 {
+  padding: 0.5rem;
+}
+
+.p-2 {
+  padding: 1rem;
+}
+
+@media (max-width: 768px) {
+  .layout-container {
+    padding: 1.25rem 1rem;
+  }
+
+  .content-wrapper {
+    width: 100%;
+  }
+
+  .section {
+    margin-block: 1rem;
+  }
+
+  .section-title {
+    font-size: var(--font-lg);
+    margin-bottom: 1.5rem;
+  }
+
+  .section-content,
+  .section-content p {
+    font-size: var(--font-detail);
+  }
+}
+
+@media (max-width: 480px) {
+  .layout-container {
+    padding: 1rem 0.75rem;
+  }
+
+  .section {
+    margin-block: 0.75rem;
+  }
+
+  .main-content {
+    gap: 0.75rem;
+  }
+
+  .section-title {
+    font-size: var(--font-md);
+    margin-bottom: 1.25rem;
+  }
+
+  .section-content,
+  .section-content p {
+    font-size: var(--font-sm);
+  }
+}
