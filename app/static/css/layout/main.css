@@ -55,7 +55,6 @@ main.layout-container {
   max-width: 1024px;
   margin-block: 1.5rem;
   margin-inline: auto;
-  outline: 1px dashed red;
 }
 
 /* Section titles (e.g. headings inside sections) */
