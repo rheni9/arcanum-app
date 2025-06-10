@@ -1,34 +1,35 @@
+{# ============================================================================
+  Arcanum – Home Page Template
+  Displays the public landing page with heading, logo, motto, and access notice.
+============================================================================ #}
+
 {% extends "base.html" %}
 
 {% block title %}Home | Arcanum{% endblock %}
+{% block body_class %}home-page{% endblock %}
 
 {% block content %}
-  {# === Flash Messages === #}
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div class="flash-messages">
-        {% for category, message in messages %}
-          <div class="alert {{ 'alert-success' if category == 'success' else 'alert-error' }}">
-            {{ message }}
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
+  {# --- Welcome message section --- #}
+  <section class="section">
+    <h1 class="section-title">Welcome to Arcanum</h1>
+    <div class="section-content">
+      <p>This is your private space.</p>
+    </div>
+  </section>
 
-  <h1 class="page-title">Welcome to Arcanum</h1>
-  <p>This is your private space.</p>
-
-  <div class="logo-illustration">
-    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo icon">
-  </div>
-
-  <p class="motto"><em>Arcanum in silentio est</em></p>
-{% endblock %}
+  {# --- Branding section with logo and motto --- #}
+  <section class="section">
+    <div class="illustration page-logo">
+      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo icon">
+    </div>
+    <p class="motto">Arcanum in silentio est</p>
+  </section>
+{% endblock %}  
 
 {% block extra_footer %}
+  {# --- Guest-only footer message --- #}
   {% if not session.get('logged_in') %}
-    <div class="auth-notice">
+    <div class="auth-notice full-width">
       Access requires authorization
     </div>
   {% endif %}
