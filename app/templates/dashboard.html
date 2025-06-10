@@ -1,28 +1,22 @@
-{% extends "base.html" %}
+{# ============================================================================
+  Dashboard Page Template for the Arcanum Application
+  Displays the user dashboard with navigation cards to main features.
+============================================================================ #}
 
+{% extends "base.html" %}
 {% block title %}Dashboard | Arcanum{% endblock %}
+{% block body_class %}dashboard-page{% endblock %}
 
 {% block content %}
-  {# === Flash Messages === #}
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div class="flash-messages">
-        {% for category, message in messages %}
-          <div class="alert {{ 'alert-success' if category == 'success' else 'alert-error' }}">
-            {{ message }}
-          </div>
-        {% endfor %}
+    <div class="layout-container">
+    <section class="section">
+      <h1 class="section-title">Dashboard</h1>
+      <div class="section-content card-grid">
+        <a href="{{ url_for('chats.list_chats') }}" class="card-box">
+          <img src="{{ url_for('static', filename='img/chats.png') }}" alt="Chats icon">
+          <h2>Chats</h2>
+        </a>
       </div>
-    {% endif %}
-  {% endwith %}
-
-  <h1 class="page-title">Dashboard</h1>
-
-  {# === Main Dashboard Cards === #}
-  <div class="card-grid">
-    <a href="{{ url_for('chats.list_chats') }}" class="dashboard-card">
-      <img src="{{ url_for('static', filename='img/chats.png') }}" alt="Chats icon">
-      <h2>Chats</h2>
-    </a>
+    </section>
   </div>
 {% endblock %}
