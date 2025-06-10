@@ -1,11 +1,12 @@
 """
 Message models for the Arcanum application.
 
-Defines data classes and methods for message entities,
-including conversion, normalization, and database integration.
+Defines data classes representing message entities, including
+timestamp parsing, normalization, tag handling, and database integration.
 """
 
 import logging
+import re
 import json
 from datetime import datetime, timezone
 from dataclasses import dataclass, field, asdict
@@ -20,15 +21,26 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Message:
     """
-    Represents message entity.
+    Represents a message entity.
 
-    Stores message content, metadata, and user data
-    for display, filtering, and storage.
+    Stores message content, metadata, and user-defined fields
+    for display, filtering, search, and persistent storage.
+
+    :param id: Internal database ID.
+    :param chat_ref_id: Foreign key to Chat.id.
+    :param msg_id: Telegram message ID (if available).
+    :param timestamp: UTC-aware datetime.
+    :param link: Optional link to the message.
+    :param text: Text content of the message.
+    :param media: Media file path or reference.
+    :param screenshot: Screenshot file path or reference.
+    :param tags: List of tag strings.
+    :param notes: Optional notes.
     """
     id: int
-    chat_ref_id: int  # FK to Chat.id
+    chat_ref_id: int
     msg_id: int | None = None
-    timestamp: datetime | None = None  # Timezone-aware UTC datetime
+    timestamp: datetime | None = None
     link: str | None = None
     text: str | None = None
     media: str | None = None
@@ -36,13 +48,66 @@ class Message:
     tags: list[str] = field(default_factory=list)
     notes: str | None = None
 
+    def __post_init__(self) -> None:
+        """
+        Normalize text and tags after initialization.
+
+        Strips whitespace from the text and ensures tags are stored
+        as a clean list of non-empty strings.
+        """
+        self.normalize()
+
+    def normalize(self) -> None:
+        """
+        Normalize text and tags fields in place.
+
+        Strips leading/trailing whitespace from the text,
+        and removes empty or invalid tags.
+        """
+        if self.text:
+            self.text = self.text.strip()
+        self.tags = [tag.strip() for tag in self.tags if tag.strip()]
+        logger.debug("[MESSAGES|MODEL] Normalized Message: %s", self)
+
+    @staticmethod
+    def _parse_timestamp(val: str | datetime | None) -> datetime | None:
+        """
+        Parse a timestamp into a timezone-aware UTC datetime.
+
+        Accepts datetime object or ISO 8601 string.
+
+        :param val: ISO string, datetime, or None.
+        :return: UTC-aware datetime or None.
+        """
+        result = None
+
+        if isinstance(val, datetime):
+            result = (
+                val.astimezone(timezone.utc)
+                if val.tzinfo
+                else val.replace(tzinfo=timezone.utc)
+            )
+        elif isinstance(val, str):
+            val = val.strip()
+            if val:
+                try:
+                    # Parse via time_utils (handles Z, etc.)
+                    result = from_utc_iso(val, "UTC")
+                except (ValueError, TypeError) as e:
+                    logger.warning(
+                        "[MESSAGES|MODEL|TIMESTAMP] Failed to parse timestamp "
+                        "'%s': %s", val, e
+                    )
+
+        return result
+
     @staticmethod
     def _parse_tags(val: Any) -> list[str]:
         """
-        Parse tags from JSON, CSV string, or list.
+        Parse tags from list, JSON string, or CSV string.
 
-        :param val: Tags as list, JSON string, or CSV string.
-        :return: List of stripped tag strings.
+        :param val: Raw tags input.
+        :return: List of cleaned tag strings.
         """
         if isinstance(val, list):
             return Message._parse_tags_from_list(val)
@@ -53,7 +118,10 @@ class Message:
     @staticmethod
     def _parse_tags_from_list(items: list[Any]) -> list[str]:
         """
-        Extract and clean tags from a list.
+        Extract and clean tag strings from a list.
+
+        :param items: List of tags.
+        :return: Cleaned list of tag strings.
         """
         return [
                 tag.strip()
@@ -64,7 +132,10 @@ class Message:
     @staticmethod
     def _parse_tags_from_string(val: str) -> list[str]:
         """
-        Try parsing tags from JSON string first, then fallback to CSV.
+        Try parsing tags from a JSON string first, then fallback to CSV.
+
+        :param val: String with JSON array or CSV tags.
+        :return: List of tag strings.
         """
         val = val.strip()
         if not val:
@@ -72,11 +143,7 @@ class Message:
 
         try:
             tags = json.loads(val)
-            return [
-                tag.strip()
-                for tag in tags
-                if isinstance(tag, str) and tag.strip()
-            ]
+            return Message._parse_tags_from_list(tags)
         except (json.JSONDecodeError, TypeError) as e:
             logger.debug(
                 "[MESSAGES|MODEL|TAGS] Fallback to CSV, could not parse JSON: "
@@ -84,52 +151,12 @@ class Message:
             )
             return [tag.strip() for tag in val.split(",") if tag.strip()]
 
-    @staticmethod
-    def _parse_timestamp(val: str | datetime | None) -> datetime | None:
-        """
-        Parse UTC timestamp from various input types.
-
-        Accepts a datetime object (aware or naive), an ISO 8601 string
-        (with or without 'Z'), or None. Returns a timezone-aware UTC
-        datetime object or None.
-
-        :param val: Datetime as ISO string, datetime object, or None.
-        :return: Timezone-aware UTC datetime object or None.
-        """
-        result = None
-        if val is None:
-            result = None
-        elif isinstance(val, datetime):
-            if val.tzinfo is not None:
-                # Already timezone-aware, bring to UTC
-                result = val.astimezone(timezone.utc)
-            else:
-                # Naive datetime, assume UTC
-                result = val.replace(tzinfo=timezone.utc)
-        elif isinstance(val, str):
-            val = val.strip()
-            if not val:
-                result = None
-            else:
-                try:
-                    # Parse via time_utils (handles Z, etc.)
-                    result = from_utc_iso(val, "UTC")
-                except (ValueError, TypeError) as e:
-                    logger.warning(
-                        "[MESSAGES|MODEL|TIMESTAMP] Failed to parse timestamp "
-                        "'%s': %s", val, e
-                    )
-                    result = None
-        return result
-
     @classmethod
     def from_row(cls, row: dict[str, Any]) -> "Message":
         """
         Create a Message instance from a database row.
 
-        Designed for use with SQL/ORM row mappings.
-
-        :param row: Database row as mapping or tuple.
+        :param row: Dictionary with database columns.
         :return: Message instance.
         """
         msg = cls(
@@ -144,17 +171,15 @@ class Message:
             tags=cls._parse_tags(row.get("tags")),
             notes=empty_to_none(row.get("notes")),
         )
-        logger.debug("[MESSAGES|MODEL] Parsed Message from row: %s", msg)
+        logger.debug("[MESSAGES|MODEL] Parsed Message from DB row: %s", msg)
         return msg
 
     @classmethod
     def from_dict(cls, data: dict) -> "Message":
         """
-        Create a Message instance from a generic dictionary.
+        Create a Message instance from a dictionary.
 
-        Intended for use with deserialized JSON or manual dicts.
-
-        :param data: Dictionary of message fields.
+        :param data: Dictionary with message fields.
         :return: Message instance.
         """
         msg = cls(
@@ -172,22 +197,11 @@ class Message:
         logger.debug("[MESSAGES|MODEL] Created Message from dict: %s", msg)
         return msg
 
-    def normalize(self) -> None:
-        """
-        Normalize text and tags fields.
-
-        Trims text and tags, removing empty tags.
-        """
-        if self.text:
-            self.text = self.text.strip()
-        self.tags = [tag.strip() for tag in self.tags if tag.strip()]
-        logger.debug("[MESSAGES|MODEL] Normalized Message: %s", self)
-
     def to_dict(self) -> dict:
         """
-        Return the message as a dictionary.
+        Convert the message to a dictionary representation.
 
-        :return: Message as dictionary.
+        :return: Dictionary with message fields.
         """
         result = asdict(self)
         # Serialize datetime to ISO string for output (if present)
@@ -197,14 +211,16 @@ class Message:
 
     def prepare_for_db(self) -> tuple:
         """
-        Prepare the message data for database operations.
+        Prepare the message instance for database operations.
 
-        Normalize the message and return a tuple of values
-        for SQL insert or update.
+        Normalizes and serializes fields required for SQL INSERT/UPDATE.
 
-        :return: Tuple of normalized message fields for SQL operations.
+        Field order:
+        (chat_ref_id, msg_id, timestamp, link, text,
+         media, screenshot, tags, notes)
+
+        :return: Tuple of normalized message field values.
         """
-        self.normalize()
         timestamp_str = to_utc_iso(self.timestamp) if self.timestamp else None
         tags_value = json.dumps(self.tags if self.tags is not None else [])
         return (
@@ -221,15 +237,28 @@ class Message:
 
     def get_short_text(self, limit: int = 50) -> str:
         """
-        Return a shortened, single-line version of the message text.
+        Return a shortened single-line preview of the message text.
 
-        :param limit: Character limit.
-        :return: Shortened message text without linebreaks.
+        Collapses all whitespace characters (tabs, newlines, multiple spaces)
+        into single spaces and truncates the result if it exceeds the limit.
+
+        :param limit: Maximum number of characters to show.
+        :return: Cleaned and truncated message text.
         """
         if not self.text:
             return ""
-        text = self.text.replace("\r", " ").replace("\n", " ")
-        text = " ".join(text.split())
-        if len(text) <= limit:
-            return text
-        return text[:limit] + "..."
+        cleaned = re.sub(r"\s+", " ", self.text).strip()
+        return cleaned if len(cleaned) <= limit else cleaned[:limit] + "..."
+
+    def __repr__(self) -> str:
+        """
+        Compact debug representation of a Message.
+
+        :return: Summary string.
+        """
+        short = (self.text or "")
+        short = short[:27] + "..." if len(short) > 30 else short
+        return (
+            f"<Message id={self.id} chat={self.chat_ref_id} "
+            f"msg={self.msg_id} text='{short}'>"
+        )

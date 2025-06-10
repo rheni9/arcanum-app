@@ -1,8 +1,9 @@
 """
 Chat models for the Arcanum application.
 
-Defines data classes and methods for chat entities,
-including conversion, normalization, and database integration.
+Defines data classes representing chat entities, including methods
+for normalization, conversion from data sources, database integration,
+and lightweight reference generation.
 """
 
 import logging
@@ -18,10 +19,22 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Chat:
     """
-    Represents a chat entity.
+    Represents a full chat entity with metadata.
 
-    Stores comprehensive chat metadata for internal management,
-    display, and filtering operations.
+    Stores comprehensive chat metadata used for display,
+    filtering, internal management, and database storage.
+
+    :param id: Internal database ID.
+    :param slug: Unique chat slug.
+    :param name: Display name.
+    :param chat_id: Telegram chat ID (if available).
+    :param link: Optional link to the chat.
+    :param type: Chat type (e.g., 'group', 'channel').
+    :param joined: Date the user joined the chat.
+    :param is_active: Whether the chat is currently active.
+    :param is_member: Whether the user is a member.
+    :param is_public: Whether the chat is publicly visible.
+    :param notes: Optional notes.
     """
     id: int
     slug: str
@@ -37,8 +50,10 @@ class Chat:
 
     def __post_init__(self) -> None:
         """
-        Normalize boolean fields and ensure correct
-        date type after initialization.
+        Normalize boolean flags and parse the joined date after initialization.
+
+        Ensures that is_active, is_member, and is_public are strict booleans,
+        and converts the joined field to a date object if needed.
         """
         self.is_active = bool(self.is_active)
         self.is_member = bool(self.is_member)
@@ -48,35 +63,33 @@ class Chat:
     @staticmethod
     def _parse_date(val: date | datetime | str | None) -> date | None:
         """
-        Parse the joined date from various input types.
+        Parse a date object from various formats.
 
         Accepts date object, datetime object (uses date part), or ISO string.
 
-        :param val: Date as date, datetime, ISO string, or None.
-        :return: Date object or None.
+        :param val: Date, datetime, ISO string, or None.
+        :return: Parsed date or None.
         """
         result = None
-        if val is None:
-            result = None
-        elif isinstance(val, date) and not isinstance(val, datetime):
+
+        if isinstance(val, date) and not isinstance(val, datetime):
             result = val
         elif isinstance(val, datetime):
             result = val.date()
         elif isinstance(val, str):
-            s = val.strip()
-            if not s:
-                result = None
-            else:
-                # ISO format ('YYYY-MM-DD' or 'YYYY-MM-DDTHH:MM:SS')
+            val = val.strip()
+        if val:
+            try:
+                result = date.fromisoformat(val.split("T")[0])
+            except ValueError:
                 try:
-                    result = date.fromisoformat(s.split("T")[0])
-                except ValueError:
-                    try:
-                        result = datetime.strptime(s, "%Y-%m-%d").date()
-                    except (ValueError, TypeError):
-                        result = None
-        else:
-            result = None
+                    result = datetime.strptime(val, "%Y-%m-%d").date()
+                except (ValueError, TypeError) as e:
+                    logger.warning(
+                        "[CHATS|MODEL|DATE] Failed to parse date "
+                        "'%s': %s", val, e
+                    )
+
         return result
 
     @classmethod
@@ -84,9 +97,7 @@ class Chat:
         """
         Create a Chat instance from a database row.
 
-        Designed for use with SQL/ORM row mappings.
-
-        :param row: Database row as mapping or tuple.
+        :param row: Dictionary with database columns.
         :return: Chat instance.
         """
         chat = cls(
@@ -108,11 +119,9 @@ class Chat:
     @classmethod
     def from_dict(cls, data: dict) -> "Chat":
         """
-        Create a Chat instance from a generic dictionary.
+        Create a Chat instance from a dictionary.
 
-        Intended for use with deserialized JSON or manual dicts.
-
-        :param data: Dictionary of chat fields.
+        :param data: Dictionary with chat fields.
         :return: Chat instance.
         """
         chat = cls(
@@ -133,9 +142,9 @@ class Chat:
 
     def to_dict(self) -> dict:
         """
-        Convert the chat to a dictionary.
+        Convert the chat to a dictionary representation.
 
-        :return: Dictionary representation of the chat.
+        :return: Dictionary with chat fields.
         """
         result = asdict(self)
         # Serialize date to ISO string for output (if present).
@@ -145,13 +154,15 @@ class Chat:
 
     def prepare_for_db(self) -> tuple:
         """
-        Prepare the chat data for database operations.
+        Prepare the chat instance for database operations.
 
-        Fields are returned in the following order:
+        Normalizes and serializes fields required for SQL INSERT/UPDATE.
+
+        Field order:
         (chat_id, slug, name, link, type, joined,
-        is_active, is_member, is_public, notes)
+         is_active, is_member, is_public, notes)
 
-        :return: Tuple of normalized fields suitable for SQL INSERT/UPDATE.
+        :return: Tuple of normalized chat field values.
         """
         joined_str = self.joined.isoformat() if self.joined else None
         return (
@@ -169,19 +180,32 @@ class Chat:
 
     def display_name(self) -> str:
         """
-        Return the chat display name with slug.
+        Return a display-friendly name including the chat slug.
 
-        :return: String containing name and slug.
+        :return: Chat name with slug in parentheses.
         """
         return f"{self.name} ({self.slug})"
+
+    def __repr__(self) -> str:
+        """
+        Compact debug representation of a Chat.
+
+        :return: Summary string.
+        """
+        return (
+            f"<Chat id={self.id} slug='{self.slug}' name='{self.name}' "
+            f"is_active={self.is_active} is_member={self.is_member}>"
+        )
 
 
 @dataclass
 class ChatInfo:
     """
-    Represents minimal chat information.
+    Represents a lightweight reference to a chat.
 
-    Stores essential fields for lightweight references.
+    :param id: Chat database ID.
+    :param slug: Unique slug.
+    :param name: Chat name.
     """
     id: int
     slug: str
@@ -192,7 +216,7 @@ class ChatInfo:
         """
         Create a ChatInfo instance from a database row.
 
-        :param row: Database row.
+        :param row: Dictionary with 'id', 'slug', and 'name' fields.
         :return: ChatInfo instance.
         """
         info = cls(
@@ -202,3 +226,11 @@ class ChatInfo:
         )
         logger.debug("[CHATS|MODEL] Parsed ChatInfo from row: %s", info)
         return info
+
+    def __repr__(self) -> str:
+        """
+        Compact debug representation of ChatInfo.
+
+        :return: Summary string.
+        """
+        return f"<ChatInfo id={self.id} slug='{self.slug}' name='{self.name}'>"

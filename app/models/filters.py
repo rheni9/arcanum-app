@@ -1,13 +1,13 @@
 """
 Message filter models for the Arcanum application.
 
-Defines a base filter class and a message filter class for searching
-and filtering messages. Provides normalization, validation, and SQL
-clause helpers with full PEP257-style documentation and unified style.
+Defines the message filtering data class with support for normalization,
+validation, and generation of filter arguments for SQL and request contexts.
 """
 
 import logging
 from dataclasses import dataclass, asdict
+from typing import Literal
 from flask import Request
 
 logger = logging.getLogger(__name__)
@@ -18,37 +18,31 @@ class MessageFilters():
     """
     Filter and search parameters for message entities.
 
-    Supports global and local (per chat) queries, including text
-    search and date range filtering.
+    Supports global and local queries using full-text, tag-based,
+    and date-based filtering options for messages.
 
-    :param action: Optional filter action: 'search' (by text/tags)
-                   or 'filter' (by date).
-    :param query: Search text for message content.
-    :param tag: Search text for message tags.
+    :param action: 'search' or 'filter' to define behavior.
+    :param query: Full-text search string.
+    :param tag: Tag-only search string.
     :param date_mode: Date filter mode: 'on', 'before', 'after', or 'between'.
-    :param start_date: Start date (YYYY-MM-DD).
-    :param end_date: End date (YYYY-MM-DD, used for 'between').
-    :param chat_slug: Restrict filter to this chat if set.
+    :param start_date: Start date (YYYY-MM-DD format).
+    :param end_date: End date (only used in 'between' mode).
+    :param chat_slug: Optional chat slug for chat-local filtering.
     """
-    action: str | None = None  # "search", "filter"
+    action: Literal["search", "filter"] | None = None
     query: str | None = None
     tag: str | None = None
-    date_mode: str | None = None  # "on", "before", "after", "between"
+    date_mode: Literal["on", "before", "after", "between"] | None = None
     start_date: str | None = None
     end_date: str | None = None
     chat_slug: str | None = None
 
-    def to_dict(self) -> dict:
-        """
-        Return a dictionary representation of the filter fields.
-
-        :return: Dictionary of filter fields.
-        """
-        return asdict(self)
-
     def normalize(self) -> None:
         """
         Normalize and sanitize filter fields in place.
+
+        Strips whitespace from all string fields and replaces
+        empty values with None for consistent processing.
         """
         if self.query is not None:
             self.query = self.query.strip() or None
@@ -63,17 +57,45 @@ class MessageFilters():
         if self.chat_slug is not None:
             self.chat_slug = self.chat_slug.strip() or None
 
+    def to_dict(self) -> dict:
+        """
+        Convert all filter parameters to a dictionary.
+
+        :return: Dictionary with filter fields.
+        """
+        return asdict(self)
+
+    def to_query_args(self) -> dict:
+        """
+        Convert the filter to a dictionary of URL query arguments.
+
+        :return: Dictionary of query arguments.
+        """
+        args = {}
+        if self.query:
+            args["query"] = self.query
+        if self.tag:
+            args["tag"] = self.tag
+        if self.action:
+            args["action"] = self.action
+        if self.date_mode:
+            args["date_mode"] = self.date_mode
+        if self.start_date:
+            args["start_date"] = self.start_date
+        if self.end_date:
+            args["end_date"] = self.end_date
+        if self.chat_slug:
+            args["chat_slug"] = self.chat_slug
+        return args
+
     def is_valid(self) -> bool:
         """
-        Validate minimal filter structure for action-specific logic.
+        Check if the filter has a valid combination of fields.
 
-        Determines if the filter contains the minimal required fields
-        to perform either a text search or a date-based filter.
+        Text search requires query or tag.
+        Date filter requires valid mode and date(s).
 
-        Note: For full validation, use `validate_search_filters()`
-        from the utilities module.
-
-        :return: True if the filter is structurally valid for its action.
+        :return: True if filter configuration is valid.
         """
         if self.action == "search" and (self.query or self.tag):
             return True
@@ -88,101 +110,74 @@ class MessageFilters():
                 return True
         return False
 
-    @classmethod
-    def from_request(cls, req: Request) -> "MessageFilters":
-        """
-        Create a MessageFilters instance from a Flask request.
-
-        :param req: Flask request object.
-        :return: MessageFilters instance populated from request args.
-        """
-        filters = cls(
-            action=req.args.get("action"),
-            query=req.args.get("query"),
-            tag=req.args.get("tag"),
-            date_mode=req.args.get("date_mode"),
-            start_date=req.args.get("start_date"),
-            end_date=req.args.get("end_date"),
-            chat_slug=(
-                req.args.get("chat_slug")
-                or req.args.get("chat")
-                or req.view_args.get("slug")
-            ),
-        )
-        filters.normalize()
-        if filters.has_active():
-            logger.debug(
-                "[FILTERS|REQUEST] Created filters from request: %s", filters
-            )
-        else:
-            logger.debug("[FILTERS|REQUEST] No filters provided in request.")
-        return filters
-
-    def is_tag_search(self) -> bool:
-        """
-        Determine whether the filter is a tag-only search.
-
-        :return: True if searching by tag only.
-        """
-        return bool(self.tag)
-
     def has_active(self) -> bool:
         """
-        Check if any filter field is set.
+        Check whether any filter fields are populated.
 
-        :return: True if any filter is active.
+        :return: True if any filter condition is set.
         """
-        return any([self.query, self.tag, self.start_date, self.end_date])
+        return any([
+            self.query,
+            self.tag,
+            self.date_mode,
+            self.start_date,
+            self.end_date,
+        ])
 
     def is_empty(self) -> bool:
         """
-        Check if all filter fields are empty.
+        Check if the filter has no active fields set.
 
-        :return: True if no filters are set.
+        :return: True if the filter is empty.
         """
         return not self.has_active()
 
+    def is_tag_search(self) -> bool:
+        """
+        Check whether this is a tag-based search.
+
+        :return: True if a tag is specified.
+        """
+        return bool(self.tag)
+
     def is_global(self) -> bool:
         """
-        Check if the filter is global (not restricted to a chat).
+        Check whether the filter is global (not chat-specific).
 
-        :return: True if global filter.
+        :return: True if chat_slug is not set.
         """
         return not self.chat_slug
 
     def is_local(self) -> bool:
         """
-        Check if the filter is local (restricted to a specific chat).
+        Check whether the filter is local (chat-specific).
 
-        :return: True if local filter.
+        :return: True if chat slug is set.
         """
         return bool(self.chat_slug)
 
     def get_date_clause(self) -> str:
         """
-        Return the SQL clause for the current date filter.
+        Generate SQL WHERE clause for the active date filter.
 
-        Constructs a SQL WHERE clause for date filtering based on the
-        current `date_mode` and date values.
-        Returns an empty string if filtering is not applicable.
-
-        :return: SQL WHERE clause snippet for date filtering.
+        :return: SQL clause fragment or empty string.
         """
-        if self.date_mode == "on" and self.start_date:
-            return "DATE(m.timestamp) = DATE(?)"
-        if self.date_mode == "before" and self.start_date:
-            return "DATE(m.timestamp) < DATE(?)"
-        if self.date_mode == "after" and self.start_date:
-            return "DATE(m.timestamp) >= DATE(?)"
-        if self.date_mode == "between" and self.start_date and self.end_date:
-            return "DATE(m.timestamp) BETWEEN DATE(?) AND DATE(?)"
+        match self.date_mode:
+            case "on" if self.start_date:
+                return "DATE(m.timestamp) = DATE(?)"
+            case "before" if self.start_date:
+                return "DATE(m.timestamp) < DATE(?)"
+            case "after" if self.start_date:
+                return "DATE(m.timestamp) >= DATE(?)"
+            case "between" if self.start_date and self.end_date:
+                return "DATE(m.timestamp) BETWEEN DATE(?) AND DATE(?)"
         return ""
 
     def get_date_params(self) -> list[str]:
         """
-        Return the SQL parameter values for the current date filter.
+        Return parameters corresponding to the active date clause.
 
-        :return: List of date parameters for the SQL query.
+        :return: List of date strings or an empty list.
         """
         if self.date_mode in {"on", "before", "after"} and self.start_date:
             return [self.start_date]
@@ -194,19 +189,48 @@ class MessageFilters():
             return [self.start_date, self.end_date]
         return []
 
-    def to_query_args(self) -> dict:
-        """Return dict of filters for query string, skipping empty values."""
-        args = {}
-        if self.query:
-            args["query"] = self.query
-        if self.tag:
-            args["tag"] = self.tag
-        if self.action:
-            args["action"] = self.action
-        if self.date_mode:
-            args["date_mode"] = self.date_mode
-        if self.start_date:
-            args["start_date"] = self.start_date
-        if self.end_date:
-            args["end_date"] = self.end_date
-        return args
+    @classmethod
+    def from_request(cls, req: Request) -> "MessageFilters":
+        """
+        Create a MessageFilters instance from request parameters.
+
+        :param req: Flask request object.
+        :return: Populated MessageFilters instance.
+        """
+        chat_slug = (
+            req.args.get("chat_slug")
+            or req.args.get("chat")
+            or (req.view_args.get("slug") if req.view_args else None)
+        )
+
+        filters = cls(
+            action=req.args.get("action"),
+            query=req.args.get("query"),
+            tag=req.args.get("tag"),
+            date_mode=req.args.get("date_mode"),
+            start_date=req.args.get("start_date"),
+            end_date=req.args.get("end_date"),
+            chat_slug=chat_slug,
+        )
+        filters.normalize()
+
+        logger.debug(
+            "[FILTERS|REQUEST] Parsed filters from request: %s"
+            if filters.has_active()
+            else "[FILTERS|REQUEST] No filters provided in request.", filters
+        )
+
+        return filters
+
+    def __repr__(self) -> str:
+        """
+        Compact debug representation of message filters.
+
+        :return: Summary string.
+        """
+        return (
+            f"<MessageFilters action='{self.action}' query='{self.query}' "
+            f"tag='{self.tag}' date_mode='{self.date_mode}' "
+            f"start_date='{self.start_date}' end_date='{self.end_date}' "
+            f"chat_slug='{self.chat_slug}'>"
+        )
