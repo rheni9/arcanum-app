@@ -8,12 +8,12 @@ timestamp parsing, normalization, tag handling, and database integration.
 import logging
 import re
 import json
-from datetime import datetime, timezone
+from datetime import datetime
 from dataclasses import dataclass, field, asdict
 from typing import Any
 
 from app.utils.model_utils import empty_to_none, to_int_or_none
-from app.utils.time_utils import to_utc_iso, from_utc_iso
+from app.utils.time_utils import to_utc_iso, parse_to_datetime
 
 logger = logging.getLogger(__name__)
 
@@ -68,38 +68,6 @@ class Message:
             self.text = self.text.strip()
         self.tags = [tag.strip() for tag in self.tags if tag.strip()]
         logger.debug("[MESSAGES|MODEL] Normalized Message: %s", self)
-
-    @staticmethod
-    def _parse_timestamp(val: str | datetime | None) -> datetime | None:
-        """
-        Parse a timestamp into a timezone-aware UTC datetime.
-
-        Accepts datetime object or ISO 8601 string.
-
-        :param val: ISO string, datetime, or None.
-        :return: UTC-aware datetime or None.
-        """
-        result = None
-
-        if isinstance(val, datetime):
-            result = (
-                val.astimezone(timezone.utc)
-                if val.tzinfo
-                else val.replace(tzinfo=timezone.utc)
-            )
-        elif isinstance(val, str):
-            val = val.strip()
-            if val:
-                try:
-                    # Parse via time_utils (handles Z, etc.)
-                    result = from_utc_iso(val, "UTC")
-                except (ValueError, TypeError) as e:
-                    logger.warning(
-                        "[MESSAGES|MODEL|TIMESTAMP] Failed to parse timestamp "
-                        "'%s': %s", val, e
-                    )
-
-        return result
 
     @staticmethod
     def _parse_tags(val: Any) -> list[str]:
@@ -163,7 +131,7 @@ class Message:
             id=row["id"],
             chat_ref_id=row["chat_ref_id"],
             msg_id=to_int_or_none(row.get("msg_id")),
-            timestamp=cls._parse_timestamp(row.get("timestamp")),
+            timestamp=parse_to_datetime(row.get("timestamp")),
             link=empty_to_none(row.get("link")),
             text=empty_to_none(row.get("text")),
             media=empty_to_none(row.get("media")),
@@ -186,7 +154,7 @@ class Message:
             id=to_int_or_none(data.get("id", 0)),
             chat_ref_id=int(data["chat_ref_id"]),
             msg_id=to_int_or_none(data.get("msg_id")),
-            timestamp=cls._parse_timestamp(data.get("timestamp")),
+            timestamp=parse_to_datetime(data.get("timestamp")),
             link=empty_to_none(data.get("link")),
             text=empty_to_none(data.get("text")),
             media=empty_to_none(data.get("media")),

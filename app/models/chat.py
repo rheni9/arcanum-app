@@ -7,11 +7,12 @@ and lightweight reference generation.
 """
 
 import logging
-from datetime import date, datetime
+from datetime import date
 from dataclasses import dataclass, asdict
 from typing import Any
 
 from app.utils.model_utils import empty_to_none, to_int_or_none
+from app.utils.time_utils import parse_to_date
 
 logger = logging.getLogger(__name__)
 
@@ -58,39 +59,7 @@ class Chat:
         self.is_active = bool(self.is_active)
         self.is_member = bool(self.is_member)
         self.is_public = bool(self.is_public)
-        self.joined = self._parse_date(self.joined)
-
-    @staticmethod
-    def _parse_date(val: date | datetime | str | None) -> date | None:
-        """
-        Parse a date object from various formats.
-
-        Accepts date object, datetime object (uses date part), or ISO string.
-
-        :param val: Date, datetime, ISO string, or None.
-        :return: Parsed date or None.
-        """
-        result = None
-
-        if isinstance(val, date) and not isinstance(val, datetime):
-            result = val
-        elif isinstance(val, datetime):
-            result = val.date()
-        elif isinstance(val, str):
-            val = val.strip()
-        if val:
-            try:
-                result = date.fromisoformat(val.split("T")[0])
-            except ValueError:
-                try:
-                    result = datetime.strptime(val, "%Y-%m-%d").date()
-                except (ValueError, TypeError) as e:
-                    logger.warning(
-                        "[CHATS|MODEL|DATE] Failed to parse date "
-                        "'%s': %s", val, e
-                    )
-
-        return result
+        self.joined = parse_to_date(self.joined)
 
     @classmethod
     def from_row(cls, row: dict[str, Any]) -> "Chat":
@@ -107,7 +76,7 @@ class Chat:
             chat_id=to_int_or_none(row.get("chat_id")),
             link=empty_to_none(row.get("link")),
             type=empty_to_none(row.get("type")),
-            joined=cls._parse_date(row.get("joined")),
+            joined=parse_to_date(row.get("joined")),
             is_active=row.get("is_active", False),
             is_member=row.get("is_member", False),
             is_public=row.get("is_public", False),
@@ -131,7 +100,7 @@ class Chat:
             chat_id=to_int_or_none(data.get("chat_id")),
             link=empty_to_none(data.get("link")),
             type=empty_to_none(data.get("type")),
-            joined=cls._parse_date(data.get("joined")),
+            joined=parse_to_date(data.get("joined")),
             is_active=data.get("is_active", False),
             is_member=data.get("is_member", False),
             is_public=data.get("is_public", False),
