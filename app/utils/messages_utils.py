@@ -1,72 +1,49 @@
 """
-Message grouping utilities for the Arcanum application.
+Message utilities for the Arcanum application.
 
-Provides:
-- grouping of message results by their originating chat,
-- resolving chat_ref_id into slug and name for UI rendering,
-- structures for template-friendly output.
+Groups messages by chat slug and prepares structured containers
+for UI display. Used primarily in global search results.
 """
 
 import logging
-from typing import List, Dict
-
-from app.services.chats_service import get_chats_by_ids
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-def group_messages_by_chat(messages: List[dict]) -> Dict[str, dict]:
+def group_messages_by_chat(
+    messages: list[dict]
+) -> dict[str, dict[str, Any]]:
     """
-    Group messages by their associated chat slug.
+    Group message dicts by chat slug.
 
-    Workflow:
-    - Extract unique chat_ref_id values.
-    - Resolve these IDs to chat slugs and names.
-    - Group messages by slug for frontend rendering.
+    Each group contains the chat's name and list of corresponding messages.
+    Skips messages without a valid 'chat_slug'.
 
-    :param messages: List of message dicts with 'chat_ref_id' keys.
-    :type messages: List[dict]
-    :return: Dictionary of grouped messages by chat slug.
-    :rtype: Dict[str, dict]
+    :param messages: List of message dicts with 'chat_slug' and 'chat_name'.
+    :return: Mapping {slug: {"chat_name": ..., "messages": [...]}}.
     """
-    chat_ref_ids = {
-        msg.get("chat_ref_id") for msg in messages if msg.get("chat_ref_id")
-    }
-    if not chat_ref_ids:
-        logger.debug(
-            "[MESSAGES|GROUP] No chat_ref_id found in messages. "
-            "Skipping grouping."
-        )
-        return {}
+    grouped: dict[str, dict[str, Any]] = {}
 
-    chats = get_chats_by_ids(chat_ref_ids)
-    chat_ref_id_map = {
-        chat.id: {"slug": chat.slug, "name": chat.name}
-        for chat in chats
-    }
-
-    logger.debug(
-        "[MESSAGES|GROUP] Resolved %d chat(s) from %d chat_ref_id(s).",
-        len(chat_ref_id_map), len(chat_ref_ids)
-    )
-
-    grouped = {}
     for msg in messages:
-        chat_info = chat_ref_id_map.get(msg.get("chat_ref_id"))
-        if not chat_info:
+        slug = msg.get("chat_slug")
+
+        if not slug:
+            logger.warning(
+                "[GROUP|UTIL] Skipping message without chat_slug: id=%s",
+                msg.get("id")
+            )
             continue
 
-        slug = chat_info["slug"]
+        name = msg.get("chat_name") or slug
+
         if slug not in grouped:
             grouped[slug] = {
-                "chat_name": chat_info["name"],
-                "messages": []
+                "chat_name": name,
+                "messages": [],
             }
         grouped[slug]["messages"].append(msg)
 
-    logger.debug(
-        "[MESSAGES|GROUP] Grouped %d message(s) into %d chat(s).",
-        len(messages), len(grouped)
-    )
-
+    logger.debug("[GROUP|UTIL] Grouped %d chat(s) from %d message(s)",
+                 len(grouped), len(messages))
     return grouped

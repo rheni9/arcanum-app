@@ -1,10 +1,8 @@
 """
-Slug utilities for chat names normalization in Arcanum.
+Slugify utilities for the Arcanum application.
 
-Provides:
-- Transliteration of Cyrillic chat names.
-- Safe slug generation from chat titles.
-- Collision-resistant slug resolution.
+Provides functions to normalize and validate slugs for database usage,
+including uniqueness resolution via a database existence check.
 """
 
 import re
@@ -31,11 +29,23 @@ def transliterate(text: str) -> str:
     Transliterate a Cyrillic string into Latin characters.
 
     :param text: Input string (chat name).
-    :type text: str
     :return: Transliterated lowercase string.
-    :rtype: str
     """
     return ''.join(CYR_TO_LAT.get(char, char) for char in text.lower())
+
+
+def generate_short_hash(seed: str, length: int = 6) -> str:
+    """
+    Generate a short SHA-1-based hexadecimal hash from a seed string.
+
+    Used for fallback slug generation or resolving collisions by
+    appending a short unique suffix.
+
+    :param seed: Input string to hash (e.g., original name or name+link).
+    :param length: Length of resulting hash string (default is 6).
+    :return: Short lowercase hexadecimal hash.
+    """
+    return hashlib.sha1(seed.encode("utf-8")).hexdigest()[:length]
 
 
 def slugify(text: str, max_words: int = 3) -> str:
@@ -46,11 +56,8 @@ def slugify(text: str, max_words: int = 3) -> str:
     Limits slug to first N words. Uses hash fallback for edge cases.
 
     :param text: Input string to convert.
-    :type text: str
     :param max_words: Maximum number of words in the slug.
-    :type max_words: int
     :return: Resulting slug string (e.g., "chat_name" or "chat_ab12ef").
-    :rtype: str
     """
     original_text = str(text) if text is not None else ""
     text = unicodedata.normalize("NFKD", original_text)
@@ -61,7 +68,7 @@ def slugify(text: str, max_words: int = 3) -> str:
     slug = "_".join(words[:max_words])
 
     if not slug or not any(char.isalnum() for char in slug):
-        hash_part = hashlib.sha1(original_text.encode("utf-8")).hexdigest()[:6]
+        hash_part = generate_short_hash(original_text)
         logger.warning(
             "[SLUG|FALLBACK] Generated hash slug for empty result "
             "from input '%s'.", original_text
@@ -80,17 +87,13 @@ def generate_unique_slug(
     Appends short hash suffix to base_slug in case of collisions.
 
     :param base_slug: Primary slug candidate.
-    :type base_slug: str
     :param seed: Seed for hash generation (e.g., name + link).
-    :type seed: str
     :param max_tries: Maximum attempts to resolve collision.
-    :type max_tries: int
     :return: Unique slug string.
-    :rtype: str
     :raises ValueError: If unique slug cannot be generated.
     """
     for i in range(max_tries):
-        suffix = hashlib.sha1((seed + str(i)).encode()).hexdigest()[:6]
+        suffix = generate_short_hash(seed + str(i))
         new_slug = f"{base_slug}_{suffix}"
         if not slug_exists(new_slug):
             if i > 0:

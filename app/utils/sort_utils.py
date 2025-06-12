@@ -5,7 +5,6 @@ Provides normalization and validation of sort parameters for use
 in SQL queries and request handling.
 """
 
-
 import logging
 
 logger = logging.getLogger(__name__)

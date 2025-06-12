@@ -1,5 +1,5 @@
 """
-Database utilities for the Arcanum Flask application.
+Database utilities for the Arcanum application.
 
 Provides SQLite connection helpers, request-scoped and standalone
 connections, context-managed usage, and database presence check.
@@ -174,7 +174,6 @@ def execute_and_commit(query: str, params: tuple) -> None:
 
     :param query: SQL query string.
     :param params: Query parameters.
-
     :raises ValueError: If the database path is invalid or missing.
     :raises sqlite3.DatabaseError: If the query fails and cannot be committed.
     """

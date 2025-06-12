@@ -1,9 +1,9 @@
 """
-Provides datetime utilities for the Arcanum application.
+Time utilities for the Arcanum application.
 
-Supports parsing user-provided dates and times to UTC ISO strings,
-converting timezones for chat messages, formatting timestamps for UI
-display, and consistent logging of fallbacks and parse issues.
+Provides conversion between naive and timezone-aware datetime formats,
+parsing flexible user input to UTC ISO strings, and formatting
+timestamps and dates for UI display with consistent error handling.
 """
 
 import logging
@@ -13,9 +13,58 @@ from dateutil.parser import isoparse
 from pytz import timezone as PytzTimeZone
 from pytz.tzinfo import BaseTzInfo
 
-DEFAULT_TZ = PytzTimeZone("Europe/Kyiv")
+DEFAULT_TZ = PytzTimeZone("Europe/Kyiv")  # Default UI timezone
 
 logger = logging.getLogger(__name__)
+
+
+def _format_day(dt: date) -> str:
+    """
+    Format a date without leading zero in the day.
+
+    :param dt: Date to format.
+    :return: Formatted string.
+    """
+    return f"{dt.day} {dt.strftime('%B %Y')}"
+
+
+def _format_datetime(dt: datetime, format_type: str) -> str:
+    """
+    Format datetime object into a UI string based on format_type.
+
+    :param dt: Datetime object to format.
+    :param format_type: Format style keyword.
+    :return: Formatted string.
+    """
+    format_map = {
+        "datetime": dt.strftime("%Y-%m-%d %H:%M:%S"),
+        "long_date": _format_day(dt.date()),
+        "long_date_time": (
+            f"{_format_day(dt.date())} {dt.strftime('%H:%M:%S')}"
+        ),
+        "time": dt.strftime("%H:%M:%S")
+    }
+    result = format_map.get(format_type)
+    if result:
+        return result
+    logger.warning("[TIME|FORMAT] Unknown format type '%s'.", format_type)
+    return dt.isoformat()
+
+
+def _parse_ymd_string(text: str) -> date | None:
+    """
+    Parse 'YYYY-MM-DD' string to a datetime.date object.
+
+    :param text: Date string.
+    :return: Parsed date or None.
+    """
+    try:
+        return datetime.strptime(text.strip(), "%Y-%m-%d").date()
+    except (ValueError, TypeError, AttributeError) as e:
+        logger.warning(
+            "[DATE|PARSE] Failed to parse YMD string '%s': %s", text, e
+        )
+        return None
 
 
 def to_utc_iso(dt: datetime) -> str:
@@ -23,9 +72,7 @@ def to_utc_iso(dt: datetime) -> str:
     Convert the datetime object to UTC ISO 8601 string.
 
     :param dt: Timezone-aware datetime object.
-    :type dt: datetime
     :return: ISO 8601 string in UTC.
-    :rtype: str
     """
     if dt.tzinfo is None:
         logger.warning(
@@ -33,35 +80,32 @@ def to_utc_iso(dt: datetime) -> str:
             DEFAULT_TZ.zone
         )
         dt = DEFAULT_TZ.localize(dt)
-    return dt.astimezone(dt_timezone.utc).isoformat().replace('+00:00', 'Z')
+    dt_utc = dt.astimezone(dt_timezone.utc)
+    return dt_utc.isoformat().replace('+00:00', 'Z')
 
 
 def from_utc_iso(
-    utc_str: str,
+    str_utc: str,
     target_tz: str | BaseTzInfo = DEFAULT_TZ
 ) -> datetime:
     """
     Convert the UTC ISO 8601 string into a localized datetime object.
 
-    :param utc_str: UTC ISO datetime string.
-    :type utc_str: str
+    :param str_utc: UTC ISO datetime string.
     :param target_tz: Target timezone (name or timezone object).
-    :type target_tz: str | BaseTzInfo
     :return: Localized datetime object.
-    :rtype: datetime
     :raises ValueError: If input is naive (no timezone info).
     """
-    utc_dt = isoparse(utc_str)
-    if utc_dt.tzinfo is None:
+    dt_utc = isoparse(str_utc)
+    if dt_utc.tzinfo is None:
         logger.error(
             "[TIME|PARSE] Naive datetime string '%s' in from_utc_iso.",
-            utc_str
+            str_utc
         )
         raise ValueError("UTC datetime string must be timezone-aware.")
     if isinstance(target_tz, str):
         target_tz = PytzTimeZone(target_tz)
-
-    return utc_dt.astimezone(target_tz)
+    return dt_utc.astimezone(target_tz)
 
 
 def parse_datetime(
@@ -73,13 +117,9 @@ def parse_datetime(
     Parse the flexible datetime input into UTC ISO 8601 string.
 
     :param text: User-provided datetime string.
-    :type text: str
     :param default_tz: Default timezone for naive inputs.
-    :type default_tz: BaseTzInfo
     :param day_first: Interpret ambiguous dates as DD/MM/YYYY.
-    :type day_first: bool
     :return: UTC ISO string or None if parsing fails.
-    :rtype: str | None
     """
     text = text.strip()
 
@@ -108,31 +148,67 @@ def parse_date(text: str) -> str | None:
     Parse the 'YYYY-MM-DD' string into ISO date.
 
     :param text: Date string.
-    :type text: str
     :return: ISO date string or None if invalid.
-    :rtype: str | None
     """
-    try:
-        return datetime.strptime(text.strip(), "%Y-%m-%d").date().isoformat()
-    except (ValueError, TypeError, AttributeError) as e:
-        logger.warning("[DATE|PARSE] Failed to parse '%s': %s", text, e)
-        return None
+    dt = _parse_ymd_string(text)
+    return dt.isoformat() if dt else None
 
 
-def parse_date_to_dateobject(text: str) -> date | None:
+def parse_to_datetime(val: str | datetime | None) -> datetime | None:
     """
-    Parse 'YYYY-MM-DD' string to a datetime.date object.
+    Parse a timestamp into a UTC-aware datetime object.
 
-    :param text: Date string.
-    :type text: str
-    :return: datetime.date or None if invalid.
-    :rtype: date | None
+    Accepts a datetime object or ISO 8601 string (with or without timezone).
+    Returns a UTC-aware datetime, or None if conversion fails.
+
+    :param val: Input datetime or ISO string.
+    :return: UTC datetime or None.
     """
-    try:
-        return datetime.strptime(text.strip(), "%Y-%m-%d").date()
-    except (ValueError, AttributeError, TypeError) as e:
-        logger.warning("[DATE|PARSE] Failed to parse '%s': %s", text, e)
-        return None
+    if isinstance(val, datetime):
+        return (
+            val.astimezone(dt_timezone.utc)
+            if val.tzinfo
+            else val.replace(tzinfo=dt_timezone.utc)
+        )
+    if isinstance(val, str):
+        val = val.strip()
+        if val:
+            try:
+                return from_utc_iso(val, "UTC")
+            except (ValueError, TypeError) as e:
+                logger.warning(
+                    "[TIME|PARSE] Failed to parse timestamp '%s': %s", val, e
+                )
+    return None
+
+
+def parse_to_date(val: date | datetime | str | None) -> date | None:
+    """
+    Parse a date-like value to a datetime.date object.
+
+    Accepts a date, datetime, or ISO string.
+    Returns a valid date object or None if conversion fails.
+
+    :param val: Input date, datetime, or string.
+    :return: Parsed date object or None.
+    """
+    if isinstance(val, date) and not isinstance(val, datetime):
+        return val
+    if isinstance(val, datetime):
+        return val.date()
+    if isinstance(val, str):
+        val = val.strip()
+        if val:
+            dt = _parse_ymd_string(val)
+            if dt:
+                return dt
+            try:
+                return date.fromisoformat(val.split("T")[0])
+            except (ValueError, TypeError) as e:
+                logger.warning(
+                    "[TIME|PARSE] Failed to parse date string '%s': %s", val, e
+                )
+    return None
 
 
 def datetimeformat(
@@ -144,16 +220,13 @@ def datetimeformat(
     Format a datetime/date/string for UI display.
 
     :param value: Datetime/date/string to format.
-    :type value: str | datetime | date | None
     :param format_type: Format style (e.g., "long_date_time").
-    :type format_type: str
     :param tz: Target timezone (name or tz object).
-    :type tz: str | ZoneInfo
     :return: Human-readable string.
-    :rtype: str
     """
     if not value:
         return ""
+
     dt = None
     # If already datetime
     if isinstance(value, datetime):
@@ -166,33 +239,25 @@ def datetimeformat(
         try:
             dt = from_utc_iso(value, tz)
         except (ValueError, TypeError):
-            # Try fallback to "YYYY-MM-DD"
-            try:
-                d = datetime.strptime(value, "%Y-%m-%d")
-                dt = datetime.combine(d.date(), time.min)
-            except (ValueError, TypeError):
+            d = _parse_ymd_string(value)
+            if d:
+                dt = datetime.combine(d, time.min)
+            else:
                 return value
     else:
         return str(value)
 
     # Ensure dt is in the right timezone
-    if isinstance(dt, datetime):
-        if dt.tzinfo is None:
-            dt = DEFAULT_TZ.localize(dt)
-        else:
-            dt = dt.astimezone(DEFAULT_TZ)
+    if dt.tzinfo is None:
+        logger.warning(
+            "[TIME|FORMAT] Naive datetime formatted; localized to '%s'.",
+            DEFAULT_TZ.zone
+        )
+        dt = DEFAULT_TZ.localize(dt)
+    else:
+        dt = dt.astimezone(DEFAULT_TZ)
 
-    if format_type == "datetime":
-        return dt.strftime("%Y-%m-%d %H:%M:%S")
-    if format_type == "long_date":
-        return dt.strftime("%d %B %Y")
-    if format_type == "long_date_time":
-        return dt.strftime("%d %B %Y %H:%M:%S")
-    if format_type == "time":
-        return dt.strftime("%H:%M:%S")
-
-    logger.warning("[TIME|FORMAT] Unknown format type '%s'.", format_type)
-    return dt.isoformat()
+    return _format_datetime(dt, format_type)
 
 
 def dateonlyformat(
@@ -203,31 +268,33 @@ def dateonlyformat(
     Format a date (string, date, or datetime) for UI display.
 
     :param value: Date string or date/datetime object.
-    :type value: str | date | datetime
     :param format_type: Format style: "long_date" or "short_date".
-    :type format_type: str
     :return: Formatted date string.
-    :rtype: str
     """
     if not value:
         return ""
+
     dt = None
     if isinstance(value, date) and not isinstance(value, datetime):
         dt = value
     elif isinstance(value, datetime):
         dt = value.date()
     elif isinstance(value, str):
-        try:
-            dt = datetime.strptime(value, "%Y-%m-%d").date()
-        except (ValueError, TypeError):
+        d = _parse_ymd_string(value)
+        dt = d if d else None
+        if not dt:
             return value
     else:
         return str(value)
 
-    if format_type == "long_date":
-        return dt.strftime("%-d %B %Y")
-    if format_type == "short_date":
-        return dt.strftime("%d.%m.%Y")
+    format_map = {
+        "long_date": _format_day(dt),
+        "short_date": dt.strftime("%d.%m.%Y"),
+    }
+
+    result = format_map.get(format_type)
+    if result:
+        return result
 
     logger.warning("[DATE|FORMAT] Unknown format type '%s'.", format_type)
     return dt.isoformat()

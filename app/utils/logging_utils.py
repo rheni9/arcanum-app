@@ -1,5 +1,5 @@
 """
-Logging configuration utilities for the Arcanum Flask application.
+Logging configuration utilities for the Arcanum application.
 
 Configures global logging with unified formatting for both file and console
 outputs. Enables colorized log levels for readability during development.
