@@ -1,9 +1,9 @@
 """
 Chat service operations for the Arcanum application.
 
-Provides logic for chat retrieval, creation, updating,
-and deletion. Performs validation, handles conflicts,
-and delegates low-level operations to DAO.
+Provides logic for retrieving, creating, updating, and deleting chats.
+Handles input validation, duplicate checks, and delegates all low-level
+operations to the DAO layer.
 """
 
 import logging
@@ -26,7 +26,7 @@ def get_chats(sort_by: str, order: str) -> list[dict]:
 
     :param sort_by: Field to sort by.
     :param order: Sort direction ('asc' or 'desc').
-    :return: List of chat dicts with extra statistics.
+    :return: List of chat row dictionaries with aggregate statistics.
     :raises sqlite3.DatabaseError: If DAO fails.
     """
     logger.debug("[CHATS|SERVICE] Retrieving chats sorted by '%s' (%s).",
@@ -39,7 +39,7 @@ def get_chat_by_slug(slug: str) -> Chat | None:
     Retrieve a chat by its slug.
 
     :param slug: Chat slug.
-    :return: Chat instance if found, else None.
+    :return: Chat instance if found, otherwise None.
     :raises sqlite3.DatabaseError: If DAO fails.
     """
     logger.debug("[CHATS|SERVICE] Retrieving chat by slug '%s'.", slug)
@@ -55,7 +55,7 @@ def get_chat_by_id(pk: int) -> Chat | None:
     Retrieve a chat by its primary key ID.
 
     :param pk: Chat ID.
-    :return: Chat instance if found, else None.
+    :return: Chat instance if found, otherwise None.
     :raises sqlite3.DatabaseError: If DAO fails.
     """
     logger.debug("[CHATS|SERVICE] Retrieving chat ID=%d.", pk)
@@ -72,7 +72,7 @@ def insert_chat(chat: Chat) -> int:
 
     :param chat: Chat instance.
     :return: New chat ID.
-    :raises sqlite3.IntegrityError: If slug is not unique.
+    :raises sqlite3.IntegrityError: If the slug is not unique.
     :raises sqlite3.DatabaseError: If DAO fails.
     """
     if check_slug_exists(chat.slug):
@@ -89,8 +89,8 @@ def update_chat(chat: Chat) -> None:
     Update an existing chat.
 
     :param chat: Chat instance with updated data (must have ID).
-    :raises ValueError: If ID missing.
-    :raises sqlite3.IntegrityError: If slug is not unique.
+    :raises ValueError: If ID is missing.
+    :raises sqlite3.IntegrityError: If the slug is not unique.
     :raises sqlite3.DatabaseError: If DAO fails.
     """
     if not chat.id:
@@ -108,13 +108,13 @@ def update_chat(chat: Chat) -> None:
         raise IntegrityError("Chat with this slug already exists.")
 
     update_chat_record(chat)
-    logger.info("[CHATS|SERVICE] Chat '%s' updated (ID=%d, slug='%s').",
-                chat.name, chat.id, chat.slug)
+    logger.info("[CHATS|SERVICE] Chat '%s' updated (slug='%s', ID=%d).",
+                chat.name, chat.slug, chat.id)
 
 
 def delete_chat_and_messages(slug: str) -> None:
     """
-    Delete a chat and related messages by slug.
+    Delete a chat and its related messages by slug.
 
     :param slug: Chat slug.
     :raises sqlite3.DatabaseError: If DAO fails.
@@ -125,6 +125,8 @@ def delete_chat_and_messages(slug: str) -> None:
             "[CHATS|SERVICE] Delete skipped: no chat for slug '%s'.", slug
         )
         return
+
+    # Messages deleted via ON DELETE CASCADE constraint.
     delete_chat_record(chat.id)
     logger.info("[CHATS|SERVICE] Chat '%s' deleted (ID=%d, slug='%s').",
                 chat.name, chat.id, chat.slug)
@@ -132,10 +134,10 @@ def delete_chat_and_messages(slug: str) -> None:
 
 def slug_exists(slug: str) -> bool:
     """
-    Check if a chat with the given slug exists.
+    Check whether the given chat slug exists.
 
     :param slug: Chat slug.
-    :return: True if exists, else False.
+    :return: True if the slug exists, otherwise False.
     :raises sqlite3.DatabaseError: If DAO fails.
     """
     result = check_slug_exists(slug)
@@ -145,7 +147,7 @@ def slug_exists(slug: str) -> bool:
 
 def get_global_stats() -> dict:
     """
-    Retrieve global chat statistics for the dashboard.
+    Retrieve global chat statistics.
 
     :return: Dictionary with total chats, messages, media count, etc.
     :raises sqlite3.DatabaseError: If DAO fails.

@@ -1,9 +1,9 @@
 """
 Message service operations for the Arcanum application.
 
-Provides logic for message retrieval, creation, updating,
-and deletion. Handles validation, logs context, and delegates
-low-level operations to DAO.
+Provides logic for retrieving, creating, updating, and deleting
+messages. Handles input validation, conflict checks, and delegates
+low-level operations to the DAO layer.
 """
 
 import logging
@@ -25,7 +25,7 @@ def get_message_by_id(pk: int) -> Message | None:
     Retrieve a message by its primary key ID.
 
     :param pk: Message ID.
-    :return: Message instance if found, else None.
+    :return: Message instance if found, otherwise None.
     :raises sqlite3.DatabaseError: If DAO fails.
     """
     logger.debug("[MESSAGES|SERVICE] Retrieving message ID=%d.", pk)
@@ -47,7 +47,7 @@ def get_messages_by_chat_slug(
     :param chat_slug: Chat slug.
     :param sort_by: Field to sort by.
     :param order: Sort direction ('asc' or 'desc').
-    :return: List of message row dicts.
+    :return: List of message row dictionaries.
     :raises sqlite3.DatabaseError: If DAO fails.
     """
     logger.debug(
@@ -63,7 +63,7 @@ def insert_message(message: Message) -> int:
 
     :param message: Message instance.
     :return: New message ID.
-    :raises sqlite3.IntegrityError: If msg_id is not unique per chat.
+    :raises sqlite3.IntegrityError: If msg_id is not unique within the chat.
     :raises sqlite3.DatabaseError: If DAO fails.
     """
     if message.msg_id is not None:
@@ -87,9 +87,9 @@ def update_message(message: Message) -> None:
     """
     Update an existing message.
 
-    :param message: Message instance with updated data.
+    :param message: Message instance with updated data (must have ID).
     :raises ValueError: If ID is missing.
-    :raises sqlite3.IntegrityError: If msg_id is not unique per chat.
+    :raises sqlite3.IntegrityError: If msg_id is not unique within the chat.
     :raises sqlite3.DatabaseError: If DAO fails.
     """
     if not message.id:
@@ -136,11 +136,11 @@ def delete_message(pk: int) -> None:
 
 def message_exists(chat_ref_id: int, msg_id: int) -> bool:
     """
-    Check if a message with the given msg_id exists in the chat.
+    Check if a message with the given Telegram ID exists within the chat.
 
-    :param chat_ref_id: Foreign key ID of the chat.
-    :param msg_id: Telegram message ID.
-    :return: True if exists, else False.
+    :param chat_ref_id: ID of the chat (foreign key in messages table).
+    :param msg_id: Telegram message ID (unique within the given chat).
+    :return: True if such a message exists within the chat, otherwise False.
     :raises sqlite3.DatabaseError: If DAO fails.
     """
     result = check_message_exists(chat_ref_id, msg_id)
@@ -153,10 +153,10 @@ def message_exists(chat_ref_id: int, msg_id: int) -> bool:
 
 def count_messages_in_chat(chat_ref_id: int) -> int:
     """
-    Count the number of messages in a chat.
+    Count the number of messages linked to a specific chat.
 
-    :param chat_ref_id: Foreign key ID of the chat.
-    :return: Number of messages.
+    :param chat_ref_id: ID of the related chat (foreign key).
+    :return: Total number of messages in the chat.
     :raises sqlite3.DatabaseError: If DAO fails.
     """
     count = count_messages_for_chat(chat_ref_id)

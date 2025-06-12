@@ -1,9 +1,9 @@
 """
 Chat database access for the Arcanum application.
 
-Handles low-level operations for retrieving, inserting, updating,
-and deleting chat records. Supports access by ID and slug, and
-provides aggregated message and timestamp data for sorting and UI.
+Handles low-level database operations for retrieving, inserting,
+updating, and deleting chat records. Supports access by ID and slug,
+and provides aggregate statistics for UI, sorting, and message summaries.
 """
 
 import logging
@@ -23,11 +23,9 @@ def fetch_chats(
     """
     Retrieve all chats with message count and last message timestamp.
 
-    Supports sorting by name, message count, or last message time.
-
     :param sort_by: Field to sort by.
     :param order: Sort direction ('asc' or 'desc').
-    :return: List of chat row dicts with aggregates.
+    :return: List of chat row dictionaries with aggregate statistics.
     :raises DatabaseError: If the query fails.
     """
     config = OrderConfig(
@@ -49,7 +47,6 @@ def fetch_chats(
         FROM chats c
         ORDER BY {order_clause};
     """
-
     try:
         conn = get_connection_lazy()
         rows = conn.execute(query).fetchall()
@@ -64,8 +61,8 @@ def fetch_chat_by_slug(slug: str) -> Chat | None:
     """
     Retrieve a chat by its slug.
 
-    :param slug: Chat slug.
-    :return: Chat instance or None.
+    :param slug: Unique chat slug.
+    :return: Chat instance if found, otherwise None.
     :raises DatabaseError: If the query fails.
     """
     query = "SELECT * FROM chats WHERE slug = ?;"
@@ -85,8 +82,8 @@ def fetch_chat_by_id(pk: int) -> Chat | None:
     """
     Retrieve a chat by its primary key ID.
 
-    :param pk: Chat ID.
-    :return: Chat instance or None.
+    :param pk: Chat primary key.
+    :return: Chat instance if found, otherwise None.
     :raises DatabaseError: If the query fails.
     """
     query = "SELECT * FROM chats WHERE id = ?;"
@@ -103,11 +100,11 @@ def fetch_chat_by_id(pk: int) -> Chat | None:
 
 def insert_chat_record(chat: Chat) -> int:
     """
-    Insert a new chat into the database.
+    Insert a new chat record into the database.
 
     :param chat: Chat instance to insert.
-    :return: ID of the inserted chat.
-    :raises IntegrityError: If slug is not unique.
+    :return: Primary key of the inserted chat.
+    :raises IntegrityError: If the slug is not unique.
     :raises DatabaseError: If the query fails.
     """
     query = """
@@ -134,10 +131,10 @@ def insert_chat_record(chat: Chat) -> int:
 
 def update_chat_record(chat: Chat) -> None:
     """
-    Update an existing chat with new values.
+    Update an existing chat record in the database.
 
     :param chat: Chat instance with updated values.
-    :raises IntegrityError: If slug is not unique.
+    :raises IntegrityError: If the slug is not unique.
     :raises DatabaseError: If the query fails.
     """
     query = """
@@ -166,9 +163,9 @@ def update_chat_record(chat: Chat) -> None:
 
 def delete_chat_record(pk: int) -> None:
     """
-    Delete a chat by its primary key ID.
+    Delete a chat record by its primary key.
 
-    :param pk: Chat ID.
+    :param pk: Chat primary key.
     :raises DatabaseError: If the query fails.
     """
     query = "DELETE FROM chats WHERE id = ?;"
@@ -184,17 +181,17 @@ def delete_chat_record(pk: int) -> None:
 
 def check_slug_exists(slug: str) -> bool:
     """
-    Check whether a chat with the given slug exists.
+    Check whether a chat slug already exists in the database.
 
     :param slug: Chat slug.
-    :return: True if chat slug exists.
+    :return: True if the slug exists, otherwise False.
     :raises DatabaseError: If the query fails.
     """
     query = "SELECT 1 FROM chats WHERE slug = ? LIMIT 1;"
     try:
         conn = get_connection_lazy()
         row = conn.execute(query, (slug,)).fetchone()
-        return bool(row)
+        return row is not None
     except DatabaseError as e:
         logger.error("[CHATS|DAO] Slug check failed: %s", e)
         raise
@@ -202,9 +199,12 @@ def check_slug_exists(slug: str) -> bool:
 
 def fetch_global_chat_stats() -> dict:
     """
-    Retrieve global chat and message statistics.
+    Retrieve global aggregate statistics from the database.
 
-    :return: Dictionary with statistics.
+    Includes total number of chats and messages, media message count,
+    most active chat by message count, and metadata about the last message.
+
+    :return: Dictionary with aggregated statistics for all chats.
     :raises DatabaseError: If the query fails.
     """
     query = """

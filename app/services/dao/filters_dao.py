@@ -1,8 +1,9 @@
 """
 Message filter database access for the Arcanum application.
 
-Handles low-level operations for message filtering by text or date,
-with optional chat restriction. Supports sorting and chat metadata.
+Handles low-level database operations for retrieving messages using
+text, tag, and date filters. Supports global and chat-specific scopes,
+with ordering and structured result sets.
 """
 
 import logging
@@ -18,30 +19,29 @@ logger = logging.getLogger(__name__)
 
 def fetch_filtered_messages(
     filters: MessageFilters,
-    sort_by: str,
-    order: str
+    sort_by: str = "timestamp",
+    order: str = "desc"
 ) -> list[dict]:
     """
-    Retrieve messages using search or date filtering logic.
+    Retrieve messages matching the search query, tag, or date filters.
 
-    Applies full-text search ("search" action) or timestamp-based
-    filtering ("filter" action). Results may be limited to a
-    specific chat via filters.chat_slug.
+    Supports both global and chat-specific scopes, with configurable
+    sorting and structured result rows.
 
-    :param filters: MessageFilters instance with normalized fields.
-    :param sort_by: Field to sort by.
+    :param filters: Filter parameters to apply.
+    :param sort_by: Field to sort by ('msg_id' or 'timestamp').
     :param order: Sort direction ('asc' or 'desc').
-    :return: List of matching message row dicts.
+    :return: List of message row dictionaries matching the filter criteria.
     :raises DatabaseError: If the query fails.
     """
     config = OrderConfig(
-        allowed_fields={"timestamp", "msg_id"},
+        allowed_fields={"msg_id", "timestamp"},
         default_field="timestamp",
         default_order="desc",
         prefix="m."
     )
-    order_clause = build_order_clause(sort_by, order, config)
     where_clause, params = build_sql_clause(filters, filters.chat_slug)
+    order_clause = build_order_clause(sort_by, order, config)
 
     query = (
         "SELECT m.id, m.chat_ref_id, m.msg_id, m.timestamp,"
@@ -56,8 +56,9 @@ def fetch_filtered_messages(
     try:
         conn = get_connection_lazy()
         rows = conn.execute(query, params).fetchall()
-        _log_filter_result(filters, len(rows))
-        return [dict(row) for row in rows]
+        result = [dict(row) for row in rows]
+        _log_filter_result(filters, len(result))
+        return result
 
     except DatabaseError as e:
         logger.error("[FILTERS|DAO] Query failed: %s", e)
@@ -66,41 +67,38 @@ def fetch_filtered_messages(
 
 def _log_filter_result(filters: MessageFilters, count: int) -> None:
     """
-    Log a structured message summarizing the filter results.
+    Log a summary of the filter query result.
 
-    :param filters: Filters that were applied.
-    :param count: Number of messages returned.
-    :raises ValueError: If an unknown action type is provided.
+    Displays the action type (search, tag, or date), number of matches,
+    chat scope, and filter value.
+
+    :param filters: Filters used for the query.
+    :param count: Number of matched messages.
+    :raises ValueError: If the action is unknown.
     """
-    action_loggers = {
-        "search": lambda: logger.debug(
+    chat = filters.chat_slug or "<all>"
+
+    if filters.action == "search":
+        logger.debug(
             "[FILTERS|DAO] Retrieved %d message(s) | action=search | "
             "chat='%s' | query='%s'",
-            count, filters.chat_slug or "<all>",
-            filters.query or filters.tag or "<none>"
-        ),
-        "tag": lambda: logger.debug(
+            count, chat, filters.query or filters.tag or "<none>"
+        )
+    elif filters.action == "tag":
+        logger.debug(
             "[FILTERS|DAO] Retrieved %d message(s) | action=tag | "
             "chat='%s' | tag='%s'",
-            count, filters.chat_slug or "<all>",
-            filters.tag or "<none>"
-        ),
-        "filter": lambda: logger.debug(
-            "[FILTERS|DAO] Retrieved %d message(s) | action=filter | "
-            "chat='%s' | mode=%s | start=%s%s",
-            count,
-            filters.chat_slug or "<all>",
-            filters.date_mode or "<none>",
-            filters.start_date or "<none>",
-            f" | end={filters.end_date}"
-            if filters.date_mode == "between" else ""
+            count, chat, filters.tag or "<none>"
         )
-    }
-
-    if filters.action not in action_loggers:
-        logger.debug(
-            "[FILTERS|DAO] Unknown filter action: '%s'", filters.action
+    elif filters.action == "filter":
+        msg = (
+            f"[FILTERS|DAO] Retrieved {count} message(s) | action=filter | "
+            f"chat='{chat}' | mode={filters.date_mode or '<none>'} | "
+            f"start={filters.start_date or '-'}"
         )
+        if filters.date_mode == "between":
+            msg += f" | end={filters.end_date or '-'}"
+        logger.debug(msg)
+    else:
+        logger.error("[FILTERS|DAO] Unknown action: '%s'", filters.action)
         raise ValueError(f"Unknown filter action: {filters.action}")
-
-    action_loggers[filters.action]()
