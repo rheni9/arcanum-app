@@ -214,11 +214,12 @@ class MessageFilters():
         )
         filters.normalize()
 
-        logger.debug(
-            "[FILTERS|REQUEST] Parsed filters from request: %s"
-            if filters.has_active()
-            else "[FILTERS|REQUEST] No filters provided in request.", filters
-        )
+        if filters.has_active():
+            logger.debug(
+                "[FILTERS|REQUEST] Parsed filters from request: %s", filters
+            )
+        else:
+            logger.debug("[FILTERS|REQUEST] No filters provided in request.")
 
         return filters
 
