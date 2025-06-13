@@ -66,12 +66,16 @@
           </div>
         </section>
 
-      {% elif filters.query or filters.start_date or not messages %}
+      {% elif filters.query or filters.tag or filters.start_date or not messages %}
         <section class="section ">
           <div class="results-box {{ 'no-results' if not messages }}">
             <p class="results-summary">
               {% if messages %}
-                {% if filters.query %}Search results for “<strong>{{ filters.query }}</strong>”{% endif %}
+                {% if filters.query %}
+                  Search results for “<strong>{{ filters.query }}</strong>”
+                {% elif filters.tag %}
+                  Search results for tag “<strong>#{{ filters.tag }}</strong>”
+                {% endif %}
                 {% if filters.date_mode in ['on', 'before', 'after', 'between'] and filters.start_date %}
                   {% if filters.query %} &mdash; {% endif %}
                   {% if filters.date_mode == 'on' %}Messages on <strong>{{ filters.start_date|dateonlyformat }}</strong>{% endif %}
@@ -85,7 +89,11 @@
                 <span>&mdash; <strong>{{ messages|length }}</strong>
                   message{{ 's' if messages|length != 1 else '' }} found.</span>
               {% else %}
-                {% if filters.query %}No messages found for “<strong>{{ filters.query }}</strong>”.{% endif %}
+                {% if filters.query %}
+                  No messages found for “<strong>{{ filters.query }}</strong>”.
+                {% elif filters.tag %}
+                  No messages found for tag “<strong>#{{ filters.tag }}</strong>”.
+                {% endif %}
                 {% if filters.date_mode == 'on' %}No messages on <strong>{{ filters.start_date|dateonlyformat }}</strong>.{% endif %}
                 {% if filters.date_mode == 'before' %}No messages before <strong>{{ filters.start_date|dateonlyformat }}</strong>.{% endif %}
                 {% if filters.date_mode == 'after' %}No messages after <strong>{{ filters.start_date|dateonlyformat }}</strong>.{% endif %}
@@ -93,7 +101,7 @@
                   No messages between <strong>{{ filters.start_date|dateonlyformat }}</strong>
                   and <strong>{{ filters.end_date|dateonlyformat }}</strong>.
                 {% endif %}
-                {% if not filters.query and not filters.start_date %}
+                {% if not filters.query and not filters.tag and not filters.start_date %}
                   No messages in this chat.
                 {% endif %}
               {% endif %}
