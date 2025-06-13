@@ -42,7 +42,7 @@
               <img src="{{ url_for('static', filename='img/edit_icon.png') }}" alt="Edit">
               <span>Edit</span>
             </a>
-            <form action="{{ url_for('messages.delete_message_route', chat_slug=chat.slug, pk=message.id) }}"
+            <form action="{{ url_for('messages.delete_message', chat_slug=chat.slug, pk=message.id) }}"
                   method="post" class="inline-form">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" class="btn btn-danger btn-icon"
