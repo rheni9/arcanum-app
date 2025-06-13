@@ -46,11 +46,10 @@ def normalize_filter_action(filters: MessageFilters) -> None:
         filters.date_mode = None
         filters.start_date = None
         filters.end_date = None
-    elif _is_valid_date_mode(filters.date_mode) and (
-        filters.start_date or filters.end_date
-    ):
+    elif _is_valid_date_mode(filters.date_mode):
         filters.action = "filter"
         filters.query = None
+        filters.tag = None
     else:
         filters.action = None
 

@@ -134,7 +134,8 @@ def _validate_search_query(filters: MessageFilters) -> tuple[str, str | None]:
     if not filters.query:
         return "invalid", "Please enter a search query."
 
-    return validate_search_filters(filters)
+    valid, msg = validate_search_filters(filters)
+    return ("valid", None) if valid else ("invalid", msg)
 
 
 def _validate_tag_search(filters: MessageFilters) -> tuple[str, str | None]:
@@ -152,7 +153,8 @@ def _validate_tag_search(filters: MessageFilters) -> tuple[str, str | None]:
     if not filters.tag:
         return "invalid", "Please enter a search query or tag."
 
-    return "valid", None
+    valid, msg = validate_search_filters(filters)
+    return ("valid", None) if valid else ("invalid", msg)
 
 
 def _validate_date_filter(filters: MessageFilters) -> tuple[str, str | None]:
@@ -168,7 +170,8 @@ def _validate_date_filter(filters: MessageFilters) -> tuple[str, str | None]:
     if not filters.date_mode:
         return "invalid", "Please select a date filter mode."
 
-    return validate_search_filters(filters)
+    valid, msg = validate_search_filters(filters)
+    return ("valid", None) if valid else ("invalid", msg)
 
 
 def _result_valid(
