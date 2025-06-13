@@ -19,7 +19,7 @@
       <div class="form-container wide-form">
         <div class="form-box">
           <form method="post"
-                action="{{ url_for('chats.edit_chat', slug=chat.slug) if is_edit else url_for('chats.new_chat') }}"
+                action="{{ url_for('chats.edit_chat', slug=chat.slug) if is_edit else url_for('chats.add_chat') }}"
                 class="form"
                 novalidate
                 autocomplete="off">
