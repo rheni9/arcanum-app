@@ -1,15 +1,15 @@
 """
-Provides centralized logging functions for message-related events.
+Centralized logging for message-related events in the Arcanum application.
 
-Handles logging for viewing, creating, updating, and deleting messages.
-Ensures unified log formatting across message routes and services.
+Handles logging of message viewing and actions such as creation, updating,
+and deletion. Ensures consistent log formatting across routes.
 """
 
 import logging
 
 from app.utils.time_utils import datetimeformat
 
-logger = logging.getLogger("app.messages")
+logger = logging.getLogger(__name__)
 
 
 def log_message_view(
@@ -21,34 +21,29 @@ def log_message_view(
     """
     Log the display of a single message.
 
-    :param pk: Internal message database id.
-    :type pk: int
+    :param pk: Message database ID.
     :param chat_slug: Parent chat slug.
-    :type chat_slug: str
-    :param timestamp: (Optional) Message timestamp (ISO string or datetime).
-    :type timestamp: str | None
-    :param short_text: (Optional) Shortened message text.
-    :type short_text: str | None
+    :param timestamp: Optional ISO string or datetime.
+    :param short_text: Optional preview of message text.
     """
     local_time = datetimeformat(timestamp, "datetime")
     logger.info(
         "[MESSAGES|VIEW] Message id=%s in chat='%s' | time=%s | text='%s'",
-        pk,
-        chat_slug,
-        local_time,
-        short_text or "-"
+        pk, chat_slug, local_time, short_text or "-"
     )
 
 
 def log_message_action(
-    action: str, msg_id: int | None, chat_slug: str
+    action: str,
+    msg_id: int | None,
+    chat_slug: str
 ) -> None:
     """
-    Log a message action in a unified style.
+    Log a message-level action.
 
-    :param action: Action string (CREATE, UPDATE, DELETE).
-    :param msg_id: Message database id or None.
-    :param chat_slug: Chat slug.
+    :param action: Action type ('create', 'update', 'delete').
+    :param msg_id: Message database ID or None.
+    :param chat_slug: Related chat slug.
     """
     logger.info(
         "[MESSAGES|%s] Message id=%s in chat='%s'.",
