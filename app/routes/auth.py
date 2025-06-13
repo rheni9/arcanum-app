@@ -11,7 +11,7 @@ from flask import (
     redirect, url_for, session, flash, Response
 )
 
-from app.forms.auth_form import LoginForm
+from app.forms.auth_form import AuthForm
 
 auth_bp = Blueprint("auth", __name__)
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ def login() -> Response | str:
 
     :return: Redirect to dashboard on success, or render the form with errors.
     """
-    form = LoginForm()
+    form = AuthForm()
 
     if form.validate_on_submit():
         logger.debug("[AUTH|LOGIN] Login form submitted.")
