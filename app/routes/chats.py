@@ -6,7 +6,7 @@ Supports AJAX updates, sorting, and message filtering for chat messages.
 """
 
 import logging
-from sqlite3 import DatabaseError
+from sqlite3 import DatabaseError, IntegrityError
 from flask import (
     Blueprint, render_template, redirect, url_for, flash, Response
 )
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 @chats_bp.route("/")
 def list_chats() -> str:
     """
-    List all chats with optional sorting and AJAX updates.
+    Display list of all chats with optional sorting and AJAX updates.
 
     :return: Rendered chat list page or table fragment.
     :raises DatabaseError: On retrieval failure.
@@ -43,10 +43,11 @@ def list_chats() -> str:
 @chats_bp.route("/<slug>")
 def view_chat(slug: str) -> str:
     """
-    View chat details and messages with filters and sorting.
+    Display details for a chat and its messages with filters and sorting.
 
-    :param slug: Chat slug identifier.
+    :param slug: Slug identifier of the chat.
     :return: Rendered chat view page or table fragment.
+    :raises DatabaseError: On retrieval failure.
     """
     chat = get_chat_by_slug(slug)
     if not chat:
@@ -63,11 +64,13 @@ def view_chat(slug: str) -> str:
 
 
 @chats_bp.route("/new", methods=["GET", "POST"])
-def new_chat() -> Response | str:
+def add_chat() -> Response | str:
     """
     Render and process form for creating a new chat.
 
-    :return: Redirect on success, or rendered form with errors.
+    :return: Redirect on success or rendered form on GET/error.
+    :raises IntegrityError: If slug is not unique.
+    :raises DatabaseError: On insertion failure.
     """
     form = ChatForm()
 
@@ -85,7 +88,11 @@ def new_chat() -> Response | str:
             log_chat_action(action="create", chat_slug=chat.slug)
             flash(f"Chat '{chat.name}' created successfully.", "success")
             return redirect(url_for("chats.view_chat", slug=chat.slug))
-        except (ValueError, DatabaseError) as e:
+        except IntegrityError as e:
+            logger.warning("[DATABASE|CHATS] Integrity error: %s", e)
+            flash("Slug already exists. Please choose another name.", "error")
+
+        except DatabaseError as e:
             logger.error("[DATABASE|CHATS] Failed to create chat: %s", e)
             flash(f"Failed to create chat: {e}", "error")
 
@@ -97,10 +104,13 @@ def edit_chat(slug: str) -> Response | str:
     """
     Render and process form for editing an existing chat.
 
-    :param slug: Chat slug identifier.
-    :return: Redirect on success, or rendered form with errors.
+    :param slug: Slug of the chat to edit.
+    :return: Redirect on success or rendered form on GET/error.
+    :raises IntegrityError: If new slug already exists.
+    :raises DatabaseError: On update failure.
     """
     chat = get_chat_by_slug(slug)
+
     if not chat:
         flash(f"Chat with slug '{slug}' not found.", "error")
         return redirect(url_for("chats.list_chats"))
@@ -124,7 +134,10 @@ def edit_chat(slug: str) -> Response | str:
                 f"Chat '{updated_chat.name}' updated successfully.", "success"
             )
             return redirect(url_for("chats.view_chat", slug=updated_chat.slug))
-        except (ValueError, DatabaseError) as e:
+        except IntegrityError as e:
+            logger.warning("[DATABASE|CHATS] Integrity error: %s", e)
+            flash("Slug already exists. Please choose another name.", "error")
+        except DatabaseError as e:
             logger.error("[DATABASE|CHATS] Failed to update chat: %s", e)
             flash(f"Failed to update chat: {e}", "error")
 
@@ -136,9 +149,9 @@ def edit_chat(slug: str) -> Response | str:
 @chats_bp.route("/<slug>/delete", methods=["POST"])
 def delete_chat(slug: str) -> Response:
     """
-    Delete a chat and its messages.
+    Delete a chat along with its messages.
 
-    :param slug: Chat slug identifier.
+    :param slug: Slug of the chat to delete.
     :return: Redirect to chat list after deletion.
     :raises DatabaseError: On deletion failure.
     """
