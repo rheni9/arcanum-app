@@ -13,7 +13,7 @@ import { rebindAfterAjax } from "../bindings.js";
  * Applies AJAX reload with scroll position preservation.
  */
 export function bindChatSortHandlers() {
-  const headers = document.querySelectorAll(".chat-table th.sortable");
+  const headers = document.querySelectorAll(".chats-table th.sortable");
 
   headers.forEach((header) => {
     header.addEventListener("click", async () => {
@@ -32,8 +32,8 @@ export function bindChatSortHandlers() {
 
       try {
         const doc = await ajaxFetchHtml(url.toString());
-        const container = document.getElementById("chat-table-container");
-        const replacement = doc.getElementById("chat-table-container");
+        const container = document.getElementById("chats-table-container");
+        const replacement = doc.getElementById("chats-table-container");
 
         if (container && replacement) {
           container.innerHTML = replacement.innerHTML;
