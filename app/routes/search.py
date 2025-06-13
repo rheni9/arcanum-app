@@ -1,8 +1,9 @@
 """
-Search routes for the Arcanum application.
+Search/filter routes for the Arcanum application.
 
-Handles global and per-chat search and filter for messages.
-Supports AJAX updates and grouped results for UI.
+Provides endpoints for global and per-chat message search.
+Supports filtering by text, tags, and date ranges, with full-page
+or AJAX rendering of grouped results.
 """
 
 import logging
@@ -10,8 +11,10 @@ from sqlite3 import DatabaseError
 from flask import (
     Blueprint, render_template, request, redirect, flash, url_for
 )
+
 from app.models.filters import MessageFilters
 from app.services.filters_service import resolve_message_query
+from app.logs.search_logs import log_search_outcome
 
 search_bp = Blueprint("search", __name__, url_prefix="/search")
 logger = logging.getLogger(__name__)
@@ -52,7 +55,7 @@ def global_search() -> str:
         clean_args.pop("tag", None)
         return redirect(url_for("search.global_search", **clean_args))
 
-    _log_search_outcome(status, filters, context)
+    log_search_outcome(status, filters, context)
 
     if is_ajax:
         return _render_ajax_response(
@@ -68,34 +71,8 @@ def global_search() -> str:
         "clear_url": url_for("search.global_search"),
         "chat_slug": None,
     })
+
     return render_template("search/results.html", **context)
-
-
-def _log_search_outcome(
-    status: str,
-    filters: MessageFilters,
-    context: dict
-) -> None:
-    if status == "cleared":
-        logger.info(
-            "[SEARCH|ROUTER] Filters cleared — no operation performed."
-        )
-    elif status == "invalid":
-        logger.warning(
-            "[SEARCH|ROUTER] Invalid filter input — no search performed."
-        )
-    elif status == "error":
-        logger.error(
-            "[SEARCH|ROUTER] Query failed: %s", context.get("info_message")
-        )
-    elif status == "valid":
-        scope = (
-            f"Chat '{filters.chat_slug}', " if filters.chat_slug else "Global "
-        )
-        logger.info(
-            "[SEARCH|ROUTER] %ssearch: %d message(s), filters: %s",
-            scope, context["count"], filters.to_dict()
-        )
 
 
 def _render_ajax_response(
@@ -104,8 +81,21 @@ def _render_ajax_response(
     sort_by: str,
     order: str
 ) -> str:
+    """
+    Render a grouped message result table for AJAX requests.
+
+    If a specific chat slug is provided, renders only its message table.
+    Otherwise, renders all grouped results across chats.
+
+    :param chat_slug: Optional slug of a single chat to render.
+    :param context: Dictionary with grouped message data and filters.
+    :param sort_by: Field to sort by.
+    :param order: Sort direction ('asc' or 'desc').
+    :return: Rendered HTML fragment with table content.
+    """
     grouped = context["grouped"]
     filters = context["filters"]
+
     if chat_slug:
         chat_data = grouped.get(chat_slug)
         if not chat_data:
