@@ -24,7 +24,7 @@
       <div class="form-container wide-form">
         <div class="form-box">
           <form method="post"
-                action="{% if is_edit %}{{ url_for('messages.edit_message', chat_slug=chat.slug, pk=message.id) }}{% else %}{{ url_for('messages.add_message', chat_slug=chat_slug) }}{% endif %}"
+                action="{% if is_edit %}{{ url_for('messages.edit_message', chat_slug=chat.slug, pk=message.id) }}{% else %}{{ url_for('messages.add_message', chat_slug=chat.slug) }}{% endif %}"
                 class="form"
                 novalidate
                 autocomplete="off">
@@ -137,7 +137,7 @@
                 <img src="{{ url_for('static', filename='img/save_icon.png') }}" alt="Save" class="icon-btn">
                 {{ "Update" if is_edit else "Save" }}
               </button>
-              <a href="{% if is_edit %}{{ url_for('messages.view_message', chat_slug=chat.slug, pk=message.id) }}{% else %}{{ url_for('chats.view_chat', slug=chat_slug) }}{% endif %}"
+              <a href="{% if is_edit %}{{ url_for('messages.view_message', chat_slug=chat.slug, pk=message.id) }}{% else %}{{ url_for('chats.view_chat', slug=chat.slug) }}{% endif %}"
                 class="btn btn-secondary">Cancel</a>
             </div>
           </form>
