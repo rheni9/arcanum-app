@@ -79,6 +79,8 @@
             <p class="results-summary">
               {% if filters.query %}
                 No messages found for “<strong>{{ filters.query }}</strong>”.
+              {% elif filters.tag %}
+                No messages found for tag “<strong>#{{ filters.tag }}</strong>”.
               {% elif filters.start_date %}
                 No messages found
                 {% if filters.date_mode == 'on' %}

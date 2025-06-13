@@ -17,7 +17,7 @@
         {% set query_value = '#' ~ filters.tag if filters.action == 'tag' else filters.query %}
         <input type="text" name="query"
               class="form-control search-input"
-              value="{{ query_value or '' }}"
+              value="{{ filters.query or ('#' + filters.tag if filters.tag else '') }}"
               placeholder="Search messages...">
         <button type="submit" name="action" value="search" class="btn btn-primary btn-icon">
           <img src="{{ url_for('static', filename='img/search_icon.png') }}" alt="Search">
