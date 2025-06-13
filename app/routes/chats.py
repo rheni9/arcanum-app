@@ -8,30 +8,18 @@ Supports AJAX updates, sorting, and message filtering for chat messages.
 import logging
 from sqlite3 import DatabaseError
 from flask import (
-    Blueprint, render_template, request,
-    redirect, url_for, flash, Response
+    Blueprint, render_template, redirect, url_for, flash, Response
 )
 
 from app.models.chat import Chat
-from app.models.filters import MessageFilters
 from app.forms.chat_form import ChatForm
 from app.services.chats_service import (
-    get_chats, get_chat_by_slug, insert_chat, update_chat,
-    delete_chat_and_messages, slug_exists, get_global_stats
-)
-from app.services.messages_service import (
-    get_messages_by_chat_slug, count_messages_in_chat
-)
-from app.services.filters_service import (
-    resolve_message_query, normalize_filter_action
+    get_chat_by_slug, insert_chat, update_chat,
+    delete_chat_and_messages, slug_exists
 )
 from app.utils.slugify_utils import slugify, generate_unique_slug
-from app.utils.sort_utils import get_sort_order
-from app.logs.chats_logs import (
-    log_list_view, log_list_ajax,
-    log_chat_view, log_chat_view_ajax,
-    log_chat_action
-)
+from app.utils.chats_utils import render_chat_list, render_chat_view
+from app.logs.chats_logs import log_chat_action
 
 chats_bp = Blueprint("chats", __name__, url_prefix="/chats")
 logger = logging.getLogger(__name__)
@@ -45,39 +33,32 @@ def list_chats() -> str:
     :return: Rendered chat list page or table fragment.
     :raises DatabaseError: On retrieval failure.
     """
-    sort_by, order = get_sort_order(
-        request.args.get("sort"),
-        request.args.get("order"),
-        allowed_fields={"name", "message_count", "last_message"},
-        default_field="last_message",
-        default_order="desc"
-    )
-
     try:
-        chats = get_chats(sort_by, order)
-        is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
-        template = "chats/_chats_table.html" if is_ajax else "chats/index.html"
-
-        if is_ajax:
-            log_list_ajax(len(chats), sort_by, order)
-
-        stats = get_global_stats()
-        log_list_view(len(chats), sort_by, order)
-
-        return render_template(
-            template,
-            chats=chats,
-            sort_by=sort_by,
-            order=order,
-            stats=stats,
-            from_chats=True,
-            search_action=url_for("search.global_search"),
-            clear_url=url_for("search.global_search"),
-            chat_slug=None,
-            filters=MessageFilters()
-        )
+        return render_chat_list()
     except DatabaseError as e:
         logger.error("[DATABASE|CHATS] Failed to retrieve chats: %s", e)
+        return render_template("error.html", message=f"Database error: {e}")
+
+
+@chats_bp.route("/<slug>")
+def view_chat(slug: str) -> str:
+    """
+    View chat details and messages with filters and sorting.
+
+    :param slug: Chat slug identifier.
+    :return: Rendered chat view page or table fragment.
+    """
+    chat = get_chat_by_slug(slug)
+    if not chat:
+        flash(f"Chat with slug '{slug}' not found.", "error")
+        return redirect(url_for("chats.list_chats"))
+
+    try:
+        return render_chat_view(chat)
+    except DatabaseError as e:
+        logger.error(
+            "[DATABASE|CHATS] Failed to load messages for '%s': %s", slug, e
+        )
         return render_template("error.html", message=f"Database error: {e}")
 
 
@@ -101,7 +82,7 @@ def new_chat() -> Response | str:
 
         try:
             insert_chat(chat)
-            log_chat_action("create", chat.slug)
+            log_chat_action(action="create", chat_slug=chat.slug)
             flash(f"Chat '{chat.name}' created successfully.", "success")
             return redirect(url_for("chats.view_chat", slug=chat.slug))
         except (ValueError, DatabaseError) as e:
@@ -138,7 +119,7 @@ def edit_chat(slug: str) -> Response | str:
 
         try:
             update_chat(updated_chat)
-            log_chat_action("update", updated_chat.slug)
+            log_chat_action(action="update", chat_slug=updated_chat.slug)
             flash(
                 f"Chat '{updated_chat.name}' updated successfully.", "success"
             )
@@ -150,111 +131,6 @@ def edit_chat(slug: str) -> Response | str:
     return render_template(
         "chats/form.html", form=form, is_edit=True, chat=chat
     )
-
-
-@chats_bp.route("/<slug>")
-def view_chat(slug: str) -> str:
-    """
-    View chat details and messages with filters and sorting.
-
-    :param slug: Chat slug identifier.
-    :return: Rendered chat view page or table fragment.
-    """
-    chat = get_chat_by_slug(slug)
-    if not chat:
-        flash(f"Chat with slug '{slug}' not found.", "error")
-        return redirect(url_for("chats.list_chats"))
-
-    total_count = count_messages_in_chat(chat.id)
-
-    sort_by, order = get_sort_order(
-        request.args.get("sort"),
-        request.args.get("order"),
-        allowed_fields={"timestamp", "msg_id", "text"},
-        default_field="timestamp",
-        default_order="desc"
-    )
-
-    filters = MessageFilters.from_request(request)
-    filters.chat_slug = slug
-    normalize_filter_action(filters)
-
-    try:
-        is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
-        template = "chats/_msg_table.html" if is_ajax else "chats/view.html"
-
-        if filters.action is None:
-            messages = get_messages_by_chat_slug(slug, sort_by, order)
-            message_count = len(messages)
-            info_message = None
-        else:
-            if (
-                filters.action == "search"
-                and filters.query
-                and filters.query.strip().startswith("#")
-            ):
-                tag = filters.query.strip().lstrip("#")
-                return redirect(
-                    url_for("chats.view_chat",
-                            slug=slug, action="tag", tag=tag)
-                )
-            status, context = resolve_message_query(filters, sort_by, order)
-
-            if status == "invalid":
-                messages = []
-                message_count = 0
-                info_message = context["info_message"]
-            elif status == "cleared":
-                messages = get_messages_by_chat_slug(slug, sort_by, order)
-                message_count = len(messages)
-                info_message = context["info_message"]
-            else:
-                messages = context["messages"]
-                message_count = context["count"]
-                info_message = context["info_message"]
-
-        is_valid_action = filters.action is not None
-
-        if is_ajax:
-            if is_valid_action:
-                log_chat_view_ajax(slug, message_count, filters.to_dict())
-        else:
-            if is_valid_action:
-                log_chat_view(slug, message_count, filters.to_dict())
-            else:
-                logger.warning(
-                    "[CHATS|VIEW] Invalid filter input — no search performed."
-                )
-
-        args = request.args.to_dict(flat=True)
-        args.pop("chat_slug", None)
-
-        from_search = bool(request.args.get("from_search"))
-        from_chats = bool(request.args.get("from_chats"))
-
-        return render_template(
-            template,
-            chat=chat,
-            chat_slug=chat.slug,
-            messages=messages,
-            message_count=message_count,
-            total_count=total_count,
-            sort_by=sort_by,
-            order=order,
-            filters=filters,
-            has_filters=filters.has_active(),
-            info_message=info_message,
-            search_action=url_for("chats.view_chat", slug=chat.slug),
-            clear_url=url_for("chats.view_chat", slug=chat.slug),
-            extra_args=args,
-            from_search=from_search,
-            from_chats=from_chats,
-        )
-    except DatabaseError as e:
-        logger.error(
-            "[DATABASE|CHATS] Failed to load messages for '%s': %s", slug, e
-        )
-        return render_template("error.html", message=f"Database error: {e}")
 
 
 @chats_bp.route("/<slug>/delete", methods=["POST"])
@@ -273,7 +149,7 @@ def delete_chat(slug: str) -> Response:
 
     try:
         delete_chat_and_messages(slug)
-        log_chat_action("delete", slug)
+        log_chat_action(action="delete", chat_slug=slug)
         flash(f"Chat '{chat.name}' deleted successfully.", "success")
     except DatabaseError as e:
         logger.error(
