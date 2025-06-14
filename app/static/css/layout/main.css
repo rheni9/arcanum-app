@@ -20,7 +20,7 @@
   flex-direction: column;
 }
 
-.page-container {
+.content-area {
   width: 100%;
   max-width: 1024px;
   margin-inline: auto;
@@ -28,7 +28,7 @@
   box-sizing: border-box;
 }
 
-.content-wrapper {
+.inner-wrapper {
   width: fit-content;
   margin-inline: auto;
   max-width: 100%;
@@ -62,7 +62,7 @@
   text-align: center;
 }
 
-.meta-block {
+.meta-info-block {
   max-width: 640px;
   width: 100%;
   margin-inline: auto;
@@ -113,7 +113,7 @@
     padding-block: 1.5rem;
   }
 
-  .content-wrapper {
+  .inner-wrapper {
     width: 100%;
   }
 
@@ -137,7 +137,7 @@
     padding-block: 1rem;
   }
   
-  .page-container {
+  .content-area {
     padding-inline: 0.75rem;
   }
 

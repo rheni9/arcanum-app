@@ -10,10 +10,10 @@
 {% endblock %}
 
 {% block content %}
-  <div class="page-container">
+  <div class="content-area">
 
     {# === Metadata Block: Title and Global Stats === #}
-    <div class="meta-block">
+    <div class="meta-info-block">
       <section class="section">
         <h1 class="section-title">Chats</h1>
         {% include "chats/_global_stats_table.html" %}
@@ -29,7 +29,7 @@
     </div>
 
     {# === Main Content Wrapper === #}
-    <div class="content-wrapper">
+    <div class="inner-wrapper">
     
       {# === Search and Filter Block === #}
       <section class="section">
@@ -52,6 +52,6 @@
         </div>
       </section>
 
-    </div> {# end .content-wrapper #}
-  </div> {# end .page-container #}
+    </div> {# end .inner-wrapper #}
+  </div> {# end .content-area #}
 {% endblock %}

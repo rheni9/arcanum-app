@@ -10,17 +10,17 @@
 {% endblock %}
 
 {% block content %}
-  <div class="page-container">
+  <div class="content-area">
 
     {# === Chat Metadata Section === #}
-    <div class="meta-block">
+    <div class="meta-info-block">
       <section class="section">
         <h1 class="section-title">{{ chat.name }}</h1>
         {% include "chats/_chat_summary_table.html" %}
       </section>
     </div>
 
-    <div class="content-wrapper">
+    <div class="inner-wrapper">
 
       {# === Navigation and Action Buttons === #}
       <section class="section">
