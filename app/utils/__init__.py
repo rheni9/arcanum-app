@@ -1,35 +1,17 @@
 """
 Utility functions for the Arcanum application.
 
-Provides reusable helpers and wrappers for:
+Provides reusable helpers for:
 
-- Database access:
-  - Lazy connection handling.
-  - Centralized error handling.
+- Database access and lazy connection.
+- SQL clause construction and sorting.
+- Date/time parsing and timezone conversion.
+- Logging configuration and logger setup.
+- Data transformation and slug generation.
+- Chat-specific utilities for structured views.
+- Message grouping and tag processing.
+- Filter normalization and validation.
 
-- SQL construction:
-  - Sorting logic.
-  - WHERE clause building.
-  - Safe parameter substitution.
-
-- Time and date parsing:
-  - ISO/UTC formatting.
-  - Local timezone conversion.
-  - Date normalization and comparison.
-
-- Message and filter processing:
-  - Message grouping by chat.
-  - Filter validation and normalization.
-  - Query clause resolution.
-
-- Logging setup:
-  - Unified formatter and file handler.
-  - Streamlined logger initialization.
-
-- Data handling:
-  - Model hydration from row dicts.
-  - Slug generation and sanitization.
-
-Used across DAO, services, routes, and templates to ensure consistent behavior
-and reduce code duplication.
+Used across DAO, services, and routes to ensure consistent behavior and
+minimize code duplication.
 """

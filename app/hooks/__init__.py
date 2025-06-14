@@ -1,8 +1,10 @@
 """
-Authentication hook package for the Arcanum application.
+Authentication hooks for the Arcanum application.
 
-Imports request lifecycle handlers for authentication checks and CSRF errors.
+Defines lifecycle handlers for:
+
+- Access restriction before each request.
+- CSRF error interception and response.
+
+Ensures consistent access control and user feedback across routes.
 """
-
-from .auth_hooks import restrict_access  # noqa: F401
-from .csrf_hooks import handle_csrf_error  # noqa: F401

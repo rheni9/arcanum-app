@@ -1,7 +1,12 @@
 """
-DAO package initializer for the Arcanum application.
+Data Access Layer (DAO) for the Arcanum application.
 
-Provides access to low-level database access layers for chats,
-messages, and filter-based queries. Each DAO handles its own logging,
-error management, and SQL structure.
+Provides low-level SQL operations for chats, messages, and filters.
+Responsible for:
+
+- Query construction and execution.
+- Direct interaction with SQLite.
+- Data fetching and result hydration.
+
+Used by the service layer to abstract database logic.
 """

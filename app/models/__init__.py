@@ -1,11 +1,12 @@
 """
-Model package initializer for Arcanum.
+Data models for the Arcanum application.
 
-Exposes primary data models used throughout the application.
+Defines data classes for:
+
+- Chats
+- Messages
+- Filters
+
+Includes conversion logic (from dicts and database rows) and validation
+utilities for normalized model instantiation.
 """
-
-from .chat import Chat
-from .message import Message
-from .filters import MessageFilters
-
-__all__ = ["Chat", "Message", "MessageFilters"]

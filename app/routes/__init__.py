@@ -1,19 +1,15 @@
 """
-Route registrations for the Arcanum application.
+Route definitions for the Arcanum application.
 
-Exposes all blueprint instances for use in the application factory.
+Organizes views and route handlers for:
+
+- Authentication
+- Landing (Home) page
+- Dashboard
+- Chats
+- Messages
+- Search and filtering
+
+Each blueprint handles request routing, template rendering, and session
+interaction, while delegating core logic to the service layer.
 """
-
-from app.routes.home import home_bp
-from app.routes.auth import auth_bp
-from app.routes.dashboard import dashboard_bp
-from app.routes.chats import chats_bp
-from app.routes.search import search_bp
-
-__all__ = [
-    "home_bp",
-    "auth_bp",
-    "dashboard_bp",
-    "chats_bp",
-    "search_bp"
-]
