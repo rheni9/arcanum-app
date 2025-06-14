@@ -61,11 +61,9 @@
     </main>
 
     <!-- Global footer block -->
-    <footer>
+    <footer class="site-footer">
       {% block extra_footer %}{% endblock %}
-      <div class="layout-container">
-        {% include "partials/_footer.html" %}
-      </div>
+      {% include "partials/_footer.html" %}
     </footer>
 
     <!-- Global modal  -->
