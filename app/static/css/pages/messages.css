@@ -28,6 +28,18 @@
   color: var(--text-muted);
 }
 
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.tag-link {
+  display: inline-block;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
 @media (max-width: 768px) {
   .message-box {
     padding: 1.5rem 1.25rem;
