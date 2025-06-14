@@ -1,50 +1,52 @@
 {# ============================================================================
   Arcanum – Login Page Template
-  Displays the sign-in form with lock icon, flash messages, and bottom logo.
+  Displays the sign-in interface with password form.
 ============================================================================ #}
 
 {% extends "base.html" %}
+
 {% block title %}Sign in | Arcanum{% endblock %}
-{% block body_class %}login-page{% endblock %}
 
 {% block content %}
-  <section class="section">
+  <div class="layout-container">
+    <section class="section">
 
-    {# --- Lock illustration above the form --- #}
-    <div class="illustration lock">
-      <img src="{{ url_for('static', filename='img/lock.png') }}" alt="Lock icon">
-    </div>
+      {# --- Lock illustration above the form --- #}
+      <div class="illustration lock">
+        <img src="{{ url_for('static', filename='img/lock.png') }}" alt="Lock icon">
+      </div>
 
-    <h1 class="section-title">Sign in</h1>
+      <h1 class="section-title">Sign in</h1>
 
-    {# --- Sign-in form with CSRF token --- #}
-    <div class="form-container form-box">
-      <form method="post" class="form" novalidate>
-        {{ form.hidden_tag() }}
+      {# --- Sign-in form with CSRF token --- #}
+      <div class="form-container form-box">
+        <form method="post" class="form" novalidate>
+          {{ form.hidden_tag() }}
 
-        <div class="form-group">
-          <label for="{{ form.password.id }}" class="form-label">
-            {{ form.password.label.text }}<span class="form-required-mark">*</span>
-          </label>
-          {{ form.password(class="form-control" ~ (' input-error' if form.password.errors else '')) }}
-          {% for error in form.password.errors %}
-            <div class="error">{{ error }}</div>
-          {% endfor %}
-        </div>
+          <div class="form-group">
+            <label for="{{ form.password.id }}" class="form-label">
+              {{ form.password.label.text }}<span class="form-required-mark">*</span>
+            </label>
+            {{ form.password(class="form-control" ~ (' input-error' if form.password.errors else '')) }}
+            {% for error in form.password.errors %}
+              <div class="error">{{ error }}</div>
+            {% endfor %}
+          </div>
 
-        <button type="submit" class="btn btn-primary">Sign in</button>
-      </form>
-    </div>
-    <p class="form-required-note">
-      <span class="form-required-mark">*</span> Required field
-    </p>
+          <button type="submit" class="btn btn-primary">Sign in</button>
+        </form>
+      </div>
+      <p class="form-required-note">
+        <span class="form-required-mark">*</span> Required field
+      </p>
 
-    {# --- Arcanum logo illustration below the form --- #}
-    <div class="illustration page-logo">
-      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo icon">
-    </div>
+      {# --- Arcanum logo illustration below the form --- #}
+      <div class="illustration page-logo">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo icon">
+      </div>
 
-  </section>
+    </section>
+  </div>
 {% endblock %}
 
 {% block extra_footer %}{% endblock %}
