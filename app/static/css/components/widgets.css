@@ -34,6 +34,10 @@
   gap: 1rem;
 }
 
+.btn-bar.centered {
+  justify-content: center;
+}
+
 .btn-actions {
   display: flex;
   gap: 0.5rem;

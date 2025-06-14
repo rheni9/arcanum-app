@@ -28,3 +28,8 @@
   width: clamp(40px, 6vw, 60px);
   opacity: 0.9;
 }
+
+.illustration.error-icon img {
+  width: clamp(64px, 10vw, 120px);
+  opacity: 0.9;
+}

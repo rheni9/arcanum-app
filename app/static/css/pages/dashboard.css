@@ -3,6 +3,11 @@
    Styles for reusable navigation cards in the user dashboard grid.
 ============================================================================ */
 
+/* === Specific intro spacing for dashboard === */
+.dashboard-page .dashboard-lead {
+  margin-bottom: 1.5rem;
+}
+
 /* === Grid layout for cards === */
 body.dashboard-page .card-grid {
   display: grid;

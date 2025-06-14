@@ -8,21 +8,33 @@
 {% block title %}Error | Arcanum{% endblock %}
 
 {% block content %}
-  <div class="layout-container centered">
+  <div class="layout-container">
     <section class="section">
 
       <h1 class="section-title">Something went wrong</h1>
 
-      <div class="flash-messages">
-        <div class="alert alert-error">
-          {{ message }}
-        </div>
+      <div class="illustration error-icon">
+        <img src="{{ url_for('static', filename='img/error.png') }}" alt="Error icon">
       </div>
 
-      <a href="{{ url_for('home.home') }}" class="btn btn-primary btn-icon mt-4 centered">
-        <img src="{{ url_for('static', filename='img/back_icon.png') }}" alt="Back">
-        <span>Back to Home</span>
-      </a>
+      {% if message %}
+        <div class="flash-messages">
+          <div class="alert alert-error">
+            {{ message }}
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="btn-bar centered mt-4">
+        <a href="{{ url_for('home.home') }}" class="btn btn-primary btn-icon">
+          Back to Home
+        </a>
+        {% if session.get("logged_in") %}
+          <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-secondary">
+            Go to Dashboard
+          </a>
+        {% endif %}
+      </div>
 
     </section>
   </div>

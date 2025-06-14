@@ -1,22 +1,26 @@
 {# ============================================================================
-  Dashboard Page Template for the Arcanum Application
+  Arcanum – Dashboard Template
   Displays the user dashboard with navigation cards to main features.
 ============================================================================ #}
 
 {% extends "base.html" %}
+
 {% block title %}Dashboard | Arcanum{% endblock %}
 {% block body_class %}dashboard-page{% endblock %}
 
 {% block content %}
-    <div class="layout-container">
+  <div class="layout-container">
     <section class="section">
       <h1 class="section-title">Dashboard</h1>
-      <div class="section-content card-grid">
+      <div class="section-content">
+        <p class="dashboard-lead">Select a section to explore your saved content.</p>
+      </div>
+      <div class="card-grid">
         <a href="{{ url_for('chats.list_chats') }}" class="card-box">
           <img src="{{ url_for('static', filename='img/chats.png') }}" alt="Chats icon">
-          <h2>Chats</h2>
+          <h2>Messages</h2>
         </a>
-      </div>
+      </div>      
     </section>
   </div>
 {% endblock %}

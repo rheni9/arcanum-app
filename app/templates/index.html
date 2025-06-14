@@ -9,21 +9,23 @@
 {% block body_class %}home-page{% endblock %}
 
 {% block content %}
-  {# --- Welcome message section --- #}
-  <section class="section">
-    <h1 class="section-title">Welcome to Arcanum</h1>
-    <div class="section-content">
-      <p>This is your private space.</p>
-    </div>
-  </section>
+  <div class="layout-container">
+    {# --- Welcome message section --- #}
+    <section class="section">
+      <h1 class="section-title">Welcome to Arcanum</h1>
+      <div class="section-content">
+        <p>This is your private space.</p>
+      </div>
+    </section>
 
-  {# --- Branding section with logo and motto --- #}
-  <section class="section">
-    <div class="illustration page-logo">
-      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo icon">
-    </div>
-    <p class="motto">Arcanum in silentio est</p>
-  </section>
+    {# --- Branding section with logo and motto --- #}
+    <section class="section">
+      <div class="illustration page-logo">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo icon">
+      </div>
+      <p class="motto">Arcanum in silentio est</p>
+    </section>
+  </div>
 {% endblock %}  
 
 {% block extra_footer %}
