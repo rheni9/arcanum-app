@@ -55,7 +55,7 @@
 }
 
 /* === Table Subtitle (per chat group) === */
-.chat-subtitle {
+.table-subtitle {
   font-size: var(--font-md);
   font-weight: var(--weight-bold);
   margin-bottom: 1rem;
@@ -64,7 +64,7 @@
 }
 
 /* === Grouped Table Container Margins === */
-#results-table-container > section + section .grouped-table-container {
+#results-table-container > section + section .grouped-table {
   margin-top: 3rem;
 }
 
@@ -76,11 +76,11 @@
   }
 
   /* Grouped tables */
-  .grouped-table-container {
+  .grouped-table {
     margin-top: 2rem;
   }
 
-  .chat-subtitle {
+  .table-subtitle {
     font-size: var(--font-base);
     margin-bottom: 0.75rem;
   }
@@ -111,7 +111,7 @@
   }
 
   /* Grouped section spacing */
-  #results-table-container > section + section .grouped-table-container {
+  #results-table-container > section + section .grouped-table {
     margin-top: 2rem;
   }
 }
@@ -127,16 +127,16 @@
     padding: 0.75rem;
   }
 
-  .grouped-table-container {
+  .grouped-table {
     margin-top: 1.5rem;
   }
 
-  .chat-subtitle {
+  .table-subtitle {
     font-size: var(--font-detail);
     margin-bottom: 0.5rem;
   }
 
-  #results-table-container > section + section .grouped-table-container {
+  #results-table-container > section + section .grouped-table {
     margin-top: 1.5rem;
   }
 }
