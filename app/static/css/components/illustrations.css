@@ -1,8 +1,9 @@
-/* ============================================================================
-   Arcanum – Shared Illustrations
-   Defines shared styles for logo, lock and other illustrations in pages
-============================================================================ */
+/* =============================================================
+  Arcanum – Illustration Styles
+  Scaling and alignment for decorative or explanatory images.
+============================================================= */
 
+/* --- Generic illustration wrapper --- */
 .illustration {
   display: flex;
   justify-content: center;
@@ -11,6 +12,7 @@
   margin-bottom: 1.5rem;
 }
 
+/* --- Base illustration image --- */
 .illustration img {
   display: block;
   max-width: 100%;
@@ -18,17 +20,20 @@
   opacity: 0.95;
 }
 
+/* --- Page logo image --- */
 .illustration.page-logo img {
   width: clamp(56px, 10vw, 80px);
   height: auto;
   opacity: 0.9;
 }
 
+/* --- Lock icon illustration --- */
 .illustration.lock img {
   width: clamp(40px, 6vw, 60px);
   opacity: 0.9;
 }
 
+/* --- Error icon illustration --- */
 .illustration.error-icon img {
   width: clamp(64px, 10vw, 120px);
   opacity: 0.9;

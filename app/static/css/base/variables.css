@@ -1,31 +1,30 @@
-/* ==========================================================
-  Arcanum – Base Variables
-  Defines global design tokens: colors, typography,
-  spacing, borders, shadows, and effects
-  ========================================================== */
+/* =============================================================
+  Arcanum - Base Variables
+  Design tokens: colors, typography, spacing, borders, etc.
+============================================================= */
 
 :root {
-  /* ========== Brand & Theme ========== */
+  /* --- Brand Colors --- */
   --color-primary:      #0c1a3e;
   --color-secondary:    #6b778d;
 
-    /* ========== Basic Colors ========== */
+  /* --- Basic Colors --- */
   --base-white:         #ffffff;
 
-    /* ========== Text Colors ========== */
+  /* --- Text Colors --- */
   --text-color:         #1a1a1a;
   --text-muted:         #8f8d8d;
 
-  /* ========== Link Colors ========== */
+  /* --- Link Colors --- */
   --link-default:         #153061;
   --link-hover:           #3066be;  
 
-  /* ========== Status Colors ========== */
+  /* --- Status Colors --- */
   --color-success:      #27b846;
   --color-error:        #d80032;
   --color-danger:       #db2b39;
 
-  /* ========== Background Colors ========== */
+  /* --- Backgrounds --- */
   --bg-default:         #f5f7fa;
   --bg-surface:         #ffffff;
   --bg-hover:           #e5ecf4;
@@ -36,23 +35,23 @@
   --bg-error-light:     #fff6f6;
   --toggle-bg-off:      #dedede;
 
-  /* ========== Border & Accent Colors ========== */
+  /* --- Borders & Accents --- */
   --border-default:     #ccd1d1;
   --accent-soft:        #c9d6ed;
 
-  /* ========== Shadows ========== */
+  /* --- Shadows --- */
   --shadow-default:     0 2px 6px rgba(0, 0, 0, 0.1);
   --shadow-soft:        0 1px 3px rgba(0, 0, 0, 0.08);
   --shadow-lg:          0 8px 28px rgba(0, 0, 0, 0.25);
 
-  /* ========== Radius ========== */
+  /* --- Border Radius --- */
   --radius-default:       4px;
 
-  /* ========== Typography – Font Family ========== */
+  /* --- Fonts: Family --- */
   --font-family-base:   'Roboto', sans-serif;
   /* --font-family-base: "Segoe UI", sans-serif; */
 
-  /* ========== Typography – Font Sizes ========== */
+  /* --- Fonts: Size --- */
   --font-xs:            0.75rem;
   --font-sm:            0.85rem;
   --font-detail:        0.9rem;
@@ -61,7 +60,7 @@
   --font-lg:            1.4rem;
   --font-xl:            2rem;
 
-  /* ========== Typography – Font Weights ========== */
+  /* --- Fonts: Weight --- */
   --weight-regular:     400;
   --weight-medium:      500;
   --weight-semibold:    600;

@@ -1,10 +1,9 @@
-/* ============================================================================
-   Arcanum – Button Styles
-   Defines base, primary, and icon button styles with consistent spacing,
-   alignment, accessibility, and hover feedback.
-============================================================================ */
+/* =============================================================
+  Arcanum – Button Styles
+  Styles for buttons: base, variants, icons, and responsive.
+============================================================= */
 
-/* ======= Base Button ======= */
+/* --- Base Button --- */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -12,44 +11,42 @@
   gap: 0.5rem;
   height: 2.5rem;
   padding: 0 1.25rem;
+  color: var(--base-white);
   font-size: var(--font-base);
   font-weight: var(--weight-medium);
-  border-radius: var(--radius-default);
   border: none;
+  border-radius: var(--radius-default);
+  line-height: 1.2;
   text-align: center;
   text-decoration: none;
   cursor: pointer;
-  line-height: 1.2;
   box-sizing: border-box;
   transition: background-color 0.3s ease, opacity 0.3s ease;
 }
 
-/* ======= Variants ======= */
+/* --- Variants --- */
 .btn-primary {
   background-color: var(--color-primary);
-  color: var(--base-white);
 }
 
 .btn-secondary {
   background-color: var(--color-secondary);
-  color: var(--base-white);
 }
 
 .btn-danger {
   background-color: var(--color-danger);
-  color: var(--base-white);
 }
 
-/* ======= Icon Button Support ======= */
+/* --- Icon Support --- */
 .btn-icon img,
 .btn-icon svg {
   display: inline-block;
-  height: 1em;
   width: auto;
+  height: 1em;
   filter: brightness(0) invert(1);
 }
 
-/* ======= Centering Utility ======= */
+/* --- Centering Utility --- */
 .btn.centered {
   display: flex;
   justify-content: center;
@@ -58,26 +55,31 @@
   margin-inline: auto;
 }
 
-/* ======= Inside Elements Non-Interactive ======= */
+/* --- Prevent inner elements from being interactive --- */
 .btn * {
   pointer-events: none;
 }
 
+/* --- Link Buttons --- */
 a.btn:hover,
 a.btn:focus {
   color: var(--base-white);
   text-decoration: none;
 }
 
-/* ======= Hover and Focus States ======= */
+/* --- Hover and Focus States --- */
 .btn:hover,
 .btn:focus {
-  opacity: 0.85;
+  opacity: 0.8;
 }
 
 .btn:visited {
   color: inherit;
 }
+
+/* =============================================================
+   Responsive Tweaks
+============================================================= */
 
 @media (max-width: 768px) {
   .btn {

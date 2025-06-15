@@ -1,21 +1,34 @@
-/* ==========================================================
-   Arcanum – Footer Styles
-   Styles for the bottom site section
-   ========================================================== */
+/* =============================================================
+  Arcanum – Footer Styles
+  Styles for site footer, copyright, and attribution.
+============================================================= */
 
+/* --- Footer container --- */
 .site-footer {
   margin-top: auto;
   width: 100%;
 }
 
+/* --- Footer content wrapper --- */
 .footer-content {
   padding: 1rem 2rem;
   text-align: center;
   color: var(--text-muted);
 }
 
+/* --- Footer text --- */
 .footer-text {
   font-size: var(--font-sm);
   margin: 0;
   opacity: 0.8;
+}
+
+/* =============================================================
+   Responsive Adjustments
+============================================================= */
+
+@media (max-width: 480px) {
+  .footer-text {
+    font-size: var(--font-xs);
+  }
 }

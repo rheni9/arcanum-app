@@ -1,8 +1,9 @@
-/* ==========================================================
-   Arcanum – Flash Messages
-   Styled alerts for success, error, and notification states
-   ========================================================== */
+/* =============================================================
+  Arcanum – Flash Message Styles
+  Styles for success and error alerts shown after actions.
+============================================================= */
 
+/* --- Flash messages container --- */
 .flash-messages {
   width: 100%;
   max-width: 600px;
@@ -14,6 +15,7 @@
   gap: 0.75rem;
 }
 
+/* --- Generic alert block --- */
 .alert {
   border-radius: var(--radius-default);
   padding: 0.75rem 1.25rem;
@@ -23,29 +25,33 @@
   border: 1px solid transparent;
 }
 
-/* Success message */
+/* --- Success message --- */
 .alert-success {
   background-color: var(--bg-success-light);
   color: var(--color-success);
   border: 1px solid var(--color-success);
 }
 
-/* Error message */
+/* --- Error message --- */
 .alert-error {
   background-color: var(--bg-error-light);
   color: var(--color-error);
   border: 1px solid var(--color-error);
 }
 
+/* =============================================================
+   Responsive Adjustments
+============================================================= */
+
 @media (max-width: 768px) {
   .flash-messages {
-    gap: 0.5rem;
     padding: 0 1rem;
+    gap: 0.5rem;
   }
 
   .alert {
     font-size: var(--font-sm);
-    padding: 0.75rem 1rem;    
+    padding: 0.75rem 1rem;
   }
 }
 

@@ -1,13 +1,14 @@
-/* ==========================================================
-   Arcanum – Home Page Styles
-   Specific enhancements for the landing page content and layout
-   ========================================================== */
+/* =============================================================
+  Arcanum – Home Page Styles
+  Layout for public landing page, motto block, and notices.
+============================================================= */
 
+/* --- Section spacing --- */
 body.home-page section + section {
   margin-top: 3rem;
 }
 
-/* Motto */
+/* --- Motto block --- */
 body.home-page .motto {
   font-size: var(--font-md);
   font-style: italic;
@@ -16,7 +17,7 @@ body.home-page .motto {
   margin-top: 2rem;
 }
 
-/* Guest notice block */
+/* --- Guest-only access notice --- */
 body.home-page .auth-notice.full-width {
   width: 100vw;
   margin: 0;
@@ -27,6 +28,10 @@ body.home-page .auth-notice.full-width {
   font-size: var(--font-detail);
   box-sizing: border-box;
 }
+
+/* =============================================================
+   Responsive Adjustments
+============================================================= */
 
 @media (max-width: 768px) {
   body.home-page section + section {
@@ -63,10 +68,6 @@ body.home-page .auth-notice.full-width {
   }
 
   body.home-page .auth-notice.full-width {
-    font-size: var(--font-xs);
-  }
-
-  footer .footer-text {
     font-size: var(--font-xs);
   }
 }

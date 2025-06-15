@@ -1,10 +1,9 @@
-/* ==========================================================
+/* =============================================================
   Arcanum – Modal Component Styles
-  Provides universal layout and styling for confirmation,
-  alert, and general-purpose modal dialogs
-  ========================================================== */
+  Universal modal styles for confirmation and info popups.
+============================================================= */
 
-/* ========== Modal Container ========== */
+/* --- Modal container --- */
 .modal {
   position: fixed;
   inset: 0;
@@ -20,7 +19,7 @@
   display: none;
 }
 
-/* ========== Modal Overlay ========== */
+/* --- Modal background overlay --- */
 .modal-overlay {
   position: absolute;
   inset: 0;
@@ -28,14 +27,14 @@
   backdrop-filter: blur(2px);
 }
 
-/* ========== Modal Content Block ========== */
+/* --- Modal content block --- */
 .modal-content {
   position: relative;
   width: 100%;
   max-width: 480px;
   max-height: 90vh;
   overflow-y: auto;
-  background-color: var(--base-white);
+  background-color: var(--bg-surface);
   color: var(--text-color);
   padding: 1.5rem;
   border-radius: var(--radius-default);
@@ -43,21 +42,21 @@
   z-index: 1001;
 }
 
-/* ========== Modal Title ========== */
+/* --- Modal title --- */
 .modal-title {
   font-size: var(--font-lg);
   font-weight: var(--weight-bold);
   margin-bottom: 1rem;
 }
 
-/* ========== Modal Body ========== */
+/* --- Modal body content --- */
 .modal-body {
   font-size: var(--font-base);
   line-height: 1.5;
   margin-bottom: 1.5rem;
 }
 
-/* ========== Modal Actions ========== */
+/* --- Modal actions (buttons) --- */
 .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -68,10 +67,14 @@
   min-width: 100px;
 }
 
-/* ========== Accessibility Fix ========== */
+/* --- Disable scroll on background when modal open --- */
 body.modal-open {
   overflow: hidden;
 }
+
+/* =============================================================
+   Responsive Adjustments
+============================================================= */
 
 @media (max-width: 768px) {
   .modal-content {

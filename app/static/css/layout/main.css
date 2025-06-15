@@ -1,16 +1,16 @@
-/* ==========================================================
-   Arcanum – Main Content Layout
-   Defines the primary content wrapper, section structure,
-   and reusable layout elements
-   ========================================================== */
+/* =============================================================
+  Arcanum – Main Content Layout
+  Defines primary structure, sections, and layout containers.
+============================================================= */
 
+/* --- Page wrapper --- */
 .page-wrapper {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
 
-/* ======= Main layout block ======= */
+/* --- Main layout block --- */
 .main-content {
   width: 100%;
   padding-block: 2rem;
@@ -20,6 +20,7 @@
   flex-direction: column;
 }
 
+/* --- Main content area --- */
 .content-area {
   width: 100%;
   max-width: 1024px;
@@ -28,6 +29,7 @@
   box-sizing: border-box;
 }
 
+/* --- Centered inner wrapper --- */
 .inner-wrapper {
   width: fit-content;
   margin-inline: auto;
@@ -38,7 +40,7 @@
   align-items: center;
 }
 
-/* Main page section wrapper */
+/* --- Section wrapper --- */
 .section {
   width: 100%;
   max-width: 1024px;
@@ -46,7 +48,6 @@
   margin-inline: auto;
 }
 
-/* Section titles (e.g. headings inside sections) */
 .section-title {
   font-size: var(--font-xl);
   font-weight: var(--weight-bold);
@@ -55,13 +56,14 @@
   margin-bottom: 2rem;
 }
 
-/* Section content area */
 .section-content {
   font-size: var(--font-base);
   color: var(--text-color);
   text-align: center;
 }
 
+
+/* --- Metadata block --- */
 .meta-info-block {
   max-width: 640px;
   width: 100%;
@@ -70,8 +72,11 @@
   flex-direction: column;
 }
 
-/* ===================== Utility ===================== */
+/* =============================================================
+   Utility Classes
+============================================================= */
 
+/* --- Text alignment --- */
 .text-center {
   text-align: center;
 }
@@ -80,6 +85,7 @@
   text-align: right;
 }
 
+/* --- Margin top + bottom --- */
 .mt-1 {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
@@ -100,6 +106,7 @@
   margin-bottom: 2rem;
 }
 
+/* --- Padding --- */
 .p-1 {
   padding: 0.5rem;
 }
@@ -107,6 +114,10 @@
 .p-2 {
   padding: 1rem;
 }
+
+/* =============================================================
+   Responsive Adjustments
+============================================================= */
 
 @media (max-width: 768px) {
   .main-content {

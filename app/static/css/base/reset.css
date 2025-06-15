@@ -1,14 +1,11 @@
-/* ============================================================
-  Arcanum – CSS Reset
-  Provides consistent baseline styles across all browsers,
-  normalizing default behavior for typography, layout,
-  form controls, and media elements.
-  ============================================================ */
+/* =============================================================
+  Arcanum – Reset Styles
+  Provides consistent default styling across browsers.
+  Removes native margins, paddings, and standardizes elements.
+============================================================= */
 
-/* ========== Box Sizing ========== */
-*,
-*::before,
-*::after {
+/* --- Box sizing reset --- */
+*, *::before, *::after {
   box-sizing: border-box;
 }
 
@@ -16,11 +13,10 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  /* overflow-x: hidden; */
   scroll-behavior: smooth;
 }
 
-/* ========== Default Margin & Padding Reset ========== */
+/* --- Default Margin & Padding Reset --- */
 h1, h2, h3, h4, h5, h6,
 p, blockquote, figure,
 dl, dd, ul, ol, pre,
@@ -30,29 +26,26 @@ input, textarea, button, select {
   padding: 0;
 }
 
-/* ========== Typography Reset ========== */
+/* --- Typography Reset --- */
 h1, h2, h3, h4, h5, h6,
 p {
   font-size: inherit;
   font-weight: inherit;
 }
 
-/* ========== List Reset ========== */
+/* --- List Reset --- */
 ul, ol {
   list-style: none;
 }
 
-/* ========== Link Reset ========== */
+/* --- Link Reset --- */
 a {
   text-decoration: none;
   color: inherit;
 }
 
-/* ========== Form Controls Reset ========== */
-button,
-input,
-select,
-textarea {
+/* --- Form Controls Reset --- */
+button, input, select, textarea {
   background: none;
   border: none;
   font: inherit;
@@ -63,20 +56,18 @@ textarea {
   appearance: none;
 }
 
-/* Ensure pointer cursor on buttons */
 button {
   cursor: pointer;
 }
 
-/* ========== Media Elements Reset ========== */
-img,
-video {
+/* --- Media Elements Reset --- */
+img, video {
   display: block;
   max-width: 100%;
   height: auto;
 }
 
-/* ========== Table Reset ========== */
+/* --- Table Reset --- */
 table {
   border-collapse: collapse;
   border-spacing: 0;

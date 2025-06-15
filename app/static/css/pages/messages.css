@@ -1,8 +1,9 @@
-/* ============================================================================
-   Arcanum – Message Content Box
-   Styles for displaying the full text of a single message.
-============================================================================ */
+/* =============================================================
+  Arcanum – Message View Styles
+  Styling for individual message content and metadata display.
+============================================================= */
 
+/* --- Main message container --- */
 .message-box {
   max-width: 640px;
   min-width: 400px;
@@ -10,16 +11,19 @@
   background-color: var(--bg-surface);
   border-radius: var(--radius-default);
   box-shadow: var(--shadow-default);
-  padding: 2rem;
-  font-size: var(--font-base);
+  padding: 1.5rem 2rem;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  line-height: 1.6;
+  font-size: var(--font-base);
 }
 
+/* --- Message content --- */
 .message-fulltext {
-  line-height: 1.25;
   white-space: normal;
   font-size: var(--font-base);
+  color: var(--text-color);
+  line-height: 1.25;
 }
 
 .message-box .muted {
@@ -28,23 +32,28 @@
   color: var(--text-muted);
 }
 
+/* --- Tag list --- */
 .tag-list {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
 }
 
+/* --- Tag link --- */
 .tag-link {
   display: inline-block;
   white-space: nowrap;
   text-decoration: none;
 }
 
+/* =============================================================
+   Responsive Adjustments
+============================================================= */
+
 @media (max-width: 768px) {
   .message-box {
-    padding: 1.5rem 1.25rem;
+    padding: 1.25rem 1.5rem;
     font-size: var(--font-sm);
-    /* margin-top: 1.5rem; */
   }
 
   .message-fulltext {
@@ -55,7 +64,7 @@
 
 @media (max-width: 480px) {
   .message-box {
-    padding: 1rem 1.25rem;
+    padding: 1.25rem;
     font-size: var(--font-sm);
   }
 

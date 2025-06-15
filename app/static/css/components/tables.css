@@ -1,15 +1,16 @@
-/* =============================================================================
-   Arcanum – Table Styles (Optimized)
-   Base and type-specific table styling, responsive structure, and meta layout
-============================================================================= */
+/* =============================================================
+  Arcanum – Table Styles
+  General styles for data tables: chats, messages, and results.
+============================================================= */
 
+/* --- Root variables for padding --- */
 :root {
   --table-padding: 0.75rem 1rem;
   --table-padding-md: 0.4rem 0.5rem;
   --table-padding-sm: 0.35rem 0.4rem;
 }
 
-/* === Universal Table Wrapper === */
+/* --- Table wrapper --- */
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
@@ -22,7 +23,7 @@
   margin: 0;
 }
 
-/* === Base Table Styles === */
+/* --- Base table layout --- */
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -55,7 +56,7 @@
   transition: background-color 0.15s ease-in-out;
 }
 
-/* === Column Index === */
+/* --- Column index cell --- */
 .table .col-index {
   text-align: right;
   white-space: nowrap;
@@ -63,7 +64,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* === Sorting Controls === */
+/* --- Sorting controls --- */
 .sortable {
   cursor: pointer;
 }
@@ -87,7 +88,7 @@
   color: var(--color-primary);
 }
 
-/* === Timestamp Cell === */
+/* --- Timestamp layout --- */
 .table .table-timestamp {
   display: flex;
   flex-direction: column;
@@ -106,7 +107,7 @@
   color: var(--text-muted);
 }
 
-/* === Chat Table Specific Rules === */
+/* --- Chat-specific layout --- */
 .table.chats-table td:nth-child(1),
 .table.chats-table td:nth-child(3),
 .table.chats-table td:nth-child(4) {
@@ -118,7 +119,7 @@
   width: 100%;
 }
 
-/* === Message Table Specific Rules === */
+/* --- Message-specific layout --- */
 .table.messages-table td:nth-child(1),
 .table.messages-table td:nth-child(2),
 .table.messages-table td:nth-child(4) {
@@ -130,7 +131,6 @@
   width: 100%;
 }
 
-/* === Message Text Cell === */
 .table.messages-table .msg-text {
   white-space: normal;
   word-break: break-word;
@@ -138,7 +138,7 @@
   line-height: 1.4;
 }
 
-/* === Message ID Cell Styling === */
+/* --- Message ID formatting --- */
 .msg-id-link {
   color: var(--link-default);
   font-weight: var(--weight-medium);
@@ -155,223 +155,45 @@
   font-style: italic;
 }
 
-/* === Meta Table as Flex Layout === */
-.table-wrapper.meta-table {
-  background-color: var(--bg-surface);
-  border-radius: var(--radius-default);
-  box-shadow: var(--shadow-default);
-  padding: 1.25rem 2rem;
-  max-width: 640px;
-  margin: 0 auto;
-}
+/* =============================================================
+   Responsive Adjustments
+============================================================= */
 
-.meta-table {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  font-size: var(--font-base);
-  color: var(--text-color);
-}
-
-.meta-table-row {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: flex-start;
-  gap: 0.75rem;
-  border-bottom: 1px solid var(--border-default);
-  padding-bottom: 0.25rem;
-}
-
-.meta-table-row:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.meta-label {
-  font-weight: var(--weight-bold);
-  color: var(--color-primary);
-  width: 12rem;
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-
-.meta-value {
-  flex: 1;
-  word-break: break-word;
-  text-align: left;
-}
-
-/* === Inline & Icon Elements (Unified) === */
-.meta-inline,
-.meta-icon-text,
-.meta-id-inline,
-.muted {
-  font-size: var(--font-base);
-  color: var(--text-muted);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.meta-icon-text img,
-.meta-status-icon,
-.meta-icon-ext {
-  height: 0.9em;
-  width: auto;
-  opacity: 0.8;
-}
-
-.meta-icon-ext {
-  display: inline-block;
-  margin-left: 0.25em;
-  vertical-align: baseline;
-}
-
-.meta-icon-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: center;
-  text-decoration: none;
-}
-
-a .meta-icon-group:hover .meta-date,
-a .meta-icon-group:hover .meta-time {
-  text-decoration: underline;
-  color: var(--link-hover);
-  cursor: pointer;
-}
-
-.meta-count {
-  color: var(--text-muted);
-}
-
-.meta-date,
-.meta-time {
-  color: var(--text-color);
-  font-size: var(--font-base);
-  font-weight: var(--weight-regular);
-}
-
-/* === Links === */
-.meta-link,
-.meta-ext-link {
-  color: var(--color-primary);
-  text-decoration: none;
-}
-
-.meta-link:hover,
-.meta-ext-link:hover {
-  color: var(--link-hover);
-  text-decoration: underline;
-}
-
-.meta-link-active {
-  font-weight: var(--weight-medium);
-}
-
-.meta-link-inactive {
-  color: var(--text-muted);
-  font-weight: var(--weight-medium);
-}
-
-.meta-composite {
-  display: flex;
-  align-items: center;
-  flex-wrap: nowrap;
-  gap: 0.5rem;
-}
-
-/* === Status Indicators === */
-.meta-dot {
-  width: 0.75rem;
-  height: 0.75rem;
-  border-radius: 50%;
-  display: inline-block;
-}
-
-.meta-dot.online {
-  background-color: var(--color-success);
-}
-
-.meta-dot.offline {
-  background-color: var(--color-error);
-  opacity: 0.7;
-}
-
-.meta-status-icon {
-  height: 1em;
-  vertical-align: middle;
-  opacity: 0.8;
-}
-
-.meta-status-group {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* === Responsive Adjustments === */
 @media (max-width: 768px) {
-  .table { font-size: var(--font-detail); }
-  .table th { font-size: var(--font-sm); }
-  .table th, .table td { padding: var(--table-padding-md); }
-
-  .table .table-timestamp .date { font-size: var(--font-detail); }
-  .table .table-timestamp .time { font-size: var(--font-sm); }
-
-  .table-wrapper.meta-table { padding: 1.25rem 1.5rem; }
-  .meta-table { gap: 0.75rem; }
-  .meta-table-row { gap: 0.5rem; padding-bottom: 0.15rem; }
-
-  .meta-label,
-  .meta-value,
-  .meta-inline,
-  .meta-id-inline,
-  .meta-date,
-  .meta-time {
+  .table {
     font-size: var(--font-detail);
+  }
+
+  .table th {
+    font-size: var(--font-sm);
+  }
+
+  .table th,
+  .table td {
+    padding: var(--table-padding-md);
+  }
+
+  .table .table-timestamp .date {
+    font-size: var(--font-detail);
+  }
+
+  .table .table-timestamp .time {
+    font-size: var(--font-sm);
   }
 }
 
 @media (max-width: 480px) {
-  .table th, .table td {
+  .table th,
+  .table td {
     padding: var(--table-padding-sm);
     font-size: var(--font-xs);
   }
 
-  .table .table-timestamp .date { font-size: var(--font-sm); }
-
-  .table .table-timestamp .time { font-size: var(--font-xs); }
-
-  .table-wrapper.meta-table { padding: 1rem 1.25rem; }
-
-  .meta-table { gap: 0.65rem; }
-
-  .meta-table-row {
-    gap: 0.35rem;
-    padding-bottom: 0.05rem;
-  }
-
-  .meta-label {
-    max-width: 10rem;
+  .table .table-timestamp .date {
     font-size: var(--font-sm);
   }
 
-  .meta-value,
-  .meta-inline,
-  .meta-id-inline,
-  .meta-date,
-  .meta-time {
-    font-size: var(--font-sm);
-  }
-
-  .meta-icon-group { gap: 0.3rem; }
-
-  .meta-status-icon,
-  .meta-icon-ext,
-  .meta-dot {
-    transform: scale(0.85);
+  .table .table-timestamp .time {
+    font-size: var(--font-xs);
   }
 }

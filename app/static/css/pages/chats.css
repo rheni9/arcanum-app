@@ -1,14 +1,16 @@
-/* ============================================================================
-   Arcanum – Chat Page Styles
-============================================================================ */
+/* =============================================================
+  Arcanum – Chat and Result Table Styles
+  Styles for displaying chat tables, result summaries,
+  grouped sections, and action button alignment.
+============================================================= */
 
-/* === Layout Blocks === */
+/* --- Layout Blocks --- */
 .results-box,
 .chat-messages-table {
   width: 100%;
 }
 
-/* === Action Button Layouts === */
+/* --- Action Button Alignment --- */
 .btn-left {
   display: flex;
   justify-content: flex-start;
@@ -28,7 +30,7 @@
   margin-top: 2rem;
 }
 
-/* === Results Box Styling === */
+/* --- Results Box --- */
 .results-box {
   background-color: var(--bg-section);
   border: 1px solid var(--accent-soft);
@@ -54,7 +56,7 @@
   color: var(--color-error);
 }
 
-/* === Table Subtitle (per chat group) === */
+/* --- Table Subtitle for Grouped Tables --- */
 .table-subtitle {
   font-size: var(--font-md);
   font-weight: var(--weight-bold);
@@ -63,21 +65,18 @@
   text-align: center;
 }
 
-/* === Grouped Table Container Margins === */
+/* --- Grouped Table Section Spacing --- */
 #results-table-container > section + section .grouped-table {
   margin-top: 3rem;
 }
 
-/* === Responsive Styles === */
+/* =============================================================
+   Responsive Adjustments
+============================================================= */
+
 @media (max-width: 768px) {
-  /* Results summary */
   .results-summary {
     font-size: var(--font-detail);
-  }
-
-  /* Grouped tables */
-  .grouped-table {
-    margin-top: 2rem;
   }
 
   .table-subtitle {
@@ -85,7 +84,6 @@
     margin-bottom: 0.75rem;
   }
 
-  /* Button alignment */
   .btn-left,
   .btn-right {
     flex-direction: column;
@@ -110,7 +108,10 @@
     justify-content: center;
   }
 
-  /* Grouped section spacing */
+  .grouped-table {
+    margin-top: 2rem;
+  }
+
   #results-table-container > section + section .grouped-table {
     margin-top: 2rem;
   }
@@ -127,13 +128,13 @@
     padding: 0.75rem;
   }
 
-  .grouped-table {
-    margin-top: 1.5rem;
-  }
-
   .table-subtitle {
     font-size: var(--font-detail);
     margin-bottom: 0.5rem;
+  }
+
+  .grouped-table {
+    margin-top: 1.5rem;
   }
 
   #results-table-container > section + section .grouped-table {

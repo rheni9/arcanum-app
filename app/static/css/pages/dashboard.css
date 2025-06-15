@@ -1,14 +1,15 @@
-/* ============================================================================
-   Arcanum – Dashboard Feature Cards
-   Styles for reusable navigation cards in the user dashboard grid.
-============================================================================ */
+/* =============================================================
+  Arcanum – Dashboard Page Styles
+  Styles for the main dashboard section with centered
+  navigation cards linking to core parts of the application.
+============================================================= */
 
-/* === Specific intro spacing for dashboard === */
-.dashboard-page .dashboard-lead {
+/* --- Dashboard lead spacing --- */
+body.dashboard-page .dashboard-lead {
   margin-bottom: 1.5rem;
 }
 
-/* === Grid layout for cards === */
+/* --- Grid layout for card links --- */
 body.dashboard-page .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -16,7 +17,7 @@ body.dashboard-page .card-grid {
   justify-content: center;
 }
 
-/* === Individual card box === */
+/* --- Individual card block --- */
 body.dashboard-page .card-box {
   width: 100%;
   max-width: 240px;
@@ -31,19 +32,22 @@ body.dashboard-page .card-box {
   transition: background-color 0.2s ease;
 }
 
-/* === Hover effect === */
+/* --- Card hover state --- */
 body.dashboard-page .card-box:hover {
   background-color: var(--bg-hover);
 }
 
-/* === Icon in card === */
+/* --- Card icon/image --- */
 body.dashboard-page .card-box img {
   display: block;
   height: 80px;
   margin: 0 auto 1rem;
 }
 
-/* === Tablet === */
+/* =============================================================
+   Responsive Adjustments
+============================================================= */
+
 @media (max-width: 768px) {
   body.dashboard-page .card-grid {
     gap: 1rem;
@@ -61,7 +65,6 @@ body.dashboard-page .card-box img {
   }
 }
 
-/* === Mobile === */
 @media (max-width: 480px) {
   body.dashboard-page .card-grid {
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));

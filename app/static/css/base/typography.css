@@ -1,10 +1,9 @@
-/* ==========================================================
+/* =============================================================
   Arcanum – Typography Styles
-  Handles text rendering: body text, headings, links, lists,
-  inline elements, and typographic blocks
-  ========================================================== */
+  Base text styles for headings, body, links, lists, and code.
+============================================================= */
 
-/* ========== Body Base ========== */
+/* --- Body --- */
 body {
   font-family: var(--font-family-base);
   font-size: var(--font-base);
@@ -19,7 +18,7 @@ body.disable-scroll {
   scroll-behavior: auto !important;
 }
 
-/* ========== Headings ========== */
+/* --- Headings --- */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-family-base);
   font-weight: var(--weight-bold);
@@ -37,14 +36,14 @@ h6 {
   font-weight: var(--weight-medium);
 }
 
-/* ========== Paragraphs ========== */
+/* --- Paragraphs --- */
 p {
   margin: 0;
   font-size: var(--font-base);
   line-height: 1.6;
 }
 
-/* ========== Links ========== */
+/* --- Links --- */
 a {
   color: var(--link-default);
   text-decoration: none;
@@ -58,7 +57,7 @@ a:focus {
   text-decoration: none;
 }
 
-/* ========== Lists ========== */
+/* --- Lists --- */
 ul, ol {
   padding-left: 1.5rem;
   margin: 1rem 0;
@@ -69,7 +68,7 @@ li {
   line-height: 1.4;
 }
 
-/* ========== Inline Elements ========== */
+/* --- Inline Elements --- */
 strong {
   font-weight: var(--weight-bold);
 }
@@ -87,7 +86,7 @@ code {
   overflow-wrap: break-word;
 }
 
-/* ========== Blockquote ========== */
+/* --- Blockquote --- */
 blockquote {
   margin: 1rem 0;
   padding-left: 1rem;
@@ -97,20 +96,24 @@ blockquote {
   line-height: 1.6;
 }
 
-/* ========== Horizontal Rule ========== */
+/* --- Horizontal Rule --- */
 hr {
   border: none;
   border-top: 1px solid var(--border-default);
   margin: 2rem 0;
 }
 
-/* ========== Footer ========== */
+/* --- Footer --- */
 footer {
   text-align: center;
   font-size: var(--font-sm);
   color: var(--text-muted);
   padding: 1rem 0 0.5rem;
 }
+
+/* =============================================================
+   Responsive Adjustments
+============================================================= */
 
 @media (max-width: 768px) {
   h1 { font-size: var(--font-lg); }
@@ -120,10 +123,8 @@ footer {
   h5 { font-size: var(--font-sm); }
   h6 { font-size: var(--font-xs); }
 
-  p { font-size: var(--font-detail); }
-
+  p   { font-size: var(--font-detail); }
   ul, ol { padding-left: 1.2rem; }
-
   code { font-size: var(--font-sm); }
 }
 
@@ -133,10 +134,7 @@ footer {
   h3 { font-size: var(--font-sm); }
   h4, h5, h6 { font-size: var(--font-xs); }
 
-  p { font-size: var(--font-sm); }
-
+  p   { font-size: var(--font-sm); }
   ul, ol { padding-left: 1rem; }
-
   code { font-size: var(--font-xs); }
 }
-

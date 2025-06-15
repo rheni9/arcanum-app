@@ -1,10 +1,9 @@
-/* ============================================================
-   Arcanum – Header Styles
-   Defines layout and appearance of the site header, logo,
-   title, and authentication navigation
-   ============================================================ */
+/* =============================================================
+  Arcanum – Header Styles
+  Styles for logo, navigation, and auth actions in the header.
+============================================================= */
 
-/* ======= Header Container ======= */
+/* --- Header container --- */
 .site-header {
   background-color: var(--color-primary);
   color: var(--base-white);
@@ -12,7 +11,7 @@
   box-shadow: var(--shadow-default);
 }
 
-/* ======= Content Flex Wrapper ======= */
+/* --- Header content wrapper --- */
 .header-content {
   display: flex;
   justify-content: space-between;
@@ -22,7 +21,7 @@
   margin: 0 auto;
 }
 
-/* ======= Logo Link ======= */
+/* --- Logo --- */
 .logo-link {
   display: flex;
   align-items: center;
@@ -45,7 +44,7 @@
   filter: drop-shadow(0 0 6px var(--accent-soft));
 }
 
-/* ======= Site Title ======= */
+/* --- Site title --- */
 .site-title {
   color: var(--base-white);
   font-size: var(--font-lg);
@@ -56,11 +55,6 @@
   transition: color 0.2s ease, text-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.site-title:hover {
-  text-shadow: 0 0 6px var(--accent-soft);
-  transform: translateY(-1px);
-}
-
 .site-title:hover,
 .site-title:focus {
   color: var(--base-white);
@@ -69,7 +63,7 @@
   transform: translateY(-1px);
 }
 
-/* ======= Auth Navigation ======= */
+/* --- Auth navigation --- */
 .auth-nav {
   display: flex;
   align-items: center;
@@ -107,6 +101,10 @@
   filter: brightness(1.1);
 }
 
+/* =============================================================
+   Responsive Header Adjustments
+============================================================= */
+
 @media (max-width: 768px) {
   .site-header {
     padding: 1rem 2rem;
@@ -132,25 +130,22 @@
     padding: 1rem;
   }
 
-  .logo-link {
-    gap: 0.5rem;
-  }
-
-  .site-title {
-    font-size: var(--font-detail);
-    max-width: 100%;
-  }
-
   .header-content {
     flex-wrap: wrap;
     gap: 0.5rem;
   }
 
   .logo-link {
+    gap: 0.5rem;
     flex-grow: 1;
     flex-shrink: 1;
     min-width: 0;
     max-width: 60%;
+  }
+
+  .site-title {
+    font-size: var(--font-detail);
+    max-width: 100%;
   }
 
   .auth-nav {
