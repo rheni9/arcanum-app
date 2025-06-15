@@ -76,20 +76,25 @@ def render_message_view(chat_slug: str, pk: int) -> str:
 
     filters = MessageFilters.from_request(request)
 
-    if request.args.get("from_search"):
+    from_search = bool(request.args.get("from_search"))
+    from_chats = bool(request.args.get("from_chats"))
+
+    if from_search:
         back_url = url_for("search.global_search", **filters.to_query_args())
-    elif request.args.get("from_chats"):
+        back_label = "Back to Search"
+    elif from_chats:
         back_url = url_for("chats.list_chats")
+        back_label = "Back to Chats"
     else:
         back_url = url_for("chats.view_chat", slug=chat.slug,
                            **filters.to_query_args())
+        back_label = "Back to Chat"
 
     return render_template(
         "messages/view.html",
         message=message,
         chat=chat,
         filters=filters,
-        from_chats=bool(request.args.get("from_chats")),
-        from_search=bool(request.args.get("from_search")),
-        back_url=back_url
+        back_url=back_url,
+        back_label=back_label
     )
