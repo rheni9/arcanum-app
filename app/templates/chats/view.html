@@ -54,21 +54,20 @@
         </div>
       </section>
 
-      {# === Filters and Search Block === #}
+      {# === Search and Filter Interface === #}
       <section class="section">
         {% include "components/_search_filter_block.html" with context %}
       </section>
 
-      {# === Info Message or Result Summary === #}
+      {# === Results Summary or No Results Message === #}
       {% if info_message %}
         <section class="section">
           <div class="results-box no-results">
             <p class="results-summary">{{ info_message }}</p>
           </div>
         </section>
-
       {% elif filters.query or filters.tag or filters.start_date or not messages %}
-        <section class="section ">
+        <section class="section">
           <div class="results-box {{ 'no-results' if not messages }}">
             <p class="results-summary">
               {% if messages %}
@@ -77,8 +76,9 @@
                 {% elif filters.tag %}
                   Search results for tag “<strong>#{{ filters.tag }}</strong>”
                 {% endif %}
+
                 {% if filters.date_mode in ['on', 'before', 'after', 'between'] and filters.start_date %}
-                  {% if filters.query %} &mdash; {% endif %}
+                  {% if filters.query or filters.tag %} — {% endif %}
                   {% if filters.date_mode == 'on' %}Messages on <strong>{{ filters.start_date|dateonlyformat }}</strong>{% endif %}
                   {% if filters.date_mode == 'before' %}Messages before <strong>{{ filters.start_date|dateonlyformat }}</strong>{% endif %}
                   {% if filters.date_mode == 'after' %}Messages after <strong>{{ filters.start_date|dateonlyformat }}</strong>{% endif %}
@@ -87,7 +87,7 @@
                     and <strong>{{ filters.end_date|dateonlyformat }}</strong>
                   {% endif %}
                 {% endif %}<br>
-                <span>&mdash; <strong>{{ messages|length }}</strong>
+                <span>— <strong>{{ messages|length }}</strong>
                   message{{ 's' if messages|length != 1 else '' }} found.</span>
               {% else %}
                 {% if filters.query %}

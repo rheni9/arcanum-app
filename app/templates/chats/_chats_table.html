@@ -1,43 +1,48 @@
 {# ============================================================================
   Arcanum – Chats Table Partial
-  Displays all chats in a sortable table with name, message count,
-  and last message timestamp. Links to individual chat views.
-=============================================================================#}
+  Displays a sortable list of chats with name, message count, and the 
+  timestamp of the last message. Each row links to the corresponding chat view.
+============================================================================= #}
 
-{# === Chat Table Wrapper === #}
-<div id="chats-table-container">
+<div id="chats-table-container" class="table-wrapper">
   <table class="table chats-table">
 
-    {# --- Sortable table headers: name, message count, last message --- #}
+    {# === Table Headers: Chat Name, Messages, Last Message === #}
     <thead>
       <tr>
-        <th>#</th>
+        <th class="col-index">#</th>
         <th class="sortable {% if sort_by == 'name' %}active-sort{% endif %}" data-sort="name">
           <div class="sort-wrapper">
-            <span class="header-label">Chat Name</span>
-            <span class="sort-arrow">{{ '▲' if sort_by == 'name' and order == 'asc' else '▼' if sort_by == 'name' else '' }}</span>
+            <span class="header-label">Chat</span>
+            <span class="sort-arrow">
+              {{ '▲' if sort_by == 'name' and order == 'asc' else '▼' if sort_by == 'name' else '' }}
+            </span>
           </div>
         </th>
         <th class="sortable {% if sort_by == 'message_count' %}active-sort{% endif %}" data-sort="message_count">
           <div class="sort-wrapper">
             <span class="header-label">Messages</span>
-            <span class="sort-arrow">{{ '▲' if sort_by == 'message_count' and order == 'asc' else '▼' if sort_by == 'message_count' else '' }}</span>
+            <span class="sort-arrow">
+              {{ '▲' if sort_by == 'message_count' and order == 'asc' else '▼' if sort_by == 'message_count' else '' }}
+            </span>
           </div>
         </th>
         <th class="sortable {% if sort_by == 'last_message' %}active-sort{% endif %}" data-sort="last_message">
           <div class="sort-wrapper">
-            <span class="header-label">Last Message</span>
-            <span class="sort-arrow">{{ '▲' if sort_by == 'last_message' and order == 'asc' else '▼' if sort_by == 'last_message' else '' }}</span>
+            <span class="header-label">Last message</span>
+            <span class="sort-arrow">
+              {{ '▲' if sort_by == 'last_message' and order == 'asc' else '▼' if sort_by == 'last_message' else '' }}
+            </span>
           </div>
         </th>
       </tr>
     </thead>
 
+    {# === Table Body: List of Chats === #}
     <tbody>
-      {# --- Render each chat row --- #}
       {% for chat in chats %}
       <tr class="clickable-row" data-href="{{ url_for('chats.view_chat', slug=chat.slug) }}">
-        <td>{{ loop.index }}</td>
+        <td class="col-index">{{ loop.index }}</td>
         <td>{{ chat.name }}</td>
         <td>{{ chat.message_count }}</td>
         <td>
@@ -47,11 +52,12 @@
               <div class="time">{{ chat.last_message | datetimeformat("time") }}</div>
             </div>
           {% else %}
-            <div class="table-timestamp"><em>No messages</em></div>
+            <div class="table-timestamp muted"><em>No messages</em></div>
           {% endif %}
         </td>
       </tr>
       {% endfor %}
     </tbody>
+
   </table>
 </div>

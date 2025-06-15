@@ -1,22 +1,24 @@
 {# ============================================================================
   Arcanum – Chat Metadata Table Partial
-  Displays basic metadata for a specific chat, including name, slug, type,
-  Telegram ID, link, join date, activity status, and member/public flags.
-=============================================================================#}
+  Displays structured metadata for a specific chat: slug, type, Telegram ID,
+  link, join date, message count, status, visibility, membership, and notes.
+============================================================================ #}
 
 <div class="table-wrapper meta-table">
 
-  {# === Slug and Chat Type === #}
+  {# === Chat Slug === #}
   <div class="meta-table-row">
     <div class="meta-label">Slug:</div>
     <div class="meta-value">{{ chat.slug }}</div>
   </div>
+
+  {# === Chat Type === #}
   <div class="meta-table-row">
     <div class="meta-label">Type:</div>
-    <div class="meta-value">{{ chat.type or '—' }}</div>
+    <div class="meta-value">{{ chat.type if chat.type else '—' }}</div>
   </div>
 
-  {# === External Link (if provided) === #}
+  {# === External Link === #}
   <div class="meta-table-row">
     <div class="meta-label">Link:</div>
     <div class="meta-value">
@@ -34,7 +36,7 @@
   {# === Telegram Chat ID === #}
   <div class="meta-table-row">
     <div class="meta-label">Chat ID:</div>
-    <div class="meta-value">{{ chat.chat_id or '—' }}</div>
+    <div class="meta-value">{{ chat.chat_id if chat.chat_id else '—' }}</div>
   </div>
 
   {# === Join Date === #}
@@ -51,7 +53,7 @@
     <div class="meta-value">{{ total_count }}</div>
   </div>
 
-  {# === Active Status Dot === #}
+  {# === Status (Active/Inactive) === #}
   <div class="meta-table-row">
     <div class="meta-label">Status:</div>
     <div class="meta-value">
@@ -61,22 +63,22 @@
     </div>
   </div>
 
-  {# === Public Visibility === #}
+  {# === Visibility === #}
   <div class="meta-table-row">
     <div class="meta-label">Public:</div>
     <div class="meta-value">{{ 'Yes' if chat.is_public else 'No' }}</div>
   </div>
 
-  {# === Membership Flag === #}
+  {# === Membership === #}
   <div class="meta-table-row">
     <div class="meta-label">Member:</div>
     <div class="meta-value">{{ 'Yes' if chat.is_member else 'No' }}</div>
   </div>
 
-  {# === Optional Notes === #}
+  {# === Notes === #}
   <div class="meta-table-row">
     <div class="meta-label">Notes:</div>
-    <div class="meta-value">{{ chat.notes or '—' }}</div>
+    <div class="meta-value">{{ chat.notes if chat.notes else '—' }}</div>
   </div>
 
 </div>

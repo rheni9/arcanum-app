@@ -1,94 +1,98 @@
 {# ============================================================================
-  Grouped Messages Table Template for Arcanum
-
-  Displays a group of messages belonging to a single chat, typically used
-  in global search results. Supports sortable columns and row click-through.
+  Arcanum – Grouped Messages Table Partial
+  Displays a group of messages for a single chat in global search results.
+  Supports sorting, formatted timestamps, and row-level navigation.
 ============================================================================ #}
 
 <section class="section">
-  <div class="grouped-table-container" id="container-{{ slug }}">
+  <div class="table-wrapper grouped-table" id="container-{{ slug }}">
 
-    {# === Chat Title === #}
-    <h2 class="chat-subtitle">
+    {# === Chat Title (linked to chat view) === #}
+    <h2 class="table-subtitle">
       <a href="{{ url_for('chats.view_chat', slug=slug) }}">{{ chat_name }}</a>
     </h2>
 
-    {# === Messages Table or Empty Block === #}
+    {# === Messages Table or No Results Block === #}
     {% if messages %}
-    <table class="table messages-table" id="table-{{ slug }}">
+      <table class="table messages-table" id="table-{{ slug }}">
 
-      {# --- Table Header with Sortable Columns --- #}
-      <thead>
-        <tr>
-          <th>#</th>
-          <th class="sortable {% if sort_by == 'msg_id' %}active-sort{% endif %}"
-              data-sort="msg_id" data-chat="{{ slug }}"
-              {% if sort_by == 'msg_id' %}aria-sort="{{ 'ascending' if order == 'asc' else 'descending' }}"{% endif %}>
-            <div class="sort-wrapper">
-              <span class="header-label">ID</span>
-              <span class="sort-arrow">
-                {% if sort_by == 'msg_id' %}
-                  {{ '▲' if order == 'asc' else '▼' }}
-                {% endif %}
-              </span>
-            </div>
-          </th>
-          <th>Text</th>
-          <th class="sortable {% if sort_by == 'timestamp' %}active-sort{% endif %}"
-              data-sort="timestamp" data-chat="{{ slug }}"
-              {% if sort_by == 'timestamp' %}aria-sort="{{ 'ascending' if order == 'asc' else 'descending' }}"{% endif %}>
-            <div class="sort-wrapper">
-              <span class="header-label">Sent</span>
-              <span class="sort-arrow">
-                {% if sort_by == 'timestamp' %}
-                  {{ '▲' if order == 'asc' else '▼' }}
-                {% endif %}
-              </span>
-            </div>
-          </th>
-        </tr>
-      </thead>
-
-      {# --- Message Rows --- #}
-      <tbody>
-        {% for msg in messages %}
-          <tr class="clickable-row"
-              data-href="{{ url_for('messages.view_message', **{
-                'chat_slug': msg['chat_slug'],
-                'pk': msg['id'],
-                'from_search': 1,
-                'query': filters.query,
-                'tag': filters.tag,
-                'date_mode': filters.date_mode,
-                'start_date': filters.start_date,
-                'end_date': filters.end_date,
-                'action': filters.action
-              }) }}">
-            <td>{{ loop.index }}</td>
-            <td>
-              {% if msg["msg_id"] and msg["link"] %}
-                <a href="{{ msg['link'] }}" target="_blank" rel="noopener noreferrer" class="msg-id-link">
-                  {{ msg["msg_id"] }}
-                </a>
-              {% else %}
-                <span class="msg-id-no-link">{{ msg["msg_id"] or '—' }}</span>
-              {% endif %}
-            </td>
-            <td>
-              <div class="msg-text">{{ msg["text"] or '' }}</div>
-            </td>
-            <td>
-              <div class="table-timestamp">
-                <div class="date">{{ msg["timestamp"] | datetimeformat("long_date") }}</div>
-                <div class="time">{{ msg["timestamp"] | datetimeformat("time") }}</div>
+        {# --- Table Headers: ID, Text, Sent Time --- #}
+        <thead>
+          <tr>
+            <th class="col-index">#</th>
+            <th class="sortable {% if sort_by == 'msg_id' %}active-sort{% endif %}"
+                data-sort="msg_id" data-chat="{{ slug }}"
+                {% if sort_by == 'msg_id' %}aria-sort="{{ 'ascending' if order == 'asc' else 'descending' }}"{% endif %}>
+              <div class="sort-wrapper">
+                <span class="header-label">ID</span>
+                <span class="sort-arrow">
+                  {{ '▲' if sort_by == 'msg_id' and order == 'asc' else '▼' if sort_by == 'msg_id' else '' }}
+                </span>
               </div>
-            </td>
+            </th>
+            <th>Text</th>
+            <th class="sortable {% if sort_by == 'timestamp' %}active-sort{% endif %}"
+                data-sort="timestamp" data-chat="{{ slug }}"
+                {% if sort_by == 'timestamp' %}aria-sort="{{ 'ascending' if order == 'asc' else 'descending' }}"{% endif %}>
+              <div class="sort-wrapper">
+                <span class="header-label">Sent</span>
+                <span class="sort-arrow">
+                  {{ '▲' if sort_by == 'timestamp' and order == 'asc' else '▼' if sort_by == 'timestamp' else '' }}
+                </span>
+              </div>
+            </th>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+
+      {# --- Message Rows: Clickable links to full view --- #}
+      <tbody>
+          {% for msg in messages %}
+            <tr class="clickable-row"
+                data-href="{{ url_for('messages.view_message', **{
+                  'chat_slug': msg['chat_slug'],
+                  'pk': msg['id'],
+                  'from_search': 1,
+                  'query': filters.query,
+                  'tag': filters.tag,
+                  'date_mode': filters.date_mode,
+                  'start_date': filters.start_date,
+                  'end_date': filters.end_date,
+                  'action': filters.action
+                }) }}">
+              <td class="col-index">{{ loop.index }}</td>
+              <td>
+                {% if msg["msg_id"] and msg["link"] %}
+                  <a href="{{ msg['link'] }}" target="_blank" rel="noopener noreferrer" class="msg-id-link">
+                    {{ msg["msg_id"] }}
+                  </a>
+                {% elif msg["msg_id"] %}
+                  <span class="msg-id-no-link">{{ msg["msg_id"] }}</span>
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+              <td>
+                <div class="msg-text">
+                  {{ msg["text"] if msg["text"] else '—' }}
+                </div>
+              </td>
+              <td>
+                {% if msg["timestamp"] %}
+                  <div class="table-timestamp">
+                    <div class="date">{{ msg["timestamp"] | datetimeformat("long_date") }}</div>
+                    <div class="time">{{ msg["timestamp"] | datetimeformat("time") }}</div>
+                  </div>
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
     {% else %}
-    <div class="no-results">No messages found.</div>
+      <div class="no-results">No messages found.</div>
     {% endif %}
   </div>
 </section>

@@ -1,7 +1,7 @@
 {# ============================================================================
-  Message View Template for the Arcanum Application
-
-  Displays a single message with metadata, controls (edit/delete), and full text.
+  Arcanum – Message Detail Page
+  Displays message metadata, action buttons, and full message content,
+  with back navigation based on search or chat context.
 ============================================================================ #}
 
 {% extends "base.html" %}
@@ -11,9 +11,7 @@
 {% endblock %}
 
 {% block content %}
-
   <div class="content-area">
-
     <div class="meta-info-block">
 
       {# === Message Metadata Section === #}
@@ -28,17 +26,13 @@
           <div class="btn-left">
             <a href="{{ back_url }}" class="btn btn-primary btn-icon">
               <img src="{{ url_for('static', filename='img/back_icon.png') }}" alt="Back">
-              <span>
-                Back{% if from_search %} to Search
-                    {% elif from_chats %} to Chats
-                    {% else %} to Chat{% endif %}
-              </span>
+              <span>{{ back_label }}</span>
             </a>
           </div>
 
           <div class="btn-right">
             <a href="{{ url_for('messages.edit_message', chat_slug=chat.slug, pk=message.id) }}"
-              class="btn btn-secondary btn-icon">
+               class="btn btn-secondary btn-icon">
               <img src="{{ url_for('static', filename='img/edit_icon.png') }}" alt="Edit">
               <span>Edit</span>
             </a>
@@ -56,18 +50,19 @@
         </div>
       </section>
 
-      {# === Message Content Section === #}    
+      {# === Full Message Content === #}
       <section class="section">
         <div class="message-box">
           <div class="message-fulltext">
             {% if message.text %}
               {{ message.text | replace('\n', '<br>') | safe }}
             {% else %}
-              <span class="muted">&mdash; No message content &mdash;</span>
+              <span class="muted">— No message content —</span>
             {% endif %}
           </div>
         </div>
       </section>
+
     </div>
   </div>
 {% endblock %}

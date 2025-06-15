@@ -1,7 +1,8 @@
 {# ============================================================================
-  Message Form Template for the Arcanum Application
-  Provides a unified interface for creating or editing messages,
-  with integrated field validation and consistent application layout.
+  Arcanum – Message Form Page
+  Provides a form to create a new message or edit an existing one. Includes
+  fields for Telegram ID, timestamp, link, text, media, screenshot, tags, and
+  notes.
 ============================================================================ #}
 
 {% extends "base.html" %}
@@ -23,8 +24,10 @@
       {# === Form Container === #}
       <div class="form-container wide-form">
         <div class="form-box">
+          {% set action_url = url_for('messages.edit_message', chat_slug=chat.slug, pk=message.id)
+                              if is_edit else url_for('messages.add_message', chat_slug=chat.slug) %}
           <form method="post"
-                action="{% if is_edit %}{{ url_for('messages.edit_message', chat_slug=chat.slug, pk=message.id) }}{% else %}{{ url_for('messages.add_message', chat_slug=chat.slug) }}{% endif %}"
+                action="{{ action_url }}"
                 class="form"
                 novalidate
                 autocomplete="off">
@@ -43,7 +46,7 @@
               {% endfor %}
             </div>
 
-            {# === Date and Time  === #}
+            {# === Date and Time Fields === #}
             <div class="form-datetime-row">
               <div class="form-group">
                 <label for="{{ form.date.id }}" class="form-label">
@@ -64,7 +67,7 @@
               <div class="error">{{ form.datetime_error }}</div>
             {% endif %}
 
-            {# === Link === #}
+            {# === External Link === #}
             <div class="form-group">
               <label for="{{ form.link.id }}" class="form-label">
                 {{ form.link.label.text }}
@@ -87,7 +90,7 @@
               {% endfor %}
             </div>
 
-            {# === Media === #}
+            {# === Media Path === #}
             <div class="form-group">
               <label for="{{ form.media.id }}" class="form-label">
                 {{ form.media.label.text }}
@@ -99,7 +102,7 @@
               {% endfor %}
             </div>
 
-            {# === Screenshot === #}
+            {# === Screenshot Path === #}
             <div class="form-group">
               <label for="{{ form.screenshot.id }}" class="form-label">
                 {{ form.screenshot.label.text }}
@@ -138,8 +141,9 @@
                 {{ "Update" if is_edit else "Save" }}
               </button>
               <a href="{% if is_edit %}{{ url_for('messages.view_message', chat_slug=chat.slug, pk=message.id) }}{% else %}{{ url_for('chats.view_chat', slug=chat.slug) }}{% endif %}"
-                class="btn btn-secondary">Cancel</a>
+                 class="btn btn-secondary">Cancel</a>
             </div>
+
           </form>
         </div>
       </div>

@@ -1,9 +1,8 @@
-{# =============================================================================
+{# ============================================================================
   Arcanum – Chat Form Page
   Provides a form to create a new chat or edit an existing one. Includes fields
-  for name, link, chat ID, type, join date, status toggles (active, member,
-  public), and notes.
-============================================================================= #}
+  for name, type, link, Telegram ID, join date, status flags, and notes.
+============================================================================ #}
 
 {% extends "base.html" %}
 
@@ -30,11 +29,11 @@
             {% if is_edit and chat %}
               <div class="form-group">
                 <label class="form-label">Slug:</label>
-                <span class="inline-value">{{ chat.slug }}</span>
+                <span class="static-value">{{ chat.slug }}</span>
               </div>
             {% endif %}
 
-            {# === Name === #}
+            {# === Chat Name === #}
             <div class="form-group">
               <label for="{{ form.name.id }}" class="form-label">
                 {{ form.name.label.text }}<span class="form-required-mark">*</span>
@@ -45,7 +44,7 @@
               {% endfor %}
             </div>
 
-            {# === Type === #}
+            {# === Chat Type === #}
             <div class="form-group">
               <label for="{{ form.type.id }}" class="form-label">
                 {{ form.type.label.text }}
@@ -56,7 +55,7 @@
               {% endfor %}
             </div>
 
-            {# === Link === #}
+            {# === External Link === #}
             <div class="form-group">
               <label for="{{ form.link.id }}" class="form-label">
                 {{ form.link.label.text }}
@@ -85,7 +84,7 @@
               <label for="{{ form.joined.id }}" class="form-label">
                 {{ form.joined.label.text }}
               </label>
-              {{ form.joined(class="form-control form-date form-date-input" ~ (' input-error' if form.joined.errors else '')) }}
+              {{ form.joined(class="form-control form-date-input" ~ (' input-error' if form.joined.errors else '')) }}
               {% for error in form.joined.errors %}
                 <div class="error">{{ error }}</div>
               {% endfor %}
@@ -136,15 +135,16 @@
             <div class="form-actions-centered">
               <button type="submit" class="btn btn-primary btn-icon">
                 <img src="{{ url_for('static', filename='img/save_icon.png') }}" alt="Save" class="icon-btn">
-                {% if is_edit %}Update{% else %}Create{% endif %}
+                {{ "Update" if is_edit else "Create" }}
               </button>
               <a href="{{ url_for('chats.view_chat', slug=chat.slug) if is_edit else url_for('chats.list_chats') }}"
-                class="btn btn-secondary">Cancel</a>
+                 class="btn btn-secondary">Cancel</a>
             </div>
 
           </form>
         </div>
       </div>
+
       <p class="form-required-note">
         <span class="form-required-mark">*</span> Required field
       </p>

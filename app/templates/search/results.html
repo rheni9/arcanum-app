@@ -1,31 +1,33 @@
 {# ============================================================================
-  Search Results Template for the Arcanum Application
-  Displays grouped messages by chat with filters and summary information.
+  Arcanum – Search Results Page
+  Displays grouped messages by chat with filters, summary, and message tables.
 ============================================================================ #}
 
 {% extends "base.html" %}
 
-{% block title %}Search Results | Arcanum{% endblock %}
+{% block title %}
+  Search Results | Arcanum
+{% endblock %}
 
 {% block content %}
   <div class="content-area">
 
-    {# === Metadata Section === #}
+    {# === Page Title === #}
     <div class="meta-info-block">
       <section class="section">
         <h1 class="section-title">Search Results</h1>
       </section>
     </div>
 
-    {# === Main Content Section === #}
+    {# === Main Content Wrapper === #}
     <div class="inner-wrapper">
 
-      {# === Search/Filter Block === #}
+      {# === Search and Filter Interface === #}
       <section class="section">
         {% include "components/_search_filter_block.html" with context %}
       </section>
 
-      {# === Info Message === #}
+      {# === Info Message (Optional Notice) === #}
       {% if info_message %}
         <section class="section">
           <div class="results-box no-results">
@@ -34,17 +36,19 @@
         </section>
       {% endif %}
 
-      {# === Back Button === #}
+      {# === Action Buttons === #}
       <section class="section">
-        <div class="btn-left">
-          <a href="{{ url_for('chats.list_chats') }}" class="btn btn-primary btn-icon">
-            <img src="{{ url_for('static', filename='img/back_icon.png') }}" alt="Back">
-            <span>Back to Chats</span>
-          </a>
+        <div class="btn-bar">
+          <div class="btn-left">
+            <a href="{{ url_for('chats.list_chats') }}" class="btn btn-primary btn-icon">
+              <img src="{{ url_for('static', filename='img/back_icon.png') }}" alt="Back">
+              <span>Back to Chats</span>
+            </a>
+          </div>
         </div>
       </section>
 
-      {# === Summary Block (Search/Filter description) === #}
+      {# === Results Summary Block === #}
       {% if grouped and filters.action %}
         <section class="section">
           <div class="results-box">
@@ -66,7 +70,8 @@
                 {% endif %}
               {% endif %}
               <br>
-              <span>— <strong>{{ count }}</strong> message{{ 's' if count != 1 else '' }} found across chats.</span>
+              <span>— <strong>{{ count }}</strong>
+                message{{ 's' if count != 1 else '' }} found across chats.</span>
             </p>
           </div>
         </section>
@@ -102,7 +107,7 @@
         </section>
       {% endif %}
 
-      {# === Results Tables (Grouped by Chat) === #}
+      {# === Results Tables Grouped by Chat === #}
       {% if grouped %}
         <div id="results-table-container">
           {% for slug, group in grouped.items() %}
@@ -118,6 +123,6 @@
         </div>
       {% endif %}
 
-    </div> {# end .inner-wrapper #}
-  </div> {# end .content-area #}
+    </div> {# === End .inner-wrapper === #}
+  </div> {# === End .content-area === #}
 {% endblock %}

@@ -1,13 +1,13 @@
 {# ============================================================================
   Arcanum – Messages Table Partial
-  Displays messages for a specific chat in a sortable table with ID, text,
-  and timestamp columns. Each row is clickable and links to full message view.
-=============================================================================#}
+  Displays a sortable list of messages with Telegram ID, text,
+  and timestamp. Each row links to the full message view.
+============================================================================= #}
 
-<div id="messages-table-container" class="table-wrapper messages-table">
+<div id="messages-table-container" class="table-wrapper">
   <table class="table messages-table">
 
-    {# === Table Header === #}
+    {# === Table Headers: ID, Text, Sent Time === #}
     <thead>
       <tr>
         <th class="col-index">#</th>
@@ -31,10 +31,14 @@
       </tr>
     </thead>
 
+    {# === Table Body: List of Messages === #}
     <tbody>
-      {# === Message Rows === #}
       {% for msg in messages %}
-      <tr class="clickable-row" data-href="{{ url_for('messages.view_message', chat_slug=chat.slug, pk=msg['id'], **extra_args) }}">
+      <tr class="clickable-row"
+          data-href="{{ url_for('messages.view_message',
+                                chat_slug=chat.slug,
+                                pk=msg['id'],
+                                **extra_args) }}">
         <td class="col-index">{{ loop.index }}</td>
         <td>
           {% if msg["msg_id"] and msg["link"] %}
@@ -44,11 +48,13 @@
           {% elif msg["msg_id"] %}
             <span class="msg-id-no-link">{{ msg["msg_id"] }}</span>
           {% else %}
-              —
+            —
           {% endif %}
         </td>
         <td>
-          <div class="msg-text">{{ msg["text"] or '' }}</div>
+          <div class="msg-text">
+            {{ msg["text"] if msg["text"] else '—' }}
+          </div>
         </td>
         <td>
           <div class="table-timestamp">
@@ -59,5 +65,6 @@
       </tr>
       {% endfor %}
     </tbody>
+
   </table>
 </div>

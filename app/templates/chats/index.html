@@ -13,7 +13,7 @@
 {% block content %}
   <div class="content-area">
 
-    {# === Metadata Block: Title and Global Stats === #}
+    {# === Page Title and Global Statistics === #}
     <div class="meta-info-block">
       <section class="section">
         <h1 class="section-title">Chats</h1>
@@ -32,27 +32,27 @@
     {# === Main Content Wrapper === #}
     <div class="inner-wrapper">
     
-      {# === Search and Filter Block === #}
+      {# === Search and Filter Interface === #}
       <section class="section">
         {% include "components/_search_filter_block.html" with context %}
       </section>
 
-      {# === Informational Message === #}
+      {# === Info Message (No Results or Notice) === #}
       {% if info_message %}
-      <section class="section">
-        <div class="results-box no-results">
-          <p class="results-summary">{{ info_message }}</p>
-        </div>
-      </section>
+        <section class="section">
+          <div class="results-box no-results">
+            <p class="results-summary">{{ info_message }}</p>
+          </div>
+        </section>
       {% endif %}
 
-      {# === Chats Table === #}
+      {# === Chats Table Section === #}
       <section class="section">
         <div id="chats-table-container">
           {% include "chats/_chats_table.html" %}
         </div>
       </section>
 
-    </div> {# end .inner-wrapper #}
-  </div> {# end .content-area #}
+    </div> {# === End .inner-wrapper === #}
+  </div> {# === End .content-area === #}
 {% endblock %}

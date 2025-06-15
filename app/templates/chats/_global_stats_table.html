@@ -1,22 +1,24 @@
 {# ============================================================================
   Arcanum – Global Stats Table Partial
-  Displays total counts for chats, messages, and messages with media,
-  most active chat with message count, and timestamp of the last message.
+  Displays the number of chats and messages, messages with media, the most
+  active chat with message count, and the timestamp of the last message.
 =============================================================================#}
 
 <div class="table-wrapper meta-table">
 
-  {# === Total Counts === #}
+  {# === Number of chats === #}
   <div class="meta-table-row">
-    <div class="meta-label">Total chats:</div>
+    <div class="meta-label">Number of chats:</div>
     <div class="meta-value">{{ stats.total_chats }}</div>
   </div>
 
+  {# === Number of messages === #}
   <div class="meta-table-row">
-    <div class="meta-label">Total messages:</div>
+    <div class="meta-label">Number of messages:</div>
     <div class="meta-value">{{ stats.total_messages }}</div>
   </div>
 
+  {# === Number of messages with media === #}
   <div class="meta-table-row">
     <div class="meta-label">Messages with media:</div>
     <div class="meta-value">{{ stats.media_messages }}</div>
@@ -27,7 +29,8 @@
     <div class="meta-label">Most active chat:</div>
     <div class="meta-value">
       {% if stats.most_active_chat_name %}
-        <a href="{{ url_for('chats.view_chat', slug=stats.most_active_chat_slug) }}" class="meta-link meta-link-active">
+        <a href="{{ url_for('chats.view_chat', slug=stats.most_active_chat_slug) }}"
+           class="meta-link meta-link-active">
           {{ stats.most_active_chat_name }}
         </a>
         <span class="meta-count">({{ stats.most_active_chat_count }} messages)</span>
@@ -42,7 +45,10 @@
     <div class="meta-label">Last message timestamp:</div>
     <div class="meta-value">
       {% if stats.last_message_timestamp and stats.last_message_id %}
-        <a href="{{ url_for('messages.view_message', chat_slug=stats.last_message_chat_slug, pk=stats.last_message_id, from_chats=1) }}">
+        <a href="{{ url_for('messages.view_message',
+                            chat_slug=stats.last_message_chat_slug,
+                            pk=stats.last_message_id,
+                            from_chats=1) }}">
           <div class="meta-icon-group">
             <span class="meta-icon-text">
               <img src="{{ url_for('static', filename='img/calendar.png') }}" alt="Date">
