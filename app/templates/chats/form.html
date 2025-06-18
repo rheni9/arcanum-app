@@ -84,7 +84,11 @@
               <label for="{{ form.joined.id }}" class="form-label">
                 {{ form.joined.label.text }}
               </label>
-              {{ form.joined(class="form-control form-date-input" ~ (' input-error' if form.joined.errors else '')) }}
+              {{ form.joined(
+                  class="form-control form-date-input" ~ (' input-error' if form.joined.errors else ''),
+                  type="date"
+              ) }}
+              <div class="form-message-wrapper"></div>
               {% for error in form.joined.errors %}
                 <div class="error">{{ error }}</div>
               {% endfor %}

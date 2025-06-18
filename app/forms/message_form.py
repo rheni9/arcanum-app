@@ -191,12 +191,9 @@ class MessageForm(FlaskForm):
                 logger.debug(
                     "[MESSAGES|FORM] Date/time in future: %s", local_dt
                 )
-                self.date.errors.append(
-                    "Date and time cannot be in the future."
-                )
-                self.time.errors.append(
-                    "Date and time cannot be in the future."
-                )
+                self.date.errors.append("")
+                self.time.errors.append("")
+                self.datetime_error = "Date and time cannot be in the future."
                 is_valid = False
             else:
                 self._final_dt = local_dt
