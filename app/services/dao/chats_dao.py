@@ -197,6 +197,24 @@ def check_slug_exists(slug: str) -> bool:
         raise
 
 
+def check_chat_id_exists(chat_id: int) -> bool:
+    """
+    Check whether a chat ID already exists in the database.
+
+    :param chat_id: Telegram chat ID.
+    :return: True if the chat ID exists, otherwise False.
+    :raises DatabaseError: If the query fails.
+    """
+    query = "SELECT 1 FROM chats WHERE chat_id = ? LIMIT 1;"
+    try:
+        conn = get_connection_lazy()
+        row = conn.execute(query, (chat_id,)).fetchone()
+        return row is not None
+    except DatabaseError as e:
+        logger.error("[CHATS|DAO] Chat ID check failed: %s", e)
+        raise
+
+
 def fetch_global_chat_stats() -> dict:
     """
     Retrieve global aggregate statistics from the database.

@@ -90,8 +90,18 @@ def add_chat() -> Response | str:
             return redirect(url_for("chats.view_chat", slug=chat.slug))
         except IntegrityError as e:
             logger.warning("[DATABASE|CHATS] Integrity error: %s", e)
-            flash("Slug already exists. Please choose another name.", "error")
-
+            msg = str(e).lower()
+            if "telegram id" in msg:
+                flash(
+                    "This Telegram ID is already in use. "
+                    "Please check the value.", "error"
+                )
+            elif "slug" in msg:
+                flash(
+                    "Slug already exists. Please choose another name.", "error"
+                )
+            else:
+                flash("Integrity error. Please review your input.", "error")
         except DatabaseError as e:
             logger.error("[DATABASE|CHATS] Failed to create chat: %s", e)
             flash(f"Failed to create chat: {e}", "error")
@@ -136,7 +146,18 @@ def edit_chat(slug: str) -> Response | str:
             return redirect(url_for("chats.view_chat", slug=updated_chat.slug))
         except IntegrityError as e:
             logger.warning("[DATABASE|CHATS] Integrity error: %s", e)
-            flash("Slug already exists. Please choose another name.", "error")
+            msg = str(e).lower()
+            if "telegram id" in msg:
+                flash(
+                    "This Telegram ID is already in use. "
+                    "Please check the value.", "error"
+                )
+            elif "slug" in msg:
+                flash(
+                    "Slug already exists. Please choose another name.", "error"
+                )
+            else:
+                flash("Integrity error. Please review your input.", "error")
         except DatabaseError as e:
             logger.error("[DATABASE|CHATS] Failed to update chat: %s", e)
             flash(f"Failed to update chat: {e}", "error")
