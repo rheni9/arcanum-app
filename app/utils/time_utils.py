@@ -44,16 +44,15 @@ def _format_datetime(dt: datetime, format_type: str) -> str:
         ),
         "time": dt.strftime("%H:%M:%S")
     }
-    result = format_map.get(format_type)
-    if result:
-        return result
-    logger.warning("[TIME|FORMAT] Unknown format type '%s'.", format_type)
-    return dt.isoformat()
+    if format_type not in format_map:
+        logger.warning("[TIME|FORMAT] Unknown format type '%s'.", format_type)
+        return dt.isoformat()
+    return format_map[format_type]
 
 
 def _parse_ymd_string(text: str) -> date | None:
     """
-    Parse 'YYYY-MM-DD' string to a datetime.date object.
+    Parse 'YYYY-MM-DD' string to a date object.
 
     :param text: Date string.
     :return: Parsed date or None.
@@ -116,6 +115,10 @@ def parse_datetime(
     """
     Parse the flexible datetime input into UTC ISO 8601 string.
 
+    Tries to parse exact ISO format first, then falls back to
+    flexible parsing. Naive inputs are localized to the provided
+    default timezone.
+
     :param text: User-provided datetime string.
     :param default_tz: Default timezone for naive inputs.
     :param day_first: Interpret ambiguous dates as DD/MM/YYYY.
@@ -143,9 +146,66 @@ def parse_datetime(
         return None
 
 
+def parse_flexible_date(
+    text: str,
+    day_first: bool = True
+) -> tuple[date | None, str | None]:
+    """
+    Parse a user-provided date string into a valid date object.
+
+    Accepts flexible formats like '31.04.2025' or '2025/04/30'.
+    Returns a date or an error message.
+
+    :param text: User-provided date string.
+    :param day_first: Interpret ambiguous formats as DD/MM/YYYY.
+    :return: Tuple (date or None, error message or None).
+    """
+    cleaned = text.strip().replace(".", "-").replace("/", "-")
+    try:
+        dt = dateutil_parser.parse(cleaned, dayfirst=day_first)
+        return dt.date(), None
+    except (ValueError, TypeError) as e:
+        logger.warning(
+            "[DATE|PARSE] Failed to parse local date '%s': %s", text, e
+        )
+        msg = str(e)
+        if "day is out of range" in msg or "does not match format" in msg:
+            return None, "This date does not exist."
+        if "month must be in 1..12" in msg:
+            return None, "Month must be between 1 and 12."
+        if "year" in msg and "is out of range" in msg:
+            return None, "Year is out of acceptable range."
+        if "Unknown string format" in msg:
+            return None, "Unrecognized date format."
+        return None, "Invalid date."
+
+
+def parse_flexible_time(text: str) -> tuple[time | None, str | None]:
+    """
+    Parse user-entered time string into time object.
+
+    Accepts formats like '15:30', '3:30 PM', '23:00:00'.
+
+    :param text: Input time string.
+    :return: Tuple (parsed time or None, error message or None).
+    """
+    try:
+        dt = dateutil_parser.parse(text)
+        return dt.time(), None
+    except (ValueError, TypeError) as e:
+        msg = str(e)
+        if (
+            "hour must be in" in msg or
+            "minute must be in" in msg or
+            "second must be in" in msg
+        ):
+            return None, "Time values are out of valid range."
+        return None, "Invalid time format."
+
+
 def parse_date(text: str) -> str | None:
     """
-    Parse the 'YYYY-MM-DD' string into ISO date.
+    Parse a date string in 'YYYY-MM-DD' format into ISO date.
 
     :param text: Date string.
     :return: ISO date string or None if invalid.
@@ -158,8 +218,7 @@ def parse_to_datetime(val: str | datetime | None) -> datetime | None:
     """
     Parse a timestamp into a UTC-aware datetime object.
 
-    Accepts a datetime object or ISO 8601 string (with or without timezone).
-    Returns a UTC-aware datetime, or None if conversion fails.
+    Accepts a datetime or ISO 8601 string. Localizes naive input.
 
     :param val: Input datetime or ISO string.
     :return: UTC datetime or None.
@@ -199,15 +258,24 @@ def parse_to_date(val: date | datetime | str | None) -> date | None:
     if isinstance(val, str):
         val = val.strip()
         if val:
+            # fallback #1: exact YMD (e.g. '2024-06-17')
             dt = _parse_ymd_string(val)
             if dt:
                 return dt
+            # fallback #2: ISO string with T (e.g. '2024-06-17T00:00:00Z')
             try:
                 return date.fromisoformat(val.split("T")[0])
             except (ValueError, TypeError) as e:
                 logger.warning(
                     "[TIME|PARSE] Failed to parse date string '%s': %s", val, e
                 )
+                # fallback #3: flexible parsing (e.g. '31.04.2024')
+                dt, err = parse_flexible_date(val)
+                if err:
+                    logger.warning(
+                        "[TIME|PARSE] Failed to parse date '%s': %s", val, err
+                    )
+                return dt if not err else None
     return None
 
 
@@ -219,7 +287,10 @@ def datetimeformat(
     """
     Format a datetime/date/string for UI display.
 
-    :param value: Datetime/date/string to format.
+    Tries to parse strings as ISO, localizes datetimes,
+    and applies a predefined formatting style.
+
+    :param value: Datetime, date, or ISO string to format.
     :param format_type: Format style (e.g., "long_date_time").
     :param tz: Target timezone (name or tz object).
     :return: Human-readable string.
@@ -266,6 +337,8 @@ def dateonlyformat(
 ) -> str:
     """
     Format a date (string, date, or datetime) for UI display.
+
+    Accepts multiple input types and formats accordingly.
 
     :param value: Date string or date/datetime object.
     :param format_type: Format style: "long_date" or "short_date".

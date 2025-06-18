@@ -8,11 +8,10 @@ Fields and validation are fully synchronized with the Message model.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, date, time
 from flask_wtf import FlaskForm
 from wtforms import (
-    StringField, TextAreaField, IntegerField,
-    DateField, TimeField, HiddenField, SubmitField
+    StringField, TextAreaField, IntegerField, HiddenField, SubmitField
 )
 from wtforms.validators import (
     DataRequired, Optional, NumberRange, URL, ValidationError
@@ -20,18 +19,23 @@ from wtforms.validators import (
 
 from app.models.message import Message
 from app.utils.model_utils import empty_to_none, to_int_or_none
-from app.utils.time_utils import to_utc_iso, DEFAULT_TZ
+from app.utils.time_utils import (
+    to_utc_iso, parse_flexible_date, parse_flexible_time, DEFAULT_TZ
+)
 
 logger = logging.getLogger(__name__)
 
 
 def validate_not_blank(_form, field) -> None:
     """
-    WTForms validator to ensure the field is not empty or whitespace.
+    Validate that the field is not empty or whitespace-only.
 
-    :param _form: Parent form (unused).
-    :param field: WTForms field.
-    :raises ValidationError: If field is empty or contains only whitespace.
+    Used as a WTForms validator to prevent empty message text.
+    Raises a validation error if the input is invalid.
+
+    :param _form: WTForms parent form (unused).
+    :param field: The field to validate.
+    :raises ValidationError: If the value is empty or blank.
     """
     if not field.data or not field.data.strip():
         raise ValidationError("Text cannot be empty or whitespace.")
@@ -56,14 +60,12 @@ class MessageForm(FlaskForm):
         ]
     )
 
-    date = DateField(
+    date = StringField(
         "Date",
-        format="%Y-%m-%d",
         validators=[DataRequired(message="Date is required.")]
     )
-    time = TimeField(
+    time = StringField(
         "Time",
-        format="%H:%M:%S",
         validators=[DataRequired(message="Time is required.")]
     )
 
@@ -109,24 +111,81 @@ class MessageForm(FlaskForm):
         """
         super().__init__(*args, **kwargs)
         self.datetime_error = None
+        self._parsed_date: date | None = None
+        self._parsed_time: time | None = None
+        self._final_dt: datetime | None = None
         logger.debug("[MESSAGES|FORM] MessageForm initialized.")
+
+    def validate_date(self, field: StringField) -> None:
+        """
+        Validate and parse the date input field.
+
+        Parses user-provided date into a valid date object.
+        Stores the result internally if valid, or raises a validation error.
+
+        :param field: The date field to validate.
+        :raises ValidationError: If the date is invalid or does not exist.
+        """
+        raw = field.data.strip() if field.data else ""
+        logger.debug("[MESSAGES|FORM] Raw date input: '%s'", raw)
+        date_obj, error = parse_flexible_date(raw)
+        if error:
+            raise ValidationError(error)
+        self._parsed_date = date_obj
+
+    def validate_time(self, field: StringField) -> None:
+        """
+        Validate and parse the time input field.
+
+        Parses user-provided time into a valid time object.
+        Stores the result internally if valid, or raises a validation error.
+
+        :param field: The time field to validate.
+        :raises ValidationError: If the time is invalid or does not exist.
+        """
+        raw = field.data.strip() if field.data else ""
+        logger.debug("[MESSAGES|FORM] Raw time input: '%s'", raw)
+        time_obj, error = parse_flexible_time(raw)
+        if error:
+            raise ValidationError(error)
+        self._parsed_time = time_obj
 
     def validate(self, extra_validators: list | None = None) -> bool:
         """
-        Run all validators and custom datetime validation.
+        Run standard and custom validation logic.
 
-        :param extra_validators: Optional list of extra validator callables.
-        :return: True if form passes all validation, False otherwise.
+        Includes extra checks for future timestamps.
+
+        :param extra_validators: Optional list of additional validators.
+        :return: True if the form is valid, False otherwise.
         """
-        initial = super().validate(extra_validators)
-        if not initial:
+        is_valid = super().validate(extra_validators)
+        if not is_valid:
             logger.debug(
                 "[MESSAGES|FORM] Validation failed. Errors: %s", self.errors
             )
             return False
 
-        if self.date.data and self.time.data:
-            local_dt = datetime.combine(self.date.data, self.time.data)
+        date_raw = self.date.data.strip() if self.date.data else ""
+        time_raw = self.time.data.strip() if self.time.data else ""
+        logger.debug(
+            "[MESSAGES|FORM] Raw date: '%s' | time: '%s'", date_raw, time_raw
+        )
+
+        # Parse date
+        self._parsed_date, date_error = parse_flexible_date(date_raw)
+        if date_error:
+            self.date.errors.append(date_error)
+            is_valid = False
+
+        # Parse time
+        self._parsed_time, time_error = parse_flexible_time(time_raw)
+        if time_error:
+            self.time.errors.append(time_error)
+            is_valid = False
+
+        if self._parsed_date and self._parsed_time:
+            local_dt = datetime.combine(self._parsed_date, self._parsed_time)
             local_dt = DEFAULT_TZ.localize(local_dt)
             if local_dt > datetime.now(DEFAULT_TZ):
                 logger.debug(
@@ -138,14 +197,23 @@ class MessageForm(FlaskForm):
                 self.time.errors.append(
                     "Date and time cannot be in the future."
                 )
-                self.datetime_error = "Date and time cannot be in the future."
-                return False
-        return True
+                is_valid = False
+            else:
+                self._final_dt = local_dt
+
+        return is_valid
 
     def validate_link(self, field: StringField) -> None:
         """
-        Ensure the link starts with http:// or https:// if provided.
+        Validate the format of the link field.
+
+        Raises an error if the link is not empty and does not start with
+        'http://' or 'https://'.
+
+        :param field: The link field to validate.
+        :raises ValidationError: If the link has an invalid prefix.
         """
+
         if field.errors or not field.data:
             return
         if not field.data.startswith(("http://", "https://")):
@@ -161,7 +229,7 @@ class MessageForm(FlaskForm):
         Splits the tags string by comma, strips whitespace,
         and returns a list of non-empty tags.
 
-        :return: List of stripped tags.
+        :return: List of stripped tag strings.
         """
         if not self.tags.data:
             return []
@@ -171,9 +239,11 @@ class MessageForm(FlaskForm):
 
     def populate_from_model(self, message: Message) -> None:
         """
-        Populate the form fields from a Message model instance.
+        Fill the form fields using data from a Message instance.
 
-        :param message: Message model instance.
+        Populates all fields in the form based on the provided model.
+
+        :param chat: The Message object containing source values.
         """
         logger.debug(
             "[MESSAGES|FORM] Populating form from Message: %s", message
@@ -197,15 +267,16 @@ class MessageForm(FlaskForm):
 
     def to_model_dict(self) -> dict:
         """
-        Convert the form data to a dictionary suitable for the Message model.
+        Convert form data to a dictionary matching the Message model.
 
-        :return: Dictionary of form data.
+        Converts and normalizes user input into a format that matches
+        the Message model fields. Handles empty values, integers, and booleans.
+
+        :return: Dictionary suitable for passing to Message or database layer.
         """
         timestamp = None
-        if self.date.data and self.time.data:
-            local_dt = datetime.combine(self.date.data, self.time.data)
-            local_dt = DEFAULT_TZ.localize(local_dt)
-            timestamp = to_utc_iso(local_dt)
+        if self._final_dt:
+            timestamp = to_utc_iso(self._final_dt)
 
         data = {
             "id": to_int_or_none(self.id.data),

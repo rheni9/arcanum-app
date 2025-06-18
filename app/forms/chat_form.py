@@ -12,7 +12,7 @@ from datetime import datetime
 from flask_wtf import FlaskForm
 from wtforms import (
     StringField, TextAreaField, BooleanField,
-    DateField, IntegerField, HiddenField, SubmitField
+    IntegerField, HiddenField, SubmitField
 )
 from wtforms.validators import (
     DataRequired, URL, Optional, NumberRange, ValidationError
@@ -20,6 +20,7 @@ from wtforms.validators import (
 
 from app.models.chat import Chat
 from app.utils.model_utils import empty_to_none, to_int_or_none
+from app.utils.time_utils import parse_flexible_date
 
 logger = logging.getLogger(__name__)
 
@@ -57,11 +58,7 @@ class ChatForm(FlaskForm):
         ]
     )
 
-    joined = DateField(
-        "Joined Date",
-        format="%Y-%m-%d",
-        validators=[Optional()]
-    )
+    joined = StringField("Joined Date")
 
     is_active = BooleanField("Active")
     is_member = BooleanField("Member")
@@ -79,10 +76,10 @@ class ChatForm(FlaskForm):
 
     def validate(self, extra_validators: list | None = None) -> bool:
         """
-        Run all validators and log validation errors.
+        Run all field validators and log validation results.
 
-        :param extra_validators: Optional list of extra validators.
-        :return: True if form passes all validation, False otherwise.
+        :param extra_validators: Optional list of additional validators.
+        :return: True if the form is valid, False otherwise.
         """
         is_valid = super().validate(extra_validators)
         if not is_valid:
@@ -93,7 +90,13 @@ class ChatForm(FlaskForm):
 
     def validate_link(self, field: StringField) -> None:
         """
-        Ensure the link starts with http:// or https:// if provided.
+        Validate the format of the link field.
+
+        Raises an error if the link is not empty and does not start with
+        'http://' or 'https://'.
+
+        :param field: The link field to validate.
+        :raises ValidationError: If the link has an invalid prefix.
         """
         if field.errors or not field.data:
             return
@@ -103,19 +106,35 @@ class ChatForm(FlaskForm):
                 "Chat link must start with 'http://' or 'https://'."
             )
 
-    def validate_joined(self, field: DateField) -> None:
+    def validate_joined(self, field: StringField) -> None:
         """
-        Ensure the join date is not set in the future.
+        Validate the join date field.
+
+        :param field: The join date field to validate.
+        :raises ValidationError: If the date is invalid or in the future.
         """
-        if field.data and field.data > datetime.utcnow().date():
-            logger.debug("[CHATS|FORM] Join date in future: %s", field.data)
+        raw = field.data.strip() if field.data else ""
+        logger.debug("[CHATS|FORM] Raw joined date input: '%s'", raw)
+        if not raw:
+            return
+
+        joined_date, error = parse_flexible_date(raw)
+        if error:
+            raise ValidationError(error)
+
+        if joined_date > datetime.utcnow().date():
+            logger.debug("[CHATS|FORM] Join date in future: %s", joined_date)
             raise ValidationError("Join date cannot be in the future.")
+
+        field.data = joined_date.isoformat()
 
     def populate_from_model(self, chat: Chat) -> None:
         """
-        Populate the form fields from a Chat model instance.
+        Fill the form fields using data from a Chat instance.
 
-        :param chat: Chat model instance.
+        Populates all fields in the form based on the provided model.
+
+        :param chat: The Chat object containing source values.
         """
         logger.debug("[CHATS|FORM] Populating form from Chat: %s", chat)
         self.id.data = chat.id
@@ -132,9 +151,12 @@ class ChatForm(FlaskForm):
 
     def to_model_dict(self) -> dict[str, object]:
         """
-        Convert the form data to a dictionary suitable for the Chat model.
+        Convert form data to a dictionary matching the Chat model.
 
-        :return: Dictionary of form data.
+        Converts and normalizes user input into a format that matches
+        the Chat model fields. Handles empty values, integers, and booleans.
+
+        :return: Dictionary suitable for passing to Chat or database layer.
         """
         data = {
             "id": to_int_or_none(self.id.data),
