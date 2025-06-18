@@ -35,7 +35,7 @@ def resolve_message_query(
     :param sort_by: Field to sort by.
     :param order: Sort direction ('asc' or 'desc').
     :return: Result dictionary with data and metadata.
-    :raises DatabaseError: If the DAO fails.
+    :raises DatabaseError: If the DAO operation fails.
     """
     status, message = preprocess_filters(filters)
 
