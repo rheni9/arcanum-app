@@ -28,7 +28,7 @@
                               if is_edit else url_for('messages.add_message', chat_slug=chat.slug) %}
           <form method="post"
                 action="{{ action_url }}"
-                class="form"
+                class="form message-form"
                 novalidate
                 autocomplete="off">
 
@@ -41,6 +41,7 @@
               </label>
               {{ form.msg_id(class="form-control" ~ (' input-error' if form.msg_id.errors else '')) }}
               <small class="form-hint">Optional. Only digits. Example: 12345</small>
+              <div class="form-message-wrapper"></div>
               {% for error in form.msg_id.errors %}
                 <div class="error">{{ error }}</div>
               {% endfor %}
@@ -74,6 +75,7 @@
               </label>
               {{ form.link(class="form-control" ~ (' input-error' if form.link.errors else '')) }}
               <small class="form-hint">Should start with http:// or https://</small>
+              <div class="form-message-wrapper"></div>
               {% for error in form.link.errors %}
                 <div class="error">{{ error }}</div>
               {% endfor %}
@@ -85,6 +87,7 @@
                 {{ form.text.label.text }}<span class="form-required-mark">*</span>
               </label>
               {{ form.text(class="form-control" ~ (' input-error' if form.text.errors else ''), rows=3) }}
+              <div class="form-message-wrapper"></div>
               {% for error in form.text.errors %}
                 <div class="error">{{ error }}</div>
               {% endfor %}
