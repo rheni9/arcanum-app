@@ -8,7 +8,7 @@ Provides normalization, SQL clause construction, and logging support.
 import logging
 
 from app.models.filters import MessageFilters
-from app.utils.time_utils import parse_date
+from app.utils.time_utils import parse_flexible_date
 
 logger = logging.getLogger(__name__)
 
@@ -90,10 +90,12 @@ def validate_search_filters(
             msg = "Please provide a valid date."
             logger.warning("[FILTERS|VALIDATE] Filter failed: %s", msg)
             return False, msg
-        if not parse_date(filters.start_date):
-            msg = "Invalid start date format."
+        valid, error_msg, date_norm = normalize_date(filters.start_date)
+        if not valid:
+            msg = f"Invalid date: {error_msg or 'Invalid format.'}"
             logger.warning("[FILTERS|VALIDATE] Filter failed: %s", msg)
             return False, msg
+        filters.start_date = date_norm
         logger.debug(
             "[FILTERS|VALIDATE] Filter passed | mode=%s | start=%s.",
             filters.date_mode, filters.start_date
@@ -103,30 +105,53 @@ def validate_search_filters(
     def _validate_between_dates() -> tuple[bool, str | None]:
         start = filters.start_date
         end = filters.end_date
+        errors = []
 
+        # Check presence
         if not start and not end:
-            msg = "Please provide both start and end dates."
+            errors.append("Please provide both start and end dates.")
+        elif not start:
+            errors.append("Start date is required.")
+        elif not end:
+            errors.append("End date is required.")
+
+        def _validate_date(
+            date_str: str, label: str
+        ) -> tuple[bool, str | None, str | None]:
+            valid, err, normalized = normalize_date(date_str)
+            if not valid:
+                return (
+                    False,
+                    f"Invalid {label} date: {err or 'Invalid format.'}", None
+                )
+            return True, None, normalized
+
+        start_norm = end_norm = None
+
+        if not errors:
+            valid_start, err_start, start_norm = _validate_date(start, "start")
+            if not valid_start:
+                errors.append(err_start)
+
+            valid_end, err_end, end_norm = _validate_date(end, "end")
+            if not valid_end:
+                errors.append(err_end)
+
+        if not errors and start_norm > end_norm:
+            errors.append("Start date must be before or equal to end date.")
+
+        if errors:
+            msg = "; ".join(errors)
             logger.warning("[FILTERS|VALIDATE] Filter failed: %s", msg)
             return False, msg
-        if not start:
-            msg = "Start date is required."
-            logger.warning("[FILTERS|VALIDATE] Filter failed: %s", msg)
-            return False, msg
-        if not end:
-            msg = "End date is required."
-            logger.warning("[FILTERS|VALIDATE] Filter failed: %s", msg)
-            return False, msg
-        if not (parse_date(start) and parse_date(end)):
-            msg = "Invalid date format provided."
-            logger.warning("[FILTERS|VALIDATE] Filter failed: %s", msg)
-            return False, msg
-        if start > end:
-            msg = "Start date must be before or equal to end date."
-            logger.warning("[FILTERS|VALIDATE] Filter failed: %s", msg)
-            return False, msg
+
+        filters.start_date = start_norm
+        filters.end_date = end_norm
+
         logger.debug(
-            "[FILTERS|VALIDATE] Filter passed | mode=between | "
-            "start=%s | end=%s.", start, end
+            "[FILTERS|VALIDATE] Filter passed | mode=between "
+            "| start=%s | end=%s.",
+            start_norm, end_norm
         )
         return True, None
 
@@ -195,3 +220,22 @@ def build_sql_clause(
         "[FILTERS|SQL] %s | params: %s", where_sql or "<no clause>", params
     )
     return where_sql, params
+
+
+def normalize_date(
+    date_str: str | None
+) -> tuple[bool, str | None, str | None]:
+    """
+    Parse and normalize a date string.
+
+    :param date_str: Date string to parse.
+    :return: Tuple (is_valid, error_message, iso_date_or_None)
+    """
+    if not date_str:
+        return False, "Empty date string", None
+
+    dt, err = parse_flexible_date(date_str)
+    if dt is None or err is not None:
+        return False, err, None
+
+    return True, None, dt.isoformat()
