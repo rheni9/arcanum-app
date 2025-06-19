@@ -11,14 +11,19 @@
     <form method="get"
           action="{{ search_action }}"
           class="chat-filter-form search-form">
-      {% if chat_slug %}<input type="hidden" name="chat_slug" value="{{ chat_slug }}">{% endif %}
+      {% if chat_slug %}
+        <input type="hidden" name="chat_slug" value="{{ chat_slug }}">
+      {% endif %}
 
       <div class="search-group">
+        <div class="form-group">
         {% set query_value = '#' ~ filters.tag if filters.action == 'tag' else filters.query %}
         <input type="text" name="query"
               class="form-control"
               value="{{ filters.query or ('#' + filters.tag if filters.tag else '') }}"
               placeholder="Search messages...">
+          <div class="form-message-wrapper"></div>
+        </div>
         <button type="submit" name="action" value="search" class="btn btn-primary btn-icon">
           <img src="{{ url_for('static', filename='img/search_icon.png') }}" alt="Search">
           <span>Search</span>
@@ -30,35 +35,43 @@
     <form method="get"
           action="{{ search_action }}"
           class="chat-filter-form filter-form">
-      {% if chat_slug %}<input type="hidden" name="chat_slug" value="{{ chat_slug }}">{% endif %}
+      <input type="hidden" name="real_action" value="">
+      {% if chat_slug %}
+        <input type="hidden" name="chat_slug" value="{{ chat_slug }}">
+      {% endif %}
 
       <div class="date-group">
-        <div class="date-select-wrapper">
-          <select name="date_mode" class="date-mode-select" id="date_mode">
-            <option value="" disabled hidden {% if not filters.date_mode %}selected{% endif %}>Select</option>
-            <option value="on" {% if filters.date_mode == 'on' %}selected{% endif %}>On</option>
-            <option value="before" {% if filters.date_mode == 'before' %}selected{% endif %}>Before</option>
-            <option value="after" {% if filters.date_mode == 'after' %}selected{% endif %}>After</option>
-            <option value="between" {% if filters.date_mode == 'between' %}selected{% endif %}>Between</option>
-          </select>
 
-          <input type="date" name="start_date"
-                class="form-control date-input"
-                value="{{ filters.start_date or '' }}">
+        {# === inline block with select + start + end === #}
+        <div class="form-group date-fields-group">
+          <div class="date-fields-wrapper">
+            <div class="select-input-combo">
+              <select name="date_mode" class="date-mode-select" id="date_mode">
+                <option value="" disabled hidden {% if not filters.date_mode %}selected{% endif %}>Select</option>
+                <option value="on" {% if filters.date_mode == 'on' %}selected{% endif %}>On</option>
+                <option value="before" {% if filters.date_mode == 'before' %}selected{% endif %}>Before</option>
+                <option value="after" {% if filters.date_mode == 'after' %}selected{% endif %}>After</option>
+                <option value="between" {% if filters.date_mode == 'between' %}selected{% endif %}>Between</option>
+              </select>
+              <input type="date" name="start_date"
+                     class="form-control date-input"
+                     value="{{ filters.start_date or '' }}">
+            </div>
+
+            <input type="date" name="end_date"
+                   class="form-control date-input{% if filters.date_mode != 'between' %} hidden{% endif %}"
+                   id="end_date"
+                   value="{{ filters.end_date or '' }}">
+          </div>
+          <div class="form-message-wrapper"></div>
         </div>
-
-        <input type="date" name="end_date"
-              class="form-control date-input{% if filters.date_mode != 'between' %} hidden{% endif %}"
-              id="end_date"
-              value="{{ filters.end_date or '' }}">
 
         <button type="submit" name="action" value="filter" class="btn btn-primary btn-icon">
           <img src="{{ url_for('static', filename='img/calendar_icon.png') }}" alt="Filter">
           <span>Filter</span>
         </button>
 
-        {% set filters_active = filters.query or filters.tag or filters.date_mode or filters.start_date or filters.end_date %}
-        {% if filters_active %}
+        {% if filters.query or filters.tag or filters.date_mode or filters.start_date or filters.end_date %}
           <a href="{{ clear_url }}" class="btn btn-secondary btn-icon btn-reset">
             <img src="{{ url_for('static', filename='img/reset_icon.png') }}" alt="Reset">
             <span>Clear filters</span>
