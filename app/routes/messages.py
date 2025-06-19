@@ -67,7 +67,7 @@ def add_message(chat_slug: str) -> Response | str:
         flash("Chat not found.", "error")
         return redirect(url_for("chats.list_chats"))
 
-    form = MessageForm()
+    form = MessageForm(chat_slug=chat_slug)
     form.chat_ref_id.data = chat.id
 
     if form.validate_on_submit():
@@ -122,13 +122,16 @@ def edit_message(chat_slug: str, pk: int) -> Response | str:
         flash("Message not found in this chat.", "error")
         return redirect(url_for("chats.view_chat", slug=chat_slug))
 
-    form = MessageForm()
+    form = MessageForm(chat_slug=chat_slug)
 
     if request.method == "GET":
         form.populate_from_model(message)
 
     if form.validate_on_submit():
-        data = form.to_model_dict()
+        data = form.to_model_dict(
+            existing_media=message.media,
+            existing_screenshot=message.screenshot
+        )
         data["id"] = message.id
         data["chat_ref_id"] = chat.id
         updated_message = Message.from_dict(data)

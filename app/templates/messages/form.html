@@ -109,13 +109,13 @@
               {% endfor %}
             </div>
 
-            {# === Media Path === #}
+            {# === Media Upload === #}
             <div class="form-group">
               <label for="{{ form.media.id }}" class="form-label">
                 {{ form.media.label.text }}
               </label>
-              {{ form.media(class="form-control" ~ (' input-error' if form.media.errors else '')) }}
-              <small class="form-hint">Optional. Path or URL.</small>
+              {{ form.media(class="form-control-file", multiple=True) }}
+              <small class="form-hint">Up to 5 files. Images will be converted to WebP.</small>
               {% for error in form.media.errors %}
                 <div class="error">{{ error }}</div>
               {% endfor %}

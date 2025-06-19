@@ -8,13 +8,14 @@ Fields and validation are fully synchronized with the Message model.
 """
 
 import logging
+import json
 from datetime import datetime, date, time
 from flask import request
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed
 from wtforms import (
     StringField, TextAreaField, IntegerField,
-    HiddenField, SubmitField, FileField
+    HiddenField, SubmitField, FileField, MultipleFileField
 )
 from wtforms.validators import (
     DataRequired, Optional, NumberRange, URL, ValidationError
@@ -25,7 +26,7 @@ from app.utils.model_utils import empty_to_none, to_int_or_none
 from app.utils.time_utils import (
     to_utc_iso, parse_flexible_date, parse_flexible_time, DEFAULT_TZ
 )
-from app.utils.cloudinary_utils import upload_screenshot
+from app.utils.cloudinary_utils import upload_screenshot, upload_media_file
 
 logger = logging.getLogger(__name__)
 
@@ -87,8 +88,8 @@ class MessageForm(FlaskForm):
         validators=[validate_not_blank]
     )
 
-    media = StringField(
-        "Media (file path or URL)",
+    media = MultipleFileField(
+        "Upload Media (up to 5 files)",
         validators=[Optional()]
     )
 
@@ -112,7 +113,7 @@ class MessageForm(FlaskForm):
 
     submit = SubmitField("Save")
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, chat_slug: str = None, **kwargs) -> None:
         """
         Initialize the form and log the creation.
         """
@@ -121,7 +122,33 @@ class MessageForm(FlaskForm):
         self._parsed_date: date | None = None
         self._parsed_time: time | None = None
         self._final_dt: datetime | None = None
+        self.chat_slug = chat_slug
         logger.debug("[MESSAGES|FORM] MessageForm initialized.")
+
+    def _parse_media_field(self) -> list[str]:
+        """
+        Parse and normalize the media field into a list.
+
+        Handles both JSON list input and comma-separated string.
+
+        :return: List of media items (e.g., paths or URLs).
+        """
+        raw = self.media.data
+        if not raw:
+            return []
+        if isinstance(raw, list):
+            return [
+                item.strip() for item in raw
+                if isinstance(item, str) and item.strip()
+            ]
+        if isinstance(raw, str):
+            try:
+                return json.loads(raw)  # Try as JSON list
+            except json.JSONDecodeError:
+                return [
+                    item.strip() for item in raw.split(",") if item.strip()
+                ]
+        return []
 
     def validate_date(self, field: StringField) -> None:
         """
@@ -269,25 +296,57 @@ class MessageForm(FlaskForm):
         self.tags.data = ", ".join(message.tags) if message.tags else ""
         self.notes.data = message.notes
 
-    def to_model_dict(self) -> dict:
+    def to_model_dict(
+        self, existing_media=None, existing_screenshot=None
+    ) -> dict:
         """
         Convert form data to a dictionary matching the Message model.
 
-        Converts and normalizes user input into a format that matches
-        the Message model fields. Handles empty values, integers, and booleans.
+        Includes logic for conditional preservation of existing media
+        and screenshot.
 
-        :return: Dictionary suitable for passing to Message or database layer.
+        :param existing_media: List of current media URLs (from DB).
+        :param existing_screenshot: Existing screenshot URL (from DB).
+        :return: Dictionary for creating/updating a Message.
         """
-        timestamp = None
-        if self._final_dt:
-            timestamp = to_utc_iso(self._final_dt)
+        timestamp = to_utc_iso(self._final_dt) if self._final_dt else None
 
-        screenshot_url = None
-        if "screenshot" in request.files:
-            file = request.files["screenshot"]
+        # === Screenshot ===
+        file = request.files.get("screenshot")
+        if file and file.filename:
+            screenshot_url = upload_screenshot(file, self.chat_slug)
+        else:
+            screenshot_url = (
+                self.screenshot.data if isinstance(self.screenshot.data, str)
+                else existing_screenshot
+            )
+
+        # === Media files ===
+        uploaded_urls = []
+        files = request.files.getlist("media")
+        for file in files[:5]:
             if file and file.filename:
-                screenshot_url = upload_screenshot(file)
+                try:
+                    url = upload_media_file(file, self.chat_slug)
+                    uploaded_urls.append(url)
+                except RuntimeError as e:
+                    logger.warning(
+                        "[MESSAGES|FORM] Failed to upload media file: %s", e
+                    )
 
+        parsed_manual = self._parse_media_field()
+        existing_media = existing_media or []
+
+        # 🧠 Уникнути дублікатів:
+        combined_media = existing_media + uploaded_urls + parsed_manual
+        seen = set()
+        media_urls = []
+        for url in combined_media:
+            if url not in seen:
+                media_urls.append(url)
+                seen.add(url)
+
+        # === Final dict ===
         data = {
             "id": to_int_or_none(self.id.data),
             "chat_ref_id": empty_to_none(self.chat_ref_id.data),
@@ -295,12 +354,11 @@ class MessageForm(FlaskForm):
             "timestamp": timestamp,
             "link": empty_to_none(self.link.data),
             "text": empty_to_none(self.text.data),
-            "media": empty_to_none(self.media.data),
-            "screenshot": (
-                screenshot_url or empty_to_none(self.screenshot.data)
-            ),
+            "media": media_urls,
+            "screenshot": screenshot_url,
             "tags": self.process_tags(),
             "notes": empty_to_none(self.notes.data),
         }
+
         logger.debug("[MESSAGES|FORM] Form data for model: %s", data)
         return data

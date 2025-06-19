@@ -16,6 +16,7 @@ colorlog = "^6.9.0"
 d = "^0.2.2"
 flask-wtf = "^1.2.2"
 cloudinary = "^1.44.1"
+pillow = "^11.2.1"
 
 
 [build-system]

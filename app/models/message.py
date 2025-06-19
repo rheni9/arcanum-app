@@ -43,7 +43,7 @@ class Message:
     timestamp: datetime | None = None
     link: str | None = None
     text: str | None = None
-    media: str | None = None
+    media: list[str] = field(default_factory=list)
     screenshot: str | None = None
     tags: list[str] = field(default_factory=list)
     notes: str | None = None
@@ -70,7 +70,7 @@ class Message:
         logger.debug("[MESSAGES|MODEL] Normalized Message: %s", self)
 
     @staticmethod
-    def _parse_tags(val: Any) -> list[str]:
+    def _parse_list(val: Any) -> list[str]:
         """
         Parse tags from list, JSON string, or CSV string.
 
@@ -78,13 +78,13 @@ class Message:
         :return: List of cleaned tag strings.
         """
         if isinstance(val, list):
-            return Message._parse_tags_from_list(val)
+            return Message._parse_list_from_list(val)
         if isinstance(val, str):
-            return Message._parse_tags_from_string(val)
+            return Message._parse_list_from_string(val)
         return []
 
     @staticmethod
-    def _parse_tags_from_list(items: list[Any]) -> list[str]:
+    def _parse_list_from_list(items: list[Any]) -> list[str]:
         """
         Extract and clean tag strings from a list.
 
@@ -98,7 +98,7 @@ class Message:
             ]
 
     @staticmethod
-    def _parse_tags_from_string(val: str) -> list[str]:
+    def _parse_list_from_string(val: str) -> list[str]:
         """
         Try parsing tags from a JSON string first, then fallback to CSV.
 
@@ -111,13 +111,34 @@ class Message:
 
         try:
             tags = json.loads(val)
-            return Message._parse_tags_from_list(tags)
+            return Message._parse_list_from_list(tags)
         except (json.JSONDecodeError, TypeError) as e:
             logger.debug(
                 "[MESSAGES|MODEL|TAGS] Fallback to CSV, could not parse JSON: "
                 "%s | %s", val, e
             )
             return [tag.strip() for tag in val.split(",") if tag.strip()]
+
+    @staticmethod
+    def _parse_media(val: Any) -> list[str]:
+        """
+        Parse media from list, JSON string, or CSV string.
+
+        :param val: Raw media input.
+        :return: List of cleaned media paths or URLs.
+        """
+        if isinstance(val, list):
+            return [item.strip() for item in val
+                    if isinstance(item, str) and item.strip()]
+        if isinstance(val, str):
+            val = val.strip()
+            if not val:
+                return []
+            try:
+                return json.loads(val)
+            except json.JSONDecodeError:
+                return [s.strip() for s in val.split(",") if s.strip()]
+        return []
 
     @classmethod
     def from_row(cls, row: dict[str, Any]) -> "Message":
@@ -134,9 +155,9 @@ class Message:
             timestamp=parse_to_datetime(row.get("timestamp")),
             link=empty_to_none(row.get("link")),
             text=empty_to_none(row.get("text")),
-            media=empty_to_none(row.get("media")),
+            media=cls._parse_media(row.get("media")),
             screenshot=empty_to_none(row.get("screenshot")),
-            tags=cls._parse_tags(row.get("tags")),
+            tags=cls._parse_list(row.get("tags")),
             notes=empty_to_none(row.get("notes")),
         )
         logger.debug("[MESSAGES|MODEL] Parsed Message from DB row: %s", msg)
@@ -157,9 +178,9 @@ class Message:
             timestamp=parse_to_datetime(data.get("timestamp")),
             link=empty_to_none(data.get("link")),
             text=empty_to_none(data.get("text")),
-            media=empty_to_none(data.get("media")),
+            media=cls._parse_media(data.get("media")),
             screenshot=empty_to_none(data.get("screenshot")),
-            tags=cls._parse_tags(data.get("tags")),
+            tags=cls._parse_list(data.get("tags")),
             notes=empty_to_none(data.get("notes"))
         )
         logger.debug("[MESSAGES|MODEL] Created Message from dict: %s", msg)
@@ -190,6 +211,7 @@ class Message:
         :return: Tuple of normalized message field values.
         """
         timestamp_str = to_utc_iso(self.timestamp) if self.timestamp else None
+        media_value = json.dumps(self.media if self.media is not None else [])
         tags_value = json.dumps(self.tags if self.tags is not None else [])
         return (
             self.chat_ref_id,
@@ -197,7 +219,7 @@ class Message:
             timestamp_str,
             self.link,
             self.text,
-            self.media,
+            media_value,
             self.screenshot,
             tags_value,
             self.notes
