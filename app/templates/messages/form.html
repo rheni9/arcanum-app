@@ -53,14 +53,29 @@
                 <label for="{{ form.date.id }}" class="form-label">
                   {{ form.date.label.text }}<span class="form-required-mark">*</span>
                 </label>
-                {{ form.date(class="form-control form-date-input" ~ (' input-error' if form.date.errors else '')) }}
+                {{ form.date(
+                    class_="form-control form-date-input" + (" input-error" if form.date.errors else ""),
+                    type="date"
+                ) }}
+                {% for error in form.date.errors %}
+                  <div class="error">{{ error }}</div>
+                {% endfor %}
+                <div class="form-message-wrapper"></div>
               </div>
 
               <div class="form-group">
                 <label for="{{ form.time.id }}" class="form-label">
                   {{ form.time.label.text }}<span class="form-required-mark">*</span>
                 </label>
-                {{ form.time(class="form-control form-time-input" ~ (' input-error' if form.time.errors else ''), step="1") }}
+                {{ form.time(
+                    class_="form-control form-time-input" + (" input-error" if form.time.errors else ""),
+                    type="time",
+                    step="1"
+                ) }}
+                {% for error in form.time.errors %}
+                  <div class="error">{{ error }}</div>
+                {% endfor %}  
+                <div class="form-message-wrapper"></div>
               </div>
             </div>
 
