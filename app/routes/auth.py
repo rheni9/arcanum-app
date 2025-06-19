@@ -7,7 +7,7 @@ management, and authentication feedback.
 
 import logging
 from flask import (
-    Blueprint, current_app, render_template,
+    Blueprint, current_app, render_template, jsonify,
     redirect, url_for, session, flash, Response
 )
 
@@ -46,13 +46,16 @@ def login() -> Response | str:
 
 
 @auth_bp.route("/logout", methods=["POST"])
-def logout() -> Response:
+def logout() -> tuple[Response, int]:
     """
-    Log out the user and clear the session.
+    Log out the user by clearing the session.
 
-    :return: Redirect to homepage after logout.
+    Returns a JSON response containing the redirect URL and
+    HTTP status code 200, intended for AJAX logout handling.
+
+    :return: Tuple of (JSON response with redirect URL, status code).
     """
     session.pop("logged_in", None)
     logger.info("[AUTH|LOGOUT] Logout successful.")
     flash("You have been logged out successfully.", "success")
-    return redirect(url_for("home.home"))
+    return jsonify({"redirect": url_for("home.home")}), 200
