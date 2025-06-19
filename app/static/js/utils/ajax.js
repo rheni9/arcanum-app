@@ -8,9 +8,11 @@
 import { csrfFetch } from "./csrf_fetch.js";
 
 /**
- * Fetch HTML fragment via AJAX, including CSRF token in headers.
- * @param {string} url
- * @returns {Promise<Document>}
+ * Performs a secure HTML fetch via AJAX.
+ * Injects CSRF token and returns a parsed HTML document.
+ *
+ * @param {string} url - The URL to fetch the HTML from.
+ * @returns {Promise<Document>} - Parsed HTML document.
  */
 export async function ajaxFetchHtml(url) {
   const response = await csrfFetch(url, {
@@ -21,9 +23,11 @@ export async function ajaxFetchHtml(url) {
 }
 
 /**
- * Replace an existing element by ID with a new one from given HTML.
- * @param {string} id
- * @param {Document|string} source
+ * Replaces a DOM element by its ID using new HTML content.
+ * Accepts either a full HTML Document or a string.
+ *
+ * @param {string} id - ID of the existing element to replace.
+ * @param {Document|string} source - Parsed HTML document or raw HTML string.
  */
 export function replaceElementById(id, source) {
   const existing = document.getElementById(id);

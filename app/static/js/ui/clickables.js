@@ -6,8 +6,8 @@
  */
 
 /**
- * Bind click handlers to all elements with class `clickable-row`.
- * On click, navigates to the URL specified in `data-href`.
+ * Binds click handlers to all elements with class `clickable-row`.
+ * Redirects to the URL defined in the `data-href` attribute.
  */
 export function bindClickableRows() {
   document.querySelectorAll(".clickable-row").forEach((row) => {

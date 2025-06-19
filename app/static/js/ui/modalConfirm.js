@@ -1,19 +1,22 @@
 /**
  * @file modalConfirm.js
  * @description
- * UI utility for displaying a reusable modal confirmation dialog.
- * Accepts dynamic title, message, and a callback on confirmation.
+ * Displays a reusable modal confirmation dialog.
+ * Accepts dynamic title, message, and an onConfirm callback function.
+ * Manages lifecycle and event listeners for confirmation modals.
  */
+
+let currentHandler = null;
+let lastFocusedElement = null;
 
 /**
- * Show a modal confirmation dialog.
+ * Shows a confirmation modal with the given content and callback.
+ * Initializes event listeners for confirm, cancel, and overlay click.
  *
- * @param {string} title - Title text shown in the modal header.
- * @param {string} message - Message content shown in the modal body.
- * @param {Function} onConfirm - Function to execute if user confirms.
+ * @param {string} title - The modal header text.
+ * @param {string} message - The message body content.
+ * @param {Function} onConfirm - Callback to execute on confirmation.
  */
-let currentHandler = null;
-
 export function showModal(title, message, onConfirm) {
   const modal = document.getElementById("confirm-modal");
   const titleEl = document.getElementById("modal-title");
@@ -22,37 +25,45 @@ export function showModal(title, message, onConfirm) {
   const cancelBtn = document.getElementById("modal-cancel");
   const overlay = modal.querySelector(".modal-overlay");
 
-  if (!modal || !titleEl || !bodyEl || !confirmBtn || !cancelBtn) {
-    console.warn("[Modal] Required elements not found in DOM.");
+  if (!modal || !titleEl || !bodyEl || !confirmBtn || !cancelBtn || !overlay) {
+    console.warn("[MODAL] Required modal elements not found in DOM.");
     return;
   }
+
+  lastFocusedElement = document.activeElement;
 
   titleEl.textContent = title;
   bodyEl.textContent = message;
   modal.classList.remove("hidden");
   modal.setAttribute("aria-hidden", "false");
 
-  const handler = () => {
-    cleanup();
-    if (typeof onConfirm === "function") onConfirm();
-  };
-
-  const handleOverlayClick = () => {
-    cleanup();
-  };
-
   const cleanup = () => {
     modal.classList.add("hidden");
     modal.setAttribute("aria-hidden", "true");
     confirmBtn.removeEventListener("click", handler);
     cancelBtn.removeEventListener("click", cleanup);
-    overlay.removeEventListener("click", handleOverlayClick);
+    overlay.removeEventListener("click", cleanup);
     currentHandler = null;
+
+    if (document.activeElement && modal.contains(document.activeElement)) {
+      document.activeElement.blur();
+    }
+
+    if (lastFocusedElement) {
+      lastFocusedElement.focus();
+    }
+  };
+
+  const handler = () => {
+    cleanup();
+    if (typeof onConfirm === "function") {
+      onConfirm();
+    }
   };
 
   confirmBtn.addEventListener("click", handler);
   cancelBtn.addEventListener("click", cleanup);
-  overlay.addEventListener("click", handleOverlayClick);
+  overlay.addEventListener("click", cleanup);
 
   currentHandler = handler;
 }

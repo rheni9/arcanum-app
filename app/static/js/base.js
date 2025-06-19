@@ -6,21 +6,15 @@
  */
 
 import { bindAuth } from "./auth.js";
-import { bindFilterForms } from "./forms/filters.js";
-import { bindActiveMemberPublicDependency } from "./forms/state.js";
 import { bindDeleteConfirmations } from "./ui/deleteConfirm.js";
 import { bindClickableRows } from "./ui/clickables.js";
 import { rebindAfterAjax } from "./bindings.js";
 
 /**
- * Initialize all global UI behaviors after DOM is ready.
+ * Initialize all global UI behaviors after DOM is fully loaded.
  */
 document.addEventListener("DOMContentLoaded", () => {
-  if (document.getElementById("is_active")) {
-    bindActiveMemberPublicDependency();
-  }
   bindAuth();
-  bindFilterForms();
   bindDeleteConfirmations();
   bindClickableRows();
   rebindAfterAjax();

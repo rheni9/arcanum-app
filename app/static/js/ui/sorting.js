@@ -1,32 +1,34 @@
 /**
  * @file sorting.js
  * @description
- * Handles sortable table headers with AJAX reloading and scroll persistence.
- * Supports both flat and grouped table structures.
+ * Binds sorting handlers to sortable table headers.
+ * Supports AJAX-based updates with scroll preservation for:
+ * - chat list
+ * - message tables (single or grouped)
  */
 
-import { ajaxFetchHtml, replaceElementById } from "../utils/ajax.js";
+import { ajaxFetchHtml } from "../utils/ajax.js";
 import { rebindAfterAjax } from "../bindings.js";
 
 /**
- * Bind sorting handlers for the main chat list table.
- * Applies AJAX reload with scroll position preservation.
+ * Binds AJAX sorting for the main chats table.
+ * Restores scroll position and updates history state.
  */
 export function bindChatSortHandlers() {
   const headers = document.querySelectorAll(".chats-table th.sortable");
 
   headers.forEach((header) => {
     header.addEventListener("click", async () => {
-      const sortBy = header.getAttribute("data-sort");
+      const sortBy = header.dataset.sort;
       const url = new URL(window.location.href);
       const currentSort = url.searchParams.get("sort");
       const currentOrder = url.searchParams.get("order") || "asc";
-
-      const newOrder = (currentSort === sortBy && currentOrder === "asc") ? "desc" : "asc";
+      const newOrder =
+        currentSort === sortBy && currentOrder === "asc" ? "desc" : "asc";
 
       url.searchParams.set("sort", sortBy);
       url.searchParams.set("order", newOrder);
-      url.searchParams.set("t", Date.now());
+      url.searchParams.set("t", Date.now()); // prevent cache
 
       const scrollY = window.scrollY;
 
@@ -41,38 +43,39 @@ export function bindChatSortHandlers() {
           rebindAfterAjax();
           window.scrollTo(0, scrollY);
         } else {
-          console.warn("Container or replacement not found");
+          console.warn("[chat sort] Replacement container not found.");
         }
-      } catch (err) {
-        console.error("Sorting AJAX failed:", err);
+      } catch (error) {
+        console.error("[chat sort] AJAX request failed:", error);
       }
     });
   });
 }
 
 /**
- * Bind sorting handlers for message tables (used in single chat or search view).
- * Sorts by clicking on column headers with class "sortable".
+ * Binds AJAX sorting for message tables. 
+ * Typically used in single chat view.
  */
 export function bindMessageSortHandlers() {
   const headers = document.querySelectorAll(".messages-table th.sortable");
 
   headers.forEach((header) => {
-    header.onclick = async () => {
-      const sortField = header.dataset.sort;
-      if (!sortField) {
-        console.warn("[message sort] Missing data-sort on header:", header);
+    header.addEventListener("click", async () => {
+      const sortBy = header.dataset.sort;
+      if (!sortBy) {
+        console.warn("[message sort] Missing data-sort on header.");
         return;
       }
 
       const url = new URL(window.location.href);
       const currentSort = url.searchParams.get("sort");
       const currentOrder = url.searchParams.get("order") || "asc";
-      const newOrder = (currentSort === sortField && currentOrder === "asc") ? "desc" : "asc";
+      const newOrder =
+        currentSort === sortBy && currentOrder === "asc" ? "desc" : "asc";
 
-      url.searchParams.set("sort", sortField);
+      url.searchParams.set("sort", sortBy);
       url.searchParams.set("order", newOrder);
-      url.searchParams.set("t", Date.now());  // cache-buster
+      url.searchParams.set("t", Date.now()); // prevent cache
 
       const scrollY = window.scrollY;
 
@@ -87,34 +90,36 @@ export function bindMessageSortHandlers() {
           rebindAfterAjax();
           window.scrollTo(0, scrollY);
         } else {
-          console.warn("[message sort] Container or replacement not found");
+          console.warn("[message sort] Replacement container not found.");
         }
-      } catch (err) {
-        console.error("[message sort] AJAX failed:", err);
+      } catch (error) {
+        console.error("[message sort] AJAX request failed:", error);
       }
-    };
+    });
   });
 }
 
 /**
- * Bind sorting handlers for each messages table grouped by chat.
- * Sort is applied individually per chat via AJAX.
+ * Binds AJAX sorting to messages tables grouped by chat.
+ * Sorting is performed per-chat and reloads only the affected section.
  */
 export function attachSortHandlers() {
-  document.querySelectorAll(".messages-table th.sortable").forEach(header => {
+  const headers = document.querySelectorAll(".messages-table th.sortable");
+
+  headers.forEach((header) => {
     const chatSlug = header.dataset.chat;
     const sortField = header.dataset.sort;
 
     // Skip - if there is no group chat
     if (!chatSlug || !sortField) return;
 
-    header.onclick = async () => {
+    header.addEventListener("click", async () => {
       const containerId = `container-${chatSlug}`;
       const container = document.getElementById(containerId);
       const arrow = header.querySelector(".sort-arrow");
 
       if (!container) {
-        console.warn("[grouped sort] Container not found:", containerId);
+        console.warn(`[grouped sort] Container #${containerId} not found.`);
         return;
       }
 
@@ -122,30 +127,28 @@ export function attachSortHandlers() {
       const newOrder = currentOrder === "asc" ? "desc" : "asc";
 
       const url = new URL(window.location.href);
-      const params = new URLSearchParams(url.search);
+      const params = url.searchParams;
 
       params.set("chat", chatSlug);
       params.set("sort", sortField);
       params.set("order", newOrder);
-      params.set("t", Date.now());  // cache-buster
+      params.set("t", Date.now()); // prevent cache
 
       url.search = params.toString();
 
-      console.log(`[grouped sort] Chat=${chatSlug}, Sort=${sortField}, Order=${newOrder}`);
-
       try {
         const doc = await ajaxFetchHtml(url.toString());
-        const newContainer = doc.getElementById(containerId);
+        const replacement = doc.getElementById(containerId);
 
-        if (newContainer) {
-          container.replaceWith(newContainer);
+        if (replacement) {
+          container.replaceWith(replacement);
           rebindAfterAjax();
         } else {
-          console.warn(`[grouped sort] Replacement #${containerId} not found`);
+          console.warn(`[grouped sort] Replacement #${containerId} not found.`);
         }
-      } catch (err) {
-        console.error("[grouped sort] AJAX request failed:", err);
+      } catch (error) {
+        console.error("[grouped sort] AJAX request failed:", error);
       }
-    };
+    });
   });
 }

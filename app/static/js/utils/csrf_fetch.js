@@ -1,24 +1,32 @@
 /**
- * @file csrf_fetch.js * 
+ * @file csrf_fetch.js
  * @description
- * Wrapper around fetch() that automatically injects
- * the Flask-WTF CSRF token into the X-CSRFToken header.
+ * Wraps fetch() and injects the Flask-WTF CSRF token into request headers.
+ * Automatically sets the correct Content-Type for JSON payloads.
+ */
+
+/**
+ * Performs a secure fetch with automatic CSRF header injection.
+ *
+ * @param {RequestInfo} input - The URL or Request object.
+ * @param {RequestInit} [init={}] - Additional fetch options.
+ * @returns {Promise<Response>} - The fetch response promise.
  */
 export function csrfFetch(input, init = {}) {
   const token = document
     .querySelector('meta[name="csrf-token"]')
-    .getAttribute('content');
+    ?.getAttribute("content");
 
   init.headers = init.headers || {};
-  init.headers['X-CSRFToken'] = token;
+  init.headers["X-CSRFToken"] = token;
 
-  // If posting JSON, set Content-Type
+  // Automatically set JSON content type if needed
   if (
     init.body != null &&
     !(init.body instanceof FormData) &&
-    !init.headers['Content-Type']
+    !init.headers["Content-Type"]
   ) {
-    init.headers['Content-Type'] = 'application/json';
+    init.headers["Content-Type"] = "application/json";
   }
 
   return fetch(input, init);
