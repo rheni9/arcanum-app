@@ -6,7 +6,7 @@
  * after the DOM content has fully loaded.
  */
 
-import { bindFilterForm } from "../core/handlers.js";
+import { bindFilterForm } from "./core/handlers.js";
 
 /**
  * Initializes filter form validation and end date toggle logic

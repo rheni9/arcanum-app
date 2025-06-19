@@ -6,7 +6,7 @@
  * after the DOM content has fully loaded.
  */
 
-import { bindMessageForm } from "../core/handlers.js";
+import { bindMessageForm } from "./core/handlers.js";
 
 /**
  * Initializes message form validation when the DOM content is fully loaded.

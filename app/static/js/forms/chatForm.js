@@ -6,8 +6,8 @@
  * after the DOM content has fully loaded.
  */
 
-import { bindChatForm } from "../core/handlers.js";
-import { initChatToggles } from "../core/toggles.js";
+import { bindChatForm } from "./core/handlers.js";
+import { initChatToggles } from "./core/toggles.js";
 
 /**
  * Initializes chat form validation and toggle logic
