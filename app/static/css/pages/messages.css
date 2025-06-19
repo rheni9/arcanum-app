@@ -46,6 +46,19 @@
   text-decoration: none;
 }
 
+/* --- Screenshot Preview --- */
+.screenshot-preview {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.screenshot-preview img.screenshot-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-default);
+  box-shadow: var(--shadow-default);
+}
+
 /* =============================================================
    Responsive Adjustments
 ============================================================= */

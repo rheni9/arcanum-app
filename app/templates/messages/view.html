@@ -63,6 +63,18 @@
         </div>
       </section>
 
+      {# === Screenshot Preview === #}
+      {% if message.screenshot %}
+        <section class="section">
+          <h2 class="section-subtitle">Screenshot</h2>
+          <div class="screenshot-preview">
+            <a href="{{ message.screenshot }}" target="_blank">
+              <img src="{{ message.screenshot }}" alt="Screenshot" class="screenshot-image">
+            </a>
+          </div>
+        </section>
+      {% endif %}
+
     </div>
   </div>
 {% endblock %}

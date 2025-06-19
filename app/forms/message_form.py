@@ -9,9 +9,12 @@ Fields and validation are fully synchronized with the Message model.
 
 import logging
 from datetime import datetime, date, time
+from flask import request
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileAllowed
 from wtforms import (
-    StringField, TextAreaField, IntegerField, HiddenField, SubmitField
+    StringField, TextAreaField, IntegerField,
+    HiddenField, SubmitField, FileField
 )
 from wtforms.validators import (
     DataRequired, Optional, NumberRange, URL, ValidationError
@@ -22,6 +25,7 @@ from app.utils.model_utils import empty_to_none, to_int_or_none
 from app.utils.time_utils import (
     to_utc_iso, parse_flexible_date, parse_flexible_time, DEFAULT_TZ
 )
+from app.utils.cloudinary_utils import upload_screenshot
 
 logger = logging.getLogger(__name__)
 
@@ -88,9 +92,12 @@ class MessageForm(FlaskForm):
         validators=[Optional()]
     )
 
-    screenshot = StringField(
-        "Screenshot (file path or URL)",
-        validators=[Optional()]
+    screenshot = FileField(
+        "Screenshot",
+        validators=[
+            Optional(),
+            FileAllowed(["jpg", "jpeg", "png", "gif"], "Images only!")
+        ]
     )
 
     tags = StringField(
@@ -275,6 +282,12 @@ class MessageForm(FlaskForm):
         if self._final_dt:
             timestamp = to_utc_iso(self._final_dt)
 
+        screenshot_url = None
+        if "screenshot" in request.files:
+            file = request.files["screenshot"]
+            if file and file.filename:
+                screenshot_url = upload_screenshot(file)
+
         data = {
             "id": to_int_or_none(self.id.data),
             "chat_ref_id": empty_to_none(self.chat_ref_id.data),
@@ -283,7 +296,9 @@ class MessageForm(FlaskForm):
             "link": empty_to_none(self.link.data),
             "text": empty_to_none(self.text.data),
             "media": empty_to_none(self.media.data),
-            "screenshot": empty_to_none(self.screenshot.data),
+            "screenshot": (
+                screenshot_url or empty_to_none(self.screenshot.data)
+            ),
             "tags": self.process_tags(),
             "notes": empty_to_none(self.notes.data),
         }

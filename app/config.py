@@ -68,6 +68,11 @@ class Config:
     DEBUG = ENV == "development"
     TESTING = False
 
+    # Cloudinary
+    CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
+    CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
+    CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
+
     @classmethod
     def init_app(cls: type, app: Flask) -> None:
         """
@@ -78,6 +83,17 @@ class Config:
         """
         cls._validate_secret_key(app)
         cls._validate_admin_password(app)
+
+        app.config["CLOUDINARY_CLOUD_NAME"] = cls.CLOUDINARY_CLOUD_NAME
+        app.config["CLOUDINARY_API_KEY"] = cls.CLOUDINARY_API_KEY
+        app.config["CLOUDINARY_API_SECRET"] = cls.CLOUDINARY_API_SECRET
+
+        if not all([
+            cls.CLOUDINARY_CLOUD_NAME,
+            cls.CLOUDINARY_API_KEY,
+            cls.CLOUDINARY_API_SECRET
+        ]):
+            logger.warning("[CONFIG|INIT] Cloudinary config incomplete.")
 
         app.config["WTF_CSRF_SECRET_KEY"] = os.getenv(
             "WTF_CSRF_SECRET_KEY",

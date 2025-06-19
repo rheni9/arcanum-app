@@ -29,6 +29,7 @@
           <form method="post"
                 action="{{ action_url }}"
                 class="form message-form"
+                enctype="multipart/form-data"
                 novalidate
                 autocomplete="off">
 
@@ -120,13 +121,13 @@
               {% endfor %}
             </div>
 
-            {# === Screenshot Path === #}
+            {# === Screenshot Upload === #}
             <div class="form-group">
               <label for="{{ form.screenshot.id }}" class="form-label">
                 {{ form.screenshot.label.text }}
               </label>
-              {{ form.screenshot(class="form-control" ~ (' input-error' if form.screenshot.errors else '')) }}
-              <small class="form-hint">Optional. Path or URL.</small>
+              {{ form.screenshot(class="form-control-file" ~ (' input-error' if form.screenshot.errors else '')) }}
+              <small class="form-hint">Optional. Upload PNG, JPG, or GIF image.</small>
               {% for error in form.screenshot.errors %}
                 <div class="error">{{ error }}</div>
               {% endfor %}

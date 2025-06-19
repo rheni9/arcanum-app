@@ -12,6 +12,7 @@ from datetime import datetime
 from flask import Flask
 from flask_wtf import CSRFProtect
 from dotenv import load_dotenv
+from cloudinary import config as cloudinary_config
 
 from app.config import DevelopmentConfig, TestingConfig, ProductionConfig
 from app.hooks.auth_hooks import restrict_access
@@ -76,6 +77,13 @@ def create_app(config_class: type = None) -> Flask:
 
     # Initialize configuration
     config_class.init_app(app)
+
+    cloudinary_config(
+        cloud_name=app.config["CLOUDINARY_CLOUD_NAME"],
+        api_key=app.config["CLOUDINARY_API_KEY"],
+        api_secret=app.config["CLOUDINARY_API_SECRET"]
+    )
+    logger.debug("[CLOUDINARY|INIT] Cloudinary configured successfully.")
 
     # Initialize CSRF protection
     csrf.init_app(app)
