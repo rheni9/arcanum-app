@@ -13,6 +13,9 @@
 .form-group {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+  flex: 1;
+  min-width: 0;
   gap: 0.25rem;
 }
 
@@ -84,6 +87,13 @@ textarea.form-control {
 .error {
   color: var(--color-error);
   font-size: var(--font-detail);
+}
+
+.inline-error {
+  color: var(--color-error);
+  font-size: var(--font-detail);
+  margin-top: 0.25rem;
+  display: block;
 }
 
 /* --- Layout Utilities --- */

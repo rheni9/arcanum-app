@@ -43,11 +43,9 @@
 /* --- Search form group --- */
 .search-group {
   display: flex;
-  flex-wrap: nowrap;
-  align-items: stretch;
+  align-items: flex-start;
   gap: 0.5rem;
-  flex: 1 1 0;
-  min-width: 0;
+  flex: 1;
 }
 
 .search-group .form-control {
@@ -67,42 +65,82 @@
 .date-group {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
 }
 
 /* --- Combined mode select + input --- */
-.date-select-wrapper {
+.date-fields-group {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex: 1 1 auto;
+}
+
+.date-fields-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.select-input-combo {
   position: relative;
+  display: flex;
+  align-items: center;
   width: 185px;
 }
 
-.date-select-wrapper select.date-mode-select {
+.select-input-combo select.date-mode-select {
   position: absolute;
   top: 50%;
   left: 0.5rem;
   transform: translateY(-50%);
-  z-index: 2;
   appearance: none;
   background: transparent;
   border: none;
-  pointer-events: auto;
   font-size: var(--font-xs);
-  color: var(--text-color);
   width: 4rem;
-  padding: 0;
+  pointer-events: auto;
+  z-index: 2;
 }
 
-.date-select-wrapper input.date-input {
+.select-input-combo input.date-input {
   width: 100%;
   height: 2.5rem;
   padding-left: 4rem;
+  box-sizing: border-box;
 }
 
-/* --- End date field --- */
 #end_date {
   width: 135px;
   height: 2.5rem;
+}
+
+/* --- Error Messages --- */
+.form-message-wrapper {
+  font-size: var(--font-detail);
+  color: var(--color-error);
+  line-height: 1.2;
+  margin-top: 0.25rem;
+  
+  display: block;
+  width: 0;
+  flex-shrink: 1;
+  overflow: visible;
+  white-space: nowrap;
+}
+
+.form-message-wrapper:empty {
+  display: none;
+}
+
+.inline-error {
+  font-size: inherit;
+  color: inherit;
+  line-height: 1.3;
+  margin: 0;
+  padding: 0;
+  white-space: nowrap;
 }
 
 /* --- Reset button --- */
@@ -130,7 +168,7 @@
   }
 
   .search-group .form-control,
-  .date-select-wrapper,
+  .select-input-combo,
   #end_date,
   .form-control,
   .btn-reset {
@@ -144,7 +182,7 @@
     box-sizing: border-box;
   }
 
-  .date-select-wrapper input.date-input {
+  .select-input-combo input.date-input {
     height: 2.25rem;
     font-size: var(--font-sm);
     padding-left: 4rem;
@@ -156,6 +194,16 @@
     margin-left: 0;
     margin-top: 0.5rem;
   }
+
+  .inline-error {
+    font-size: var(--font-sm);
+    white-space: normal;
+  }
+
+  .form-message-wrapper {
+    width: max-content;
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
@@ -163,7 +211,7 @@
     padding: 1.15rem;
   }
 
-  .date-select-wrapper input.date-input,
+  .select-input-combo input.date-input,
   #end_date {
     height: 2.15rem;
     font-size: var(--font-sm);
