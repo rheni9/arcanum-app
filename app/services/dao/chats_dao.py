@@ -38,7 +38,7 @@ def fetch_chats(
     )
     order_clause = build_order_clause(sort_by, order, config)
 
-    query = f"""
+    query = text(f"""
         SELECT
             c.id, c.chat_id, c.slug, c.name, c.link, c.type,
             c.joined, c.is_active, c.is_member, c.is_public, c.notes,
@@ -48,7 +48,7 @@ def fetch_chats(
                 WHERE m.chat_ref_id = c.id) AS last_message
         FROM chats c
         ORDER BY {order_clause};
-    """
+    """)
     try:
         conn = get_connection_lazy()
         result = conn.execute(query)
