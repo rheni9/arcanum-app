@@ -122,7 +122,7 @@ def insert_chat_record(chat: Chat) -> int:
     try:
         conn = get_connection_lazy()
         params = chat.prepare_for_db()
-        result = conn.execute(query, params)
+        result = conn.execute(query, [params])
         conn.commit()
         pk = result.scalar_one()
         logger.debug(
@@ -156,7 +156,7 @@ def update_chat_record(chat: Chat) -> None:
         conn = get_connection_lazy()
         params = chat.prepare_for_db()
         params["id"] = chat.id
-        result = conn.execute(query, params)
+        result = conn.execute(query, [params])
         conn.commit()
         if result.rowcount == 0:
             logger.debug("[CHATS|DAO] No rows updated for ID=%d.", chat.id)

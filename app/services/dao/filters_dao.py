@@ -8,6 +8,7 @@ with ordering and structured result sets.
 
 import logging
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import text
 
 from app.models.filters import MessageFilters
 from app.utils.db_utils import get_connection_lazy
@@ -55,7 +56,7 @@ def fetch_filtered_messages(
 
     try:
         session = get_connection_lazy()
-        result_proxy = session.execute(query, params)
+        result_proxy = session.execute(text(query), params)
         rows = result_proxy.mappings().all()
         result = [dict(row) for row in rows]
         _log_filter_result(filters, len(result))
