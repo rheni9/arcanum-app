@@ -121,7 +121,7 @@ class Chat:
             result["joined"] = self.joined.isoformat()
         return result
 
-    def prepare_for_db(self) -> tuple:
+    def prepare_for_db(self) -> dict:
         """
         Prepare the chat instance for database operations.
 
@@ -131,10 +131,10 @@ class Chat:
         (chat_id, slug, name, link, type, joined,
          is_active, is_member, is_public, notes)
 
-        :return: Tuple of normalized chat field values.
+        :return: Dictionary of normalized fields for SQL execution.
         """
         joined_str = self.joined.isoformat() if self.joined else None
-        return (
+        return {
             self.chat_id,
             self.slug,
             self.name,
@@ -145,7 +145,7 @@ class Chat:
             int(self.is_member),
             int(self.is_public),
             self.notes
-        )
+        }
 
     def display_name(self) -> str:
         """

@@ -198,7 +198,7 @@ class Message:
             result["timestamp"] = to_utc_iso(self.timestamp)
         return result
 
-    def prepare_for_db(self) -> tuple:
+    def prepare_for_db(self) -> dict:
         """
         Prepare the message instance for database operations.
 
@@ -208,12 +208,12 @@ class Message:
         (chat_ref_id, msg_id, timestamp, link, text,
          media, screenshot, tags, notes)
 
-        :return: Tuple of normalized message field values.
+        :return: Dictionary of normalized message field values.
         """
         timestamp_str = to_utc_iso(self.timestamp) if self.timestamp else None
         media_value = json.dumps(self.media if self.media is not None else [])
         tags_value = json.dumps(self.tags if self.tags is not None else [])
-        return (
+        return {
             self.chat_ref_id,
             self.msg_id,
             timestamp_str,
@@ -223,7 +223,7 @@ class Message:
             self.screenshot,
             tags_value,
             self.notes
-        )
+        }
 
     def get_short_text(self, limit: int = 50) -> str:
         """
