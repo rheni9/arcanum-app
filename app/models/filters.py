@@ -162,15 +162,17 @@ class MessageFilters():
 
         :return: SQL clause fragment or empty string.
         """
-        match self.date_mode:
-            case "on" if self.start_date:
-                return "DATE(m.timestamp) = DATE(?)"
-            case "before" if self.start_date:
-                return "DATE(m.timestamp) < DATE(?)"
-            case "after" if self.start_date:
-                return "DATE(m.timestamp) >= DATE(?)"
-            case "between" if self.start_date and self.end_date:
-                return "DATE(m.timestamp) BETWEEN DATE(?) AND DATE(?)"
+        if self.date_mode == "on":
+            return "DATE(m.timestamp) = DATE(:start_date)"
+        if self.date_mode == "before":
+            return "DATE(m.timestamp) < DATE(:start_date)"
+        if self.date_mode == "after":
+            return "DATE(m.timestamp) >= DATE(:start_date)"
+        if self.date_mode == "between":
+            return (
+                "DATE(m.timestamp) BETWEEN DATE(:start_date) "
+                "AND DATE(:end_date)"
+            )
         return ""
 
     def get_date_params(self) -> list[str]:
@@ -180,14 +182,17 @@ class MessageFilters():
         :return: List of date strings or an empty list.
         """
         if self.date_mode in {"on", "before", "after"} and self.start_date:
-            return [self.start_date]
+            return {"start_date": self.start_date}
         if (
             self.date_mode == "between"
             and self.start_date
             and self.end_date
         ):
-            return [self.start_date, self.end_date]
-        return []
+            return {
+                "start_date": self.start_date,
+                "end_date": self.end_date
+            }
+        return {}
 
     @classmethod
     def from_request(cls, req: Request) -> "MessageFilters":

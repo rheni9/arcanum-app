@@ -176,46 +176,45 @@ def validate_search_filters(
 def build_sql_clause(
     filters: MessageFilters,
     chat_slug: str | None = None
-) -> tuple[str, list]:
+) -> tuple[str, dict]:
     """
-    Build a SQL WHERE clause and parameters based on filters for PostgreSQL.
+    Build a SQL WHERE clause and parameter dictionary for SQLAlchemy.
 
     :param filters: MessageFilters instance to extract clauses from.
     :param chat_slug: Optional slug to limit filtering to a specific chat.
-    :return: Tuple of (WHERE clause as string, list of parameters).
+    :return: Tuple of (WHERE clause as string, dict of parameters).
     """
     clause = []
-    params = []
+    params = {}
 
     if chat_slug:
-        clause.append("c.slug = %s")
-        params.append(chat_slug)
+        clause.append("c.slug = :chat_slug")
+        params["chat_slug"] = chat_slug
 
     if filters.action == "search":
         if filters.query and filters.tag:
             clause.append(
-                "(m.text ILIKE %s OR m.tags ILIKE %s OR m.tags ILIKE %s)"
+                "(m.text ILIKE :query OR m.tags ILIKE :query "
+                "OR m.tags ILIKE :tag)"
             )
-            q_param = f"%{filters.query}%"
-            t_param = f"%{filters.tag}%"
-            params.extend([q_param, q_param, t_param])
+            params["query"] = f"%{filters.query}%"
+            params["tag"] = f"%{filters.tag}%"
         elif filters.query:
-            clause.append("(m.text ILIKE %s OR m.tags ILIKE %s)")
-            q_param = f"%{filters.query}%"
-            params.extend([q_param, q_param])
+            clause.append("(m.text ILIKE :query OR m.tags ILIKE :query)")
+            params["query"] = f"%{filters.query}%"
         elif filters.tag:
-            clause.append("m.tags ILIKE %s")
-            params.append(f"%{filters.tag}%")
+            clause.append("m.tags ILIKE :tag")
+            params["tag"] = f"%{filters.tag}%"
 
     if filters.action == "tag":
-        clause.append("m.tags ILIKE %s")
-        params.append(f"%{filters.tag}%")
+        clause.append("m.tags ILIKE :tag")
+        params["tag"] = f"%{filters.tag}%"
 
     if filters.action == "filter":
         date_clause = filters.get_date_clause()
         if date_clause:
             clause.append(date_clause)
-            params.extend(filters.get_date_params())
+            params.update(filters.get_date_params())
 
     where_sql = "WHERE " + " AND ".join(clause) if clause else ""
     logger.debug(
