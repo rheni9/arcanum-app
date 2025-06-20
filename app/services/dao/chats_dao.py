@@ -8,7 +8,6 @@ and provides aggregate statistics for UI, sorting, and message summaries.
 
 import logging
 from sqlalchemy import text
-
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 from app.models.chat import Chat
@@ -52,7 +51,7 @@ def fetch_chats(
     try:
         conn = get_connection_lazy()
         result = conn.execute(query)
-        rows = result.fetchall()
+        rows = result.mappings().all()
         logger.debug("[CHATS|DAO] Retrieved %d chat(s).", len(rows))
         return [dict(row) for row in rows]
     except SQLAlchemyError as e:
@@ -72,7 +71,7 @@ def fetch_chat_by_slug(slug: str) -> Chat | None:
     try:
         conn = get_connection_lazy()
         result = conn.execute(query, {"slug": slug})
-        row = result.fetchone()
+        row = result.mappings().fetchone()
         if not row:
             logger.debug("[CHATS|DAO] No match for slug '%s'.", slug)
         return Chat.from_row(dict(row)) if row else None
@@ -94,7 +93,7 @@ def fetch_chat_by_id(pk: int) -> Chat | None:
     try:
         conn = get_connection_lazy()
         result = conn.execute(query, {"id": pk})
-        row = result.fetchone()
+        row = result.mappings().fetchone()
         if not row:
             logger.debug("[CHATS|DAO] No match for ID=%d.", pk)
         return Chat.from_row(dict(row)) if row else None
@@ -274,7 +273,7 @@ def fetch_global_chat_stats() -> dict:
     try:
         conn = get_connection_lazy()
         result = conn.execute(query)
-        row = result.fetchone()
+        row = result.mappings().fetchone()
         logger.debug("[CHATS|DAO] Retrieved global chat statistics.")
         return dict(row) if row else {}
     except SQLAlchemyError as e:

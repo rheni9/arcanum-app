@@ -7,8 +7,7 @@ chat association, sorting of results, and message counting per chat.
 """
 
 import logging
-from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+from sqlite3 import DatabaseError, IntegrityError
 
 from app.models.message import Message
 from app.utils.db_utils import get_connection_lazy
@@ -23,17 +22,16 @@ def fetch_message_by_id(pk: int) -> Message | None:
 
     :param pk: Message primary key.
     :return: Message instance if found, otherwise None.
-    :raises SQLAlchemyError: If the query fails.
+    :raises DatabaseError: If the query fails.
     """
-    query = text("SELECT * FROM messages WHERE id = :id;")
+    query = "SELECT * FROM messages WHERE id = ?;"
     try:
         conn = get_connection_lazy()
-        result = conn.execute(query, {"id": pk})
-        row = result.mappings().fetchone()
+        row = conn.execute(query, (pk,)).fetchone()
         if not row:
             logger.debug("[MESSAGES|DAO] No message found with ID=%d.", pk)
         return Message.from_row(dict(row)) if row else None
-    except SQLAlchemyError as e:
+    except DatabaseError as e:
         logger.error("[MESSAGES|DAO] Failed to fetch message by ID=%d: %s",
                      pk, e)
         raise
@@ -51,7 +49,7 @@ def fetch_messages_by_chat(
     :param sort_by: Field to sort by.
     :param order: Sort direction ('asc' or 'desc').
     :return: List of message row dictionaries.
-    :raises SQLAlchemyError: If the query fails.
+    :raises DatabaseError: If the query fails.
     """
     config = OrderConfig(
         allowed_fields={"timestamp", "msg_id"},
@@ -61,21 +59,21 @@ def fetch_messages_by_chat(
     )
     order_clause = build_order_clause(sort_by, order, config)
 
-    query = text(f"""
+    query = f"""
         SELECT m.*, c.name AS chat_name, c.slug AS chat_slug
         FROM messages m
         JOIN chats c ON m.chat_ref_id = c.id
-        WHERE c.slug = :slug
+        WHERE c.slug = ?
         ORDER BY {order_clause};
-    """)
+    """
     try:
         conn = get_connection_lazy()
-        result = conn.execute(query, {"slug": chat_slug})
-        rows = result.mappings().all()
+        cursor = conn.execute(query, (chat_slug,))
+        rows = cursor.fetchall()
         logger.debug("[MESSAGES|DAO] Retrieved %d message(s) for chat '%s'.",
                      len(rows), chat_slug)
         return [dict(row) for row in rows]
-    except SQLAlchemyError as e:
+    except DatabaseError as e:
         logger.error("[MESSAGES|DAO] Failed to retrieve messages for chat "
                      "'%s': %s", chat_slug, e)
         raise
@@ -88,28 +86,22 @@ def insert_message_record(message: Message) -> int:
     :param message: Message instance to insert.
     :return: Primary key of the inserted message.
     :raises IntegrityError: If msg_id is not unique within the chat.
-    :raises SQLAlchemyError: If the query fails.
+    :raises DatabaseError: If the query fails.
     """
-    query = text("""
+    query = '''
         INSERT INTO messages (
             chat_ref_id, msg_id, timestamp, link,
             text, media, screenshot, tags, notes
-        ) VALUES (
-            :chat_ref_id, :msg_id, :timestamp, :link,
-            :text, :media, :screenshot, :tags, :notes
-        )
-        RETURNING id;
-    """)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+    '''
     try:
         conn = get_connection_lazy()
-        params = message.prepare_for_db_dict()
-        result = conn.execute(query, params)
+        cursor = conn.execute(query, message.prepare_for_db())
         conn.commit()
-        pk = result.scalar_one()
-        logger.debug(
-            "[MESSAGES|DAO] Inserted message ID=%d for chat_ref_id=%d.",
-            pk, message.chat_ref_id
-        )
+        pk = cursor.lastrowid
+        logger.debug("[MESSAGES|DAO] Inserted message ID=%d for "
+                     "(chat_ref_id=%d).",
+                     pk, message.chat_ref_id)
         return pk
     except IntegrityError as e:
         logger.error(
@@ -118,7 +110,7 @@ def insert_message_record(message: Message) -> int:
             message.chat_ref_id, str(message.msg_id), e
         )
         raise
-    except SQLAlchemyError as e:
+    except DatabaseError as e:
         logger.error("[MESSAGES|DAO] Insert failed: %s", e)
         raise
 
@@ -129,25 +121,22 @@ def update_message_record(message: Message) -> None:
 
     :param message: Message instance with updated values.
     :raises IntegrityError: If msg_id is not unique within the chat.
-    :raises SQLAlchemyError: If the query fails.
+    :raises DatabaseError: If the query fails.
     """
-    query = text("""
+    query = '''
         UPDATE messages
-        SET msg_id = :msg_id, timestamp = :timestamp, link = :link,
-            text = :text, media = :media, screenshot = :screenshot,
-            tags = :tags, notes = :notes
-        WHERE id = :id;
-    """)
+        SET msg_id = ?, timestamp = ?, link = ?, text = ?,
+            media = ?, screenshot = ?, tags = ?, notes = ?
+        WHERE id = ?;
+    '''
     try:
         conn = get_connection_lazy()
-        params = message.prepare_for_db_dict()
-        params["id"] = message.id
-        result = conn.execute(query, params)
+        params = message.prepare_for_db()[1:] + (message.id,)
+        cursor = conn.execute(query, params)
         conn.commit()
-        if result.rowcount == 0:
-            logger.debug(
-                "[MESSAGES|DAO] No rows updated for ID=%d.", message.id
-            )
+        if cursor.rowcount == 0:
+            logger.debug("[MESSAGES|DAO] No rows updated for ID=%d.",
+                         message.id)
         else:
             logger.debug("[MESSAGES|DAO] Updated message ID=%d.", message.id)
     except IntegrityError as e:
@@ -157,7 +146,7 @@ def update_message_record(message: Message) -> None:
             message.chat_ref_id, str(message.msg_id), e
         )
         raise
-    except SQLAlchemyError as e:
+    except DatabaseError as e:
         logger.error("[MESSAGES|DAO] Update failed: %s", e)
         raise
 
@@ -167,15 +156,15 @@ def delete_message_record(pk: int) -> None:
     Delete a message record by its primary key.
 
     :param pk: Message primary key.
-    :raises SQLAlchemyError: If the query fails.
+    :raises DatabaseError: If the query fails.
     """
-    query = text("DELETE FROM messages WHERE id = :id;")
+    query = "DELETE FROM messages WHERE id = ?;"
     try:
         conn = get_connection_lazy()
-        conn.execute(query, {"id": pk})
+        conn.execute(query, (pk,))
         conn.commit()
         logger.debug("[MESSAGES|DAO] Deleted message ID=%d.", pk)
-    except SQLAlchemyError as e:
+    except DatabaseError as e:
         logger.error("[MESSAGES|DAO] Delete failed: %s", e)
         raise
 
@@ -187,21 +176,18 @@ def check_message_exists(chat_ref_id: int, msg_id: int) -> bool:
     :param chat_ref_id: ID of the chat (foreign key in messages table).
     :param msg_id: Telegram message ID (unique within the given chat).
     :return: True if such a message exists within the chat, otherwise False.
-    :raises SQLAlchemyError: If the query fails.
+    :raises DatabaseError: If the query fails.
     """
-    query = text("""
-        SELECT 1 FROM messages
-        WHERE chat_ref_id = :chat_ref_id AND msg_id = :msg_id
-        LIMIT 1;
-    """)
+    query = (
+        "SELECT 1 FROM messages "
+        "WHERE chat_ref_id = ? AND msg_id = ? "
+        "LIMIT 1;"
+    )
     try:
         conn = get_connection_lazy()
-        result = conn.execute(
-            query, {"chat_ref_id": chat_ref_id, "msg_id": msg_id}
-        )
-        row = result.fetchone()
+        row = conn.execute(query, (chat_ref_id, msg_id)).fetchone()
         return row is not None
-    except SQLAlchemyError as e:
+    except DatabaseError as e:
         logger.error("[MESSAGES|DAO] Existence check failed: %s", e)
         raise
 
@@ -212,16 +198,13 @@ def count_messages_for_chat(chat_ref_id: int) -> int:
 
     :param chat_ref_id: ID of the related chat (foreign key).
     :return: Total number of messages in the chat.
-    :raises SQLAlchemyError: If the query fails.
+    :raises DatabaseError: If the query fails.
     """
-    query = text(
-        "SELECT COUNT(*) FROM messages WHERE chat_ref_id = :chat_ref_id;"
-    )
+    query = "SELECT COUNT(*) FROM messages WHERE chat_ref_id = ?;"
     try:
         conn = get_connection_lazy()
-        result = conn.execute(query, {"chat_ref_id": chat_ref_id})
-        row = result.fetchone()
+        row = conn.execute(query, (chat_ref_id,)).fetchone()
         return row[0] if row else 0
-    except SQLAlchemyError as e:
+    except DatabaseError as e:
         logger.error("[MESSAGES|DAO] Count failed: %s", e)
         raise

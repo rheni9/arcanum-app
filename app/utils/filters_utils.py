@@ -178,7 +178,7 @@ def build_sql_clause(
     chat_slug: str | None = None
 ) -> tuple[str, list]:
     """
-    Build a SQL WHERE clause and parameters based on filters.
+    Build a SQL WHERE clause and parameters based on filters for PostgreSQL.
 
     :param filters: MessageFilters instance to extract clauses from.
     :param chat_slug: Optional slug to limit filtering to a specific chat.
@@ -188,25 +188,27 @@ def build_sql_clause(
     params = []
 
     if chat_slug:
-        clause.append("c.slug = ?")
+        clause.append("c.slug = %s")
         params.append(chat_slug)
 
     if filters.action == "search":
         if filters.query and filters.tag:
-            clause.append("(m.text LIKE ? OR m.tags LIKE ? OR m.tags LIKE ?)")
+            clause.append(
+                "(m.text ILIKE %s OR m.tags ILIKE %s OR m.tags ILIKE %s)"
+            )
             q_param = f"%{filters.query}%"
             t_param = f"%{filters.tag}%"
             params.extend([q_param, q_param, t_param])
         elif filters.query:
-            clause.append("(m.text LIKE ? OR m.tags LIKE ?)")
+            clause.append("(m.text ILIKE %s OR m.tags ILIKE %s)")
             q_param = f"%{filters.query}%"
             params.extend([q_param, q_param])
         elif filters.tag:
-            clause.append("m.tags LIKE ?")
+            clause.append("m.tags ILIKE %s")
             params.append(f"%{filters.tag}%")
 
     if filters.action == "tag":
-        clause.append("m.tags LIKE ?")
+        clause.append("m.tags ILIKE %s")
         params.append(f"%{filters.tag}%")
 
     if filters.action == "filter":
@@ -220,6 +222,57 @@ def build_sql_clause(
         "[FILTERS|SQL] %s | params: %s", where_sql or "<no clause>", params
     )
     return where_sql, params
+
+
+# def build_sql_clause(
+#     filters: MessageFilters,
+#     chat_slug: str | None = None
+# ) -> tuple[str, list]:
+#     """
+#     Build a SQL WHERE clause and parameters based on filters.
+
+#     :param filters: MessageFilters instance to extract clauses from.
+#     :param chat_slug: Optional slug to limit filtering to a specific chat.
+#     :return: Tuple of (WHERE clause as string, list of parameters).
+#     """
+#     clause = []
+#     params = []
+
+#     if chat_slug:
+#         clause.append("c.slug = ?")
+#         params.append(chat_slug)
+
+#     if filters.action == "search":
+#         if filters.query and filters.tag:
+#             clause.append(
+#                "(m.text LIKE ? OR m.tags LIKE ? OR m.tags LIKE ?)"
+#             )
+#             q_param = f"%{filters.query}%"
+#             t_param = f"%{filters.tag}%"
+#             params.extend([q_param, q_param, t_param])
+#         elif filters.query:
+#             clause.append("(m.text LIKE ? OR m.tags LIKE ?)")
+#             q_param = f"%{filters.query}%"
+#             params.extend([q_param, q_param])
+#         elif filters.tag:
+#             clause.append("m.tags LIKE ?")
+#             params.append(f"%{filters.tag}%")
+
+#     if filters.action == "tag":
+#         clause.append("m.tags LIKE ?")
+#         params.append(f"%{filters.tag}%")
+
+#     if filters.action == "filter":
+#         date_clause = filters.get_date_clause()
+#         if date_clause:
+#             clause.append(date_clause)
+#             params.extend(filters.get_date_params())
+
+#     where_sql = "WHERE " + " AND ".join(clause) if clause else ""
+#     logger.debug(
+#         "[FILTERS|SQL] %s | params: %s", where_sql or "<no clause>", params
+#     )
+#     return where_sql, params
 
 
 def normalize_date(

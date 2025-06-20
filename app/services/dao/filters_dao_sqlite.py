@@ -7,7 +7,7 @@ with ordering and structured result sets.
 """
 
 import logging
-from sqlalchemy.exc import SQLAlchemyError
+from sqlite3 import DatabaseError
 
 from app.models.filters import MessageFilters
 from app.utils.db_utils import get_connection_lazy
@@ -32,7 +32,7 @@ def fetch_filtered_messages(
     :param sort_by: Field to sort by ('msg_id' or 'timestamp').
     :param order: Sort direction ('asc' or 'desc').
     :return: List of message row dictionaries matching the filter criteria.
-    :raises SQLAlchemyError: If the query fails.
+    :raises DatabaseError: If the query fails.
     """
     config = OrderConfig(
         allowed_fields={"msg_id", "timestamp"},
@@ -54,14 +54,13 @@ def fetch_filtered_messages(
     )
 
     try:
-        session = get_connection_lazy()
-        result_proxy = session.execute(query, params)
-        rows = result_proxy.mappings().all()
+        conn = get_connection_lazy()
+        rows = conn.execute(query, params).fetchall()
         result = [dict(row) for row in rows]
         _log_filter_result(filters, len(result))
         return result
 
-    except SQLAlchemyError as e:
+    except DatabaseError as e:
         logger.error("[FILTERS|DAO] Query failed: %s", e)
         raise
 
