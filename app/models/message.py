@@ -216,7 +216,7 @@ class Message:
         return {
             "chat_ref_id": self.chat_ref_id,
             "msg_id": self.msg_id,
-            "timestamp_str": timestamp_str,
+            "timestamp": timestamp_str,
             "link": self.link,
             "text": self.text,
             "media_value": media_value,
