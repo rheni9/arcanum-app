@@ -102,7 +102,7 @@ def insert_message_record(message: Message) -> int:
     """)
     try:
         conn = get_connection_lazy()
-        params = message.prepare_for_db_dict()
+        params = message.prepare_for_db()
         result = conn.execute(query, params)
         conn.commit()
         pk = result.scalar_one()
@@ -140,7 +140,7 @@ def update_message_record(message: Message) -> None:
     """)
     try:
         conn = get_connection_lazy()
-        params = message.prepare_for_db_dict()
+        params = message.prepare_for_db()
         params["id"] = message.id
         result = conn.execute(query, params)
         conn.commit()

@@ -121,7 +121,7 @@ def insert_chat_record(chat: Chat) -> int:
     """)
     try:
         conn = get_connection_lazy()
-        params = chat.prepare_for_db_dict()
+        params = chat.prepare_for_db()
         result = conn.execute(query, params)
         conn.commit()
         pk = result.scalar_one()
@@ -154,7 +154,7 @@ def update_chat_record(chat: Chat) -> None:
     """)
     try:
         conn = get_connection_lazy()
-        params = chat.prepare_for_db_dict()
+        params = chat.prepare_for_db()
         params["id"] = chat.id
         result = conn.execute(query, params)
         conn.commit()
