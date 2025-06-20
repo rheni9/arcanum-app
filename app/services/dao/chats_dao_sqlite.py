@@ -7,7 +7,7 @@ and provides aggregate statistics for UI, sorting, and message summaries.
 """
 
 import logging
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+from sqlite3 import DatabaseError, IntegrityError
 
 from app.models.chat import Chat
 from app.utils.db_utils import get_connection_lazy
@@ -26,7 +26,7 @@ def fetch_chats(
     :param sort_by: Field to sort by.
     :param order: Sort direction ('asc' or 'desc').
     :return: List of chat row dictionaries with aggregate statistics.
-    :raises SQLAlchemyError: If the query fails.
+    :raises DatabaseError: If the query fails.
     """
     config = OrderConfig(
         allowed_fields={"name", "message_count", "last_message"},
@@ -49,11 +49,10 @@ def fetch_chats(
     """
     try:
         conn = get_connection_lazy()
-        result = conn.execute(query)
-        rows = result.fetchall()
+        rows = conn.execute(query).fetchall()
         logger.debug("[CHATS|DAO] Retrieved %d chat(s).", len(rows))
         return [dict(row) for row in rows]
-    except SQLAlchemyError as e:
+    except DatabaseError as e:
         logger.error("[CHATS|DAO] Failed to retrieve chats: %s", e)
         raise
 
@@ -64,17 +63,16 @@ def fetch_chat_by_slug(slug: str) -> Chat | None:
 
     :param slug: Unique chat slug.
     :return: Chat instance if found, otherwise None.
-    :raises SQLAlchemyError: If the query fails.
+    :raises DatabaseError: If the query fails.
     """
-    query = "SELECT * FROM chats WHERE slug = :slug;"
+    query = "SELECT * FROM chats WHERE slug = ?;"
     try:
         conn = get_connection_lazy()
-        result = conn.execute(query, {"slug": slug})
-        row = result.fetchone()
+        row = conn.execute(query, (slug,)).fetchone()
         if not row:
             logger.debug("[CHATS|DAO] No match for slug '%s'.", slug)
         return Chat.from_row(dict(row)) if row else None
-    except SQLAlchemyError as e:
+    except DatabaseError as e:
         logger.error("[CHATS|DAO] Failed to fetch chat by slug '%s': %s",
                      slug, e)
         raise
@@ -86,17 +84,16 @@ def fetch_chat_by_id(pk: int) -> Chat | None:
 
     :param pk: Chat primary key.
     :return: Chat instance if found, otherwise None.
-    :raises SQLAlchemyError: If the query fails.
+    :raises DatabaseError: If the query fails.
     """
-    query = "SELECT * FROM chats WHERE id = :id;"
+    query = "SELECT * FROM chats WHERE id = ?;"
     try:
         conn = get_connection_lazy()
-        result = conn.execute(query, {"id": pk})
-        row = result.fetchone()
+        row = conn.execute(query, (pk,)).fetchone()
         if not row:
             logger.debug("[CHATS|DAO] No match for ID=%d.", pk)
         return Chat.from_row(dict(row)) if row else None
-    except SQLAlchemyError as e:
+    except DatabaseError as e:
         logger.error("[CHATS|DAO] Failed to fetch chat by ID=%d: %s", pk, e)
         raise
 
@@ -108,30 +105,26 @@ def insert_chat_record(chat: Chat) -> int:
     :param chat: Chat instance to insert.
     :return: Primary key of the inserted chat.
     :raises IntegrityError: If the slug is not unique.
-    :raises SQLAlchemyError: If the query fails.
+    :raises DatabaseError: If the query fails.
     """
     query = """
         INSERT INTO chats
             (chat_id, slug, name, link, type, joined,
              is_active, is_member, is_public, notes)
-        VALUES (:chat_id, :slug, :name, :link, :type, :joined,
-                :is_active, :is_member, :is_public, :notes)
-        RETURNING id;
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     """
     try:
         conn = get_connection_lazy()
-        params = chat.prepare_for_db_dict()
-        result = conn.execute(query, params)
+        cursor = conn.execute(query, chat.prepare_for_db())
         conn.commit()
-        pk = result.scalar_one()
-        logger.debug(
-            "[CHATS|DAO] Inserted chat ID=%d (slug='%s').", pk, chat.slug
-        )
+        pk = cursor.lastrowid
+        logger.debug("[CHATS|DAO] Inserted chat ID=%d (slug='%s').",
+                     pk, chat.slug)
         return pk
     except IntegrityError as e:
         logger.error("[CHATS|DAO] Insert failed due to slug conflict: %s", e)
         raise
-    except SQLAlchemyError as e:
+    except DatabaseError as e:
         logger.error("[CHATS|DAO] Insert failed: %s", e)
         raise
 
@@ -142,22 +135,20 @@ def update_chat_record(chat: Chat) -> None:
 
     :param chat: Chat instance with updated values.
     :raises IntegrityError: If the slug is not unique.
-    :raises SQLAlchemyError: If the query fails.
+    :raises DatabaseError: If the query fails.
     """
     query = """
         UPDATE chats
-        SET chat_id = :chat_id, slug = :slug, name = :name, link = :link,
-            type = :type, joined = :joined, is_active = :is_active,
-            is_member = :is_member, is_public = :is_public, notes = :notes
-        WHERE id = :id;
+        SET chat_id = ?, slug = ?, name = ?, link = ?, type = ?, joined = ?,
+            is_active = ?, is_member = ?, is_public = ?, notes = ?
+        WHERE id = ?;
     """
     try:
         conn = get_connection_lazy()
-        params = chat.prepare_for_db_dict()
-        params["id"] = chat.id
-        result = conn.execute(query, params)
+        params = chat.prepare_for_db() + (chat.id,)
+        cursor = conn.execute(query, params)
         conn.commit()
-        if result.rowcount == 0:
+        if cursor.rowcount == 0:
             logger.debug("[CHATS|DAO] No rows updated for ID=%d.", chat.id)
         else:
             logger.debug("[CHATS|DAO] Updated chat ID=%d (slug='%s').",
@@ -165,7 +156,7 @@ def update_chat_record(chat: Chat) -> None:
     except IntegrityError as e:
         logger.error("[CHATS|DAO] Update failed due to slug conflict: %s", e)
         raise
-    except SQLAlchemyError as e:
+    except DatabaseError as e:
         logger.error("[CHATS|DAO] Update failed: %s", e)
         raise
 
@@ -175,15 +166,15 @@ def delete_chat_record(pk: int) -> None:
     Delete a chat record by its primary key.
 
     :param pk: Chat primary key.
-    :raises SQLAlchemyError: If the query fails.
+    :raises DatabaseError: If the query fails.
     """
-    query = "DELETE FROM chats WHERE id = :id;"
+    query = "DELETE FROM chats WHERE id = ?;"
     try:
         conn = get_connection_lazy()
-        conn.execute(query, {"id": pk})
+        conn.execute(query, (pk,))
         conn.commit()
         logger.debug("[CHATS|DAO] Deleted chat ID=%d.", pk)
-    except SQLAlchemyError as e:
+    except DatabaseError as e:
         logger.error("[CHATS|DAO] Delete failed: %s", e)
         raise
 
@@ -194,15 +185,14 @@ def check_slug_exists(slug: str) -> bool:
 
     :param slug: Chat slug.
     :return: True if the slug exists, otherwise False.
-    :raises SQLAlchemyError: If the query fails.
+    :raises DatabaseError: If the query fails.
     """
-    query = "SELECT 1 FROM chats WHERE slug = :slug LIMIT 1;"
+    query = "SELECT 1 FROM chats WHERE slug = ? LIMIT 1;"
     try:
         conn = get_connection_lazy()
-        result = conn.execute(query, {"slug": slug})
-        row = result.fetchone()
+        row = conn.execute(query, (slug,)).fetchone()
         return row is not None
-    except SQLAlchemyError as e:
+    except DatabaseError as e:
         logger.error("[CHATS|DAO] Slug check failed: %s", e)
         raise
 
@@ -213,15 +203,14 @@ def check_chat_id_exists(chat_id: int) -> bool:
 
     :param chat_id: Telegram chat ID.
     :return: True if the chat ID exists, otherwise False.
-    :raises SQLAlchemyError: If the query fails.
+    :raises DatabaseError: If the query fails.
     """
-    query = "SELECT 1 FROM chats WHERE chat_id = :chat_id LIMIT 1;"
+    query = "SELECT 1 FROM chats WHERE chat_id = ? LIMIT 1;"
     try:
         conn = get_connection_lazy()
-        result = conn.execute(query, {"chat_id": chat_id})
-        row = result.fetchone()
+        row = conn.execute(query, (chat_id,)).fetchone()
         return row is not None
-    except SQLAlchemyError as e:
+    except DatabaseError as e:
         logger.error("[CHATS|DAO] Chat ID check failed: %s", e)
         raise
 
@@ -234,7 +223,7 @@ def fetch_global_chat_stats() -> dict:
     most active chat by message count, and metadata about the last message.
 
     :return: Dictionary with aggregated statistics for all chats.
-    :raises SQLAlchemyError: If the query fails.
+    :raises DatabaseError: If the query fails.
     """
     query = """
         WITH most_active AS (
@@ -254,28 +243,27 @@ def fetch_global_chat_stats() -> dict:
             (SELECT COUNT(*) FROM chats) AS total_chats,
             (SELECT COUNT(*) FROM messages) AS total_messages,
             (SELECT COUNT(*) FROM messages
-             WHERE media IS NOT NULL AND LENGTH(TRIM(media)) > 0
+            WHERE media IS NOT NULL AND LENGTH(TRIM(media)) > 0
             ) AS media_messages,
             (SELECT name FROM chats
-             WHERE id = (SELECT chat_ref_id FROM most_active)
+            WHERE id = (SELECT chat_ref_id FROM most_active)
             ) AS most_active_chat_name,
             (SELECT slug FROM chats
-             WHERE id = (SELECT chat_ref_id FROM most_active)
+            WHERE id = (SELECT chat_ref_id FROM most_active)
             ) AS most_active_chat_slug,
             (SELECT msg_count FROM most_active) AS most_active_chat_count,
             (SELECT timestamp FROM last_msg) AS last_message_timestamp,
             (SELECT id FROM last_msg) AS last_message_id,
             (SELECT slug FROM chats
-             WHERE id = (SELECT chat_ref_id FROM last_msg)
+            WHERE id = (SELECT chat_ref_id FROM last_msg)
             ) AS last_message_chat_slug;
     """
     try:
         conn = get_connection_lazy()
-        result = conn.execute(query)
-        row = result.fetchone()
+        row = conn.execute(query).fetchone()
         logger.debug("[CHATS|DAO] Retrieved global chat statistics.")
-        return dict(row) if row else {}
-    except SQLAlchemyError as e:
+        return dict(row)
+    except DatabaseError as e:
         logger.error(
             "[CHATS|DAO] Failed to fetch global chat statistics: %s", e
         )

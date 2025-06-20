@@ -8,10 +8,10 @@ Jinja filters, global request hooks, logging, and CSRF protection.
 import os
 import logging
 from datetime import datetime
+from dotenv import load_dotenv
 
 from flask import Flask
 from flask_wtf import CSRFProtect
-from dotenv import load_dotenv
 from cloudinary import config as cloudinary_config
 
 from app.config import DevelopmentConfig, TestingConfig, ProductionConfig
@@ -25,6 +25,7 @@ from app.routes.dashboard import dashboard_bp
 from app.routes.chats import chats_bp
 from app.routes.messages import messages_bp
 from app.routes.search import search_bp
+from app.extensions import db
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +63,9 @@ def create_app(config_class: type = None) -> Flask:
     # Initialize Flask app
     app = Flask(__name__)
     app.config.from_object(config_class)
+
+    # Initialize SQLAlchemy
+    db.init_app(app)
 
     @app.context_processor
     def inject_current_year():

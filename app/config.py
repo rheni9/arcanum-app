@@ -48,7 +48,7 @@ class Config:
         "DATABASE_URL",
         (
             "sqlite:///" + os.path.join(
-                basedir, "..", "data", "chatvault_new4.sqlite"
+                basedir, "..", "data", "chatvault_new6.sqlite"
             )
         )
     )
