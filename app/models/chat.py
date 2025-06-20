@@ -141,9 +141,9 @@ class Chat:
             "link": self.link,
             "type": self.type,
             "joined": joined_str,
-            "is_active": int(self.is_active),
-            "is_member": int(self.is_member),
-            "is_public": int(self.is_public),
+            "is_active": self.is_active,
+            "is_member": self.is_member,
+            "is_public": self.is_public,
             "notes": self.notes
         }
 
