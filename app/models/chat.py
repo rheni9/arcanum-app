@@ -135,16 +135,16 @@ class Chat:
         """
         joined_str = self.joined.isoformat() if self.joined else None
         return {
-            self.chat_id,
-            self.slug,
-            self.name,
-            self.link,
-            self.type,
-            joined_str,
-            int(self.is_active),
-            int(self.is_member),
-            int(self.is_public),
-            self.notes
+            "chat_id": self.chat_id,
+            "slug": self.slug,
+            "name": self.name,
+            "link": self.link,
+            "type": self.type,
+            "joined": joined_str,
+            "is_active": int(self.is_active),
+            "is_member": int(self.is_member),
+            "is_public": int(self.is_public),
+            "notes": self.notes
         }
 
     def display_name(self) -> str:

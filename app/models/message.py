@@ -214,15 +214,15 @@ class Message:
         media_value = json.dumps(self.media if self.media is not None else [])
         tags_value = json.dumps(self.tags if self.tags is not None else [])
         return {
-            self.chat_ref_id,
-            self.msg_id,
-            timestamp_str,
-            self.link,
-            self.text,
-            media_value,
-            self.screenshot,
-            tags_value,
-            self.notes
+            "chat_ref_id": self.chat_ref_id,
+            "msg_id": self.msg_id,
+            "timestamp_str": timestamp_str,
+            "link": self.link,
+            "text": self.text,
+            "media_value": media_value,
+            "screenshot": self.screenshot,
+            "tags_value": tags_value,
+            "notes": self.notes
         }
 
     def get_short_text(self, limit: int = 50) -> str:
