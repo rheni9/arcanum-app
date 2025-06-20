@@ -219,9 +219,9 @@ class Message:
             "timestamp": timestamp_str,
             "link": self.link,
             "text": self.text,
-            "media_value": media_value,
+            "media": media_value,
             "screenshot": self.screenshot,
-            "tags_value": tags_value,
+            "tags": tags_value,
             "notes": self.notes
         }
 
