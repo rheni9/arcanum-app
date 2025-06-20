@@ -7,6 +7,8 @@ and provides aggregate statistics for UI, sorting, and message summaries.
 """
 
 import logging
+from sqlalchemy import text
+
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 from app.models.chat import Chat
@@ -66,7 +68,7 @@ def fetch_chat_by_slug(slug: str) -> Chat | None:
     :return: Chat instance if found, otherwise None.
     :raises SQLAlchemyError: If the query fails.
     """
-    query = "SELECT * FROM chats WHERE slug = :slug;"
+    query = text("SELECT * FROM chats WHERE slug = :slug;")
     try:
         conn = get_connection_lazy()
         result = conn.execute(query, {"slug": slug})
@@ -88,7 +90,7 @@ def fetch_chat_by_id(pk: int) -> Chat | None:
     :return: Chat instance if found, otherwise None.
     :raises SQLAlchemyError: If the query fails.
     """
-    query = "SELECT * FROM chats WHERE id = :id;"
+    query = text("SELECT * FROM chats WHERE id = :id;")
     try:
         conn = get_connection_lazy()
         result = conn.execute(query, {"id": pk})
@@ -110,14 +112,14 @@ def insert_chat_record(chat: Chat) -> int:
     :raises IntegrityError: If the slug is not unique.
     :raises SQLAlchemyError: If the query fails.
     """
-    query = """
+    query = text("""
         INSERT INTO chats
             (chat_id, slug, name, link, type, joined,
              is_active, is_member, is_public, notes)
         VALUES (:chat_id, :slug, :name, :link, :type, :joined,
                 :is_active, :is_member, :is_public, :notes)
         RETURNING id;
-    """
+    """)
     try:
         conn = get_connection_lazy()
         params = chat.prepare_for_db_dict()
@@ -144,13 +146,13 @@ def update_chat_record(chat: Chat) -> None:
     :raises IntegrityError: If the slug is not unique.
     :raises SQLAlchemyError: If the query fails.
     """
-    query = """
+    query = text("""
         UPDATE chats
         SET chat_id = :chat_id, slug = :slug, name = :name, link = :link,
             type = :type, joined = :joined, is_active = :is_active,
             is_member = :is_member, is_public = :is_public, notes = :notes
         WHERE id = :id;
-    """
+    """)
     try:
         conn = get_connection_lazy()
         params = chat.prepare_for_db_dict()
@@ -177,7 +179,7 @@ def delete_chat_record(pk: int) -> None:
     :param pk: Chat primary key.
     :raises SQLAlchemyError: If the query fails.
     """
-    query = "DELETE FROM chats WHERE id = :id;"
+    query = text("DELETE FROM chats WHERE id = :id;")
     try:
         conn = get_connection_lazy()
         conn.execute(query, {"id": pk})
@@ -196,7 +198,7 @@ def check_slug_exists(slug: str) -> bool:
     :return: True if the slug exists, otherwise False.
     :raises SQLAlchemyError: If the query fails.
     """
-    query = "SELECT 1 FROM chats WHERE slug = :slug LIMIT 1;"
+    query = text("SELECT 1 FROM chats WHERE slug = :slug LIMIT 1;")
     try:
         conn = get_connection_lazy()
         result = conn.execute(query, {"slug": slug})
@@ -215,7 +217,7 @@ def check_chat_id_exists(chat_id: int) -> bool:
     :return: True if the chat ID exists, otherwise False.
     :raises SQLAlchemyError: If the query fails.
     """
-    query = "SELECT 1 FROM chats WHERE chat_id = :chat_id LIMIT 1;"
+    query = text("SELECT 1 FROM chats WHERE chat_id = :chat_id LIMIT 1;")
     try:
         conn = get_connection_lazy()
         result = conn.execute(query, {"chat_id": chat_id})
@@ -236,7 +238,7 @@ def fetch_global_chat_stats() -> dict:
     :return: Dictionary with aggregated statistics for all chats.
     :raises SQLAlchemyError: If the query fails.
     """
-    query = """
+    query = text("""
         WITH most_active AS (
             SELECT chat_ref_id, COUNT(*) AS msg_count
             FROM messages
@@ -268,7 +270,7 @@ def fetch_global_chat_stats() -> dict:
             (SELECT slug FROM chats
              WHERE id = (SELECT chat_ref_id FROM last_msg)
             ) AS last_message_chat_slug;
-    """
+    """)
     try:
         conn = get_connection_lazy()
         result = conn.execute(query)

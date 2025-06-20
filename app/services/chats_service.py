@@ -7,7 +7,7 @@ operations to the DAO layer.
 """
 
 import logging
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.models.chat import Chat
 from app.services.dao.chats_dao import (
