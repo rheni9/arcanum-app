@@ -11,10 +11,11 @@ compatibility.
 import logging
 from contextlib import contextmanager
 from typing import Generator
-
+from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.engine import Connection
 from flask import g
+
 from app.extensions import db  # SQLAlchemy instance
 
 logger = logging.getLogger(__name__)
@@ -91,7 +92,7 @@ def ensure_db_exists() -> None:
     """
     try:
         with db.engine.connect() as conn:
-            conn.execute("SELECT 1")
+            conn.execute(text("SELECT 1"))
         logger.info("[DATABASE|CHECK] Database connection successful.")
     except SQLAlchemyError as e:
         logger.warning("[DATABASE|CHECK] Database not reachable: %s", e)
