@@ -194,7 +194,7 @@ def build_sql_clause(
     if filters.action == "search":
         if filters.query and filters.tag:
             clause.append(
-                "(m.text ILIKE :query OR m.tags ILIKE :query "
+                "(m.text ILIKE :query OR m.tags::text ILIKE :query "
                 "OR m.tags::text ILIKE :tag)"
             )
             params["query"] = f"%{filters.query}%"
