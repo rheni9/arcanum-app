@@ -255,7 +255,7 @@ def fetch_global_chat_stats() -> dict:
             (SELECT COUNT(*) FROM chats) AS total_chats,
             (SELECT COUNT(*) FROM messages) AS total_messages,
             (SELECT COUNT(*) FROM messages
-             WHERE media IS NOT NULL AND LENGTH(TRIM(media)) > 0
+             WHERE media IS NOT NULL AND LENGTH(TRIM(media::text)) > 0
             ) AS media_messages,
             (SELECT name FROM chats
              WHERE id = (SELECT chat_ref_id FROM most_active)
