@@ -67,17 +67,19 @@
       {% if message.screenshot %}
         <section class="section">
           <h2 class="section-subtitle">Screenshot</h2>
-          <div class="screenshot-preview">
+          <div class="media-with-delete screenshot-preview">
             <a href="{{ message.screenshot }}" target="_blank">
               <img src="{{ message.screenshot }}" alt="Screenshot" class="screenshot-image">
             </a>
-            <form method="post" action="{{ url_for('messages.remove_screenshot', chat_slug=chat.slug, pk=message.id) }}" class="inline-form ml-2">
+            <form method="post"
+                  action="{{ url_for('messages.remove_screenshot', chat_slug=chat.slug, pk=message.id) }}"
+                  class="delete-overlay-form">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" class="btn btn-danger btn-sm"
+              <button type="submit" class="btn btn-danger btn-icon delete-overlay-btn btn-sm"
                       data-confirm
                       data-type="screenshot"
                       data-label="{{ message.screenshot.split('/')[-1] }}">
-                <span>✖ Remove</span>
+                <img src="{{ url_for('static', filename='img/delete_icon.png') }}" alt="Delete">
               </button>
             </form>
           </div>
@@ -90,42 +92,79 @@
           <h2 class="section-subtitle">Attachments</h2>
           <div class="media-gallery">
             {% for media_url in message.media %}
-              <div class="media-item">
-
-                {% set lower_url = media_url.lower() %}
+              {% set lower_url = media_url.lower() %}
+              <div class="media-item media-with-delete">
 
                 {% if lower_url.endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp')) %}
                   <a href="{{ media_url }}" target="_blank">
                     <img src="{{ media_url }}" alt="Image" class="media-thumb">
                   </a>
 
+                  <form method="post"
+                        action="{{ url_for('messages.remove_media', chat_slug=chat.slug, pk=message.id) }}"
+                        class="delete-overlay-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="media_url" value="{{ media_url }}">
+                    <button type="submit" class="btn btn-danger btn-icon delete-overlay-btn btn-sm"
+                            data-confirm
+                            data-type="media"
+                            data-label="{{ media_url.split('/')[-1] }}">
+                      <img src="{{ url_for('static', filename='img/delete_icon.png') }}" alt="Delete">
+                    </button>
+                  </form>
+
                 {% elif lower_url.endswith(('.mp4', '.webm', '.ogg')) %}
                   <video src="{{ media_url }}" controls class="media-thumb" preload="metadata">
                     Your browser does not support the video tag.
                   </video>
+                  <form method="post"
+                        action="{{ url_for('messages.remove_media', chat_slug=chat.slug, pk=message.id) }}"
+                        class="inline-form mt-1">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="media_url" value="{{ media_url }}">
+                    <button type="submit" class="btn btn-danger btn-sm"
+                            data-confirm
+                            data-type="media"
+                            data-label="{{ media_url.split('/')[-1] }}">
+                      ✖ Remove
+                    </button>
+                  </form>
 
                 {% elif lower_url.endswith(('.mp3', '.wav', '.aac')) %}
                   <audio controls preload="metadata" class="media-audio">
                     <source src="{{ media_url }}">
                     Your browser does not support the audio tag.
                   </audio>
+                  <form method="post"
+                        action="{{ url_for('messages.remove_media', chat_slug=chat.slug, pk=message.id) }}"
+                        class="inline-form mt-1">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="media_url" value="{{ media_url }}">
+                    <button type="submit" class="btn btn-danger btn-sm"
+                            data-confirm
+                            data-type="media"
+                            data-label="{{ media_url.split('/')[-1] }}">
+                      ✖ Remove
+                    </button>
+                  </form>
 
                 {% else %}
                   <a href="{{ media_url }}" target="_blank" class="media-link">
                     📎 {{ media_url.split('/')[-1] }}
                   </a>
+                  <form method="post"
+                        action="{{ url_for('messages.remove_media', chat_slug=chat.slug, pk=message.id) }}"
+                        class="inline-form mt-1">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="media_url" value="{{ media_url }}">
+                    <button type="submit" class="btn btn-danger btn-sm"
+                            data-confirm
+                            data-type="media"
+                            data-label="{{ media_url.split('/')[-1] }}">
+                      ✖ Remove
+                    </button>
+                  </form>
                 {% endif %}
-
-                <form method="post" action="{{ url_for('messages.remove_media', chat_slug=chat.slug, pk=message.id) }}" class="inline-form mt-1">
-                  <input type="hidden" name="media_url" value="{{ media_url }}">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="btn btn-danger btn-sm"
-                          data-confirm
-                          data-type="media"
-                          data-label="{{ media_url.split('/')[-1] }}">
-                    <span>✖ Remove</span>
-                  </button>
-                </form>
               </div>
             {% endfor %}
           </div>
