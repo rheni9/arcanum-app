@@ -6,7 +6,7 @@
 /* --- Main message container --- */
 .message-box {
   max-width: 640px;
-  min-width: 400px;
+  min-width: 200px;
   margin: 0 auto;
   background-color: var(--bg-surface);
   border-radius: var(--radius-default);
@@ -94,11 +94,13 @@
   text-decoration: none;
 }
 
+/* --- Parent container for correct positioning --- */
 .media-with-delete {
   position: relative;
   display: inline-block;
 }
 
+/* --- Overlay Delete Button --- */
 .delete-overlay-btn {
   position: absolute;
   top: 6px;
@@ -110,13 +112,21 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  opacity: 0.85;
   z-index: 5;
   transition: opacity 0.2s ease-in-out;
 }
 
 .delete-overlay-btn:hover {
-  opacity: 1;
+  opacity: 0.8;
+}
+
+/* --- Inline media types --- */
+.media-thumb,
+.media-audio,
+.media-link {
+  display: block;
+  max-width: 100%;
+  height: auto;
 }
 
 /* =============================================================
