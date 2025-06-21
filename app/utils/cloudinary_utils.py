@@ -5,7 +5,7 @@ Provides helper functions for uploading screenshots
 to Cloudinary with WebP conversion and quality control.
 """
 
-import os
+from uuid import uuid4
 from PIL import Image, UnidentifiedImageError
 from cloudinary.uploader import upload
 from cloudinary.exceptions import Error as CloudinaryError
@@ -62,21 +62,18 @@ def upload_media_file(file_storage, chat_slug: str) -> str:
     :raises RuntimeError: If upload fails.
     """
     try:
-        filename = file_storage.filename or "media"
-        base_name, ext = os.path.splitext(filename)
-        ext = ext.lstrip(".").lower()  # without dot
-
         is_image = is_image_file(file_storage)
-
-        # Construct public_id with original extension (if not image)
-        public_id = base_name if is_image else f"{base_name}.{ext}"
+        original_filename = file_storage.filename.rsplit(".", 1)[0]
+        file_ext = file_storage.filename.rsplit(".", 1)[-1].lower()
+        unique_suffix = uuid4().hex[:8]
+        public_id = f"{original_filename}_{unique_suffix}.{file_ext}"
 
         upload_options = {
             "folder": f"arcanum/chats/media/{chat_slug}",
-            "resource_type": "auto",
+            "resource_type": "image" if is_image else "auto",
             "use_filename": False,
-            "unique_filename": False,
-            "public_id": public_id
+            "public_id": public_id,
+            "overwrite": False
         }
 
         if is_image:
