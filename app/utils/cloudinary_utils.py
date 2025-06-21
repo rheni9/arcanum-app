@@ -6,7 +6,6 @@ to Cloudinary with WebP conversion and quality control.
 """
 
 from uuid import uuid4
-from PIL import Image, UnidentifiedImageError
 from cloudinary.uploader import upload
 from cloudinary.exceptions import Error as CloudinaryError
 
@@ -37,18 +36,14 @@ def upload_screenshot(file_storage, chat_slug: str) -> str:
 
 def is_image_file(file_storage) -> bool:
     """
-    Determine if uploaded file is an image.
+    Determine if uploaded file is an image by extension.
 
-    :param file_storage: FileStorage object
-    :return: True if image, False otherwise
+    :param file_storage: FileStorage object.
+    :return: True if file has image extension, False otherwise.
     """
-    try:
-        file_storage.stream.seek(0)
-        Image.open(file_storage.stream).verify()
-        file_storage.stream.seek(0)  # reset stream after verify
-        return True
-    except (UnidentifiedImageError, OSError):
-        return False
+    return file_storage.filename.lower().endswith((
+        ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tiff"
+    ))
 
 
 # def upload_media_file(file_storage, chat_slug: str) -> str:
