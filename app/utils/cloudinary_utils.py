@@ -5,6 +5,7 @@ Provides helper functions for uploading screenshots
 to Cloudinary with WebP conversion and quality control.
 """
 
+import os
 from uuid import uuid4
 from PIL import Image, UnidentifiedImageError
 from cloudinary.uploader import upload
@@ -91,7 +92,8 @@ def is_image_file(file_storage) -> bool:
 
 def upload_media_file(file_storage, chat_slug: str) -> str:
     """
-    Uploads any media file to Cloudinary, preserving its format and filename.
+    Uploads any media file to Cloudinary.
+    Images are converted to WebP, others are preserved as-is.
 
     :param file_storage: FileStorage object from form.
     :param chat_slug: Slug to organize uploads.
@@ -99,24 +101,35 @@ def upload_media_file(file_storage, chat_slug: str) -> str:
     :raises RuntimeError: If upload fails.
     """
     try:
-        # === Витягуємо ім’я та розширення ===
-        original_filename = file_storage.filename.rsplit(".", 1)[0]
-        file_ext = file_storage.filename.rsplit(".", 1)[-1].lower()
-        unique_suffix = uuid4().hex[:8]
-        public_id = f"{original_filename}_{unique_suffix}"
+        filename = file_storage.filename
+        name, ext = os.path.splitext(filename)
+        ext = ext.lstrip(".").lower()
+        is_image = is_image_file(file_storage)
+
+        # Generate a clean public_id (with extension if not image)
+        base_id = f"{name}_{uuid4().hex[:8]}"
+        public_id = (
+            f"arcanum/chats/media/{chat_slug}/{base_id}"
+            if is_image else
+            f"arcanum/chats/media/{chat_slug}/{base_id}.{ext}"
+        )
 
         upload_options = {
-            "folder": f"arcanum/chats/media/{chat_slug}",
             "resource_type": "auto",
             "use_filename": False,
+            "unique_filename": False,
             "public_id": public_id,
-            "overwrite": False
         }
 
-        result = upload(file_storage, **upload_options)
+        if is_image:
+            upload_options.update({
+                "format": "webp",
+                "quality": "auto:good"
+            })
 
-        # Cloudinary автоматично додасть .ext у URL, якщо тип розпізнано
+        result = upload(file_storage, **upload_options)
         return result["secure_url"]
 
     except CloudinaryError as e:
         raise RuntimeError(f"Cloudinary upload failed: {e}") from e
+    
