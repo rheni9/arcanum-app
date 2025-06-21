@@ -5,14 +5,17 @@ Handles low-level database operations for retrieving, inserting,
 updating, and deleting chat records. Supports access by ID and slug,
 and provides aggregate statistics for UI, sorting, and message summaries.
 """
+# pylint: disable=no-member
 
 import logging
+from psycopg2 import errors
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 from app.models.chat import Chat
 from app.utils.db_utils import get_connection_lazy
 from app.utils.sql_utils import OrderConfig, build_order_clause
+from app.errors import DuplicateSlugError, DuplicateChatIDError
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +111,8 @@ def insert_chat_record(chat: Chat) -> int:
 
     :param chat: Chat instance to insert.
     :return: Primary key of the inserted chat.
-    :raises IntegrityError: If the slug is not unique.
+    :raises DuplicateSlugError: If the slug already exists.
+    :raises DuplicateChatIDError: If the Telegram chat ID already exists.
     :raises SQLAlchemyError: If the query fails.
     """
     query = text("""
@@ -130,7 +134,19 @@ def insert_chat_record(chat: Chat) -> int:
         )
         return pk
     except IntegrityError as e:
-        logger.error("[CHATS|DAO] Insert failed due to slug conflict: %s", e)
+        if isinstance(e.orig, errors.UniqueViolation):
+            constraint = getattr(e.orig.diag, "constraint_name", "")
+            if constraint == "chats_slug_key":
+                logger.warning("[CHATS|DAO] Slug conflict: '%s'", chat.slug)
+                raise DuplicateSlugError("Chat slug already exists.") from e
+            if constraint == "chats_chat_id_key":
+                logger.warning(
+                    "[CHATS|DAO] Chat ID conflict: %s", chat.chat_id
+                )
+                raise DuplicateChatIDError(
+                    "Telegram chat ID already exists."
+                ) from e
+        logger.error("[CHATS|DAO] Insert failed: %s", e)
         raise
     except SQLAlchemyError as e:
         logger.error("[CHATS|DAO] Insert failed: %s", e)
@@ -142,7 +158,8 @@ def update_chat_record(chat: Chat) -> None:
     Update an existing chat record in the database.
 
     :param chat: Chat instance with updated values.
-    :raises IntegrityError: If the slug is not unique.
+    :raises DuplicateSlugError: If the slug already exists.
+    :raises DuplicateChatIDError: If the Telegram chat ID already exists.
     :raises SQLAlchemyError: If the query fails.
     """
     query = text("""
@@ -164,7 +181,22 @@ def update_chat_record(chat: Chat) -> None:
             logger.debug("[CHATS|DAO] Updated chat ID=%d (slug='%s').",
                          chat.id, chat.slug)
     except IntegrityError as e:
-        logger.error("[CHATS|DAO] Update failed due to slug conflict: %s", e)
+        if isinstance(e.orig, errors.UniqueViolation):
+            constraint = getattr(e.orig.diag, "constraint_name", "")
+            if constraint == "chats_slug_key":
+                logger.warning(
+                    "[CHATS|DAO] Slug conflict during update: '%s'", chat.slug
+                )
+                raise DuplicateSlugError("Chat slug already exists.") from e
+            if constraint == "chats_chat_id_key":
+                logger.warning(
+                    "[CHATS|DAO] Chat ID conflict during update: %s",
+                    chat.chat_id
+                )
+                raise DuplicateChatIDError(
+                    "Telegram ID already exists."
+                ) from e
+        logger.error("[CHATS|DAO] Update failed: %s", e)
         raise
     except SQLAlchemyError as e:
         logger.error("[CHATS|DAO] Update failed: %s", e)

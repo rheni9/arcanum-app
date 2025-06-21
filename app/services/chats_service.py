@@ -17,6 +17,9 @@ from app.services.dao.chats_dao import (
     check_slug_exists, check_chat_id_exists,
     fetch_global_chat_stats
 )
+from app.errors import (
+    DuplicateChatIDError, DuplicateSlugError, ChatNotFoundError
+)
 
 logger = logging.getLogger(__name__)
 
@@ -90,14 +93,15 @@ def insert_chat(chat: Chat) -> int:
 
     :param chat: Chat instance to insert.
     :return: Primary key ID of the inserted chat.
-    :raises IntegrityError: If the slug or Telegram ID already exists.
+    :raises DuplicateSlugError: If the slug already exists.
+    :raises DuplicateChatIDError: If the Telegram chat ID already exists.
     :raises SQLAlchemyError: If the DAO operation fails.
     """
     try:
         if check_slug_exists(chat.slug):
             logger.warning("[CHATS|SERVICE] Slug '%s' already exists.",
                            chat.slug)
-            raise ValueError(
+            raise DuplicateSlugError(
                 f"Chat with slug '{chat.slug}' already exists."
             )
         if chat.chat_id is not None and check_chat_id_exists(chat.chat_id):
@@ -105,7 +109,7 @@ def insert_chat(chat: Chat) -> int:
                 "[CHATS|SERVICE] Telegram chat ID '%d' already exists.",
                 chat.chat_id
             )
-            raise ValueError(
+            raise DuplicateChatIDError(
                 f"Chat with Telegram ID '{chat.chat_id}' already exists."
             )
         pk = insert_chat_record(chat)
@@ -126,7 +130,9 @@ def update_chat(chat: Chat) -> None:
 
     :param chat: Chat instance with updated values (must have ID).
     :raises ValueError: If the ID is missing or the chat does not exist.
-    :raises IntegrityError: If the slug or Telegram ID already exists.
+    :raises ChatNotFoundError: If the chat to update does not exist.
+    :raises DuplicateSlugError: If the slug already exists.
+    :raises DuplicateChatIDError: If the Telegram chat ID already exists.
     :raises SQLAlchemyError: If the DAO operation fails.
     """
     if not chat.id:
@@ -137,13 +143,13 @@ def update_chat(chat: Chat) -> None:
         if not existing:
             logger.warning("[CHATS|SERVICE] Chat with ID=%d not found.",
                            chat.id)
-            raise ValueError("Chat not found for update.")
+            raise ChatNotFoundError("Chat not found for update.")
         if existing.slug != chat.slug and check_slug_exists(chat.slug):
             logger.warning(
                 "[CHATS|SERVICE] Slug update rejected (%s -> %s): duplicate.",
                 existing.slug, chat.slug
             )
-            raise ValueError("Chat with this slug already exists.")
+            raise DuplicateSlugError("Chat with this slug already exists.")
         if (chat.chat_id is not None and existing.chat_id != chat.chat_id
                 and check_chat_id_exists(chat.chat_id)):
             logger.warning(
@@ -151,7 +157,9 @@ def update_chat(chat: Chat) -> None:
                 "(duplicate).",
                 existing.chat_id, chat.chat_id
             )
-            raise ValueError("Chat with this Telegram ID already exists.")
+            raise DuplicateChatIDError(
+                "Chat with this Telegram ID already exists."
+            )
 
         update_chat_record(chat)
         logger.info("[CHATS|SERVICE] Chat '%s' updated (slug='%s', ID=%d).",

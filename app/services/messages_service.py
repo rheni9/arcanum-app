@@ -7,7 +7,6 @@ low-level operations to the DAO layer.
 """
 
 import logging
-from sqlalchemy.exc import IntegrityError
 
 from app.models.message import Message
 from app.services.dao.messages_dao import (
@@ -16,6 +15,7 @@ from app.services.dao.messages_dao import (
     delete_message_record, check_message_exists,
     count_messages_for_chat
 )
+from app.errors import DuplicateMessageError, MessageNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ def insert_message(message: Message) -> int:
 
     :param message: Message instance.
     :return: New message ID.
-    :raises IntegrityError: If msg_id is not unique within the chat.
+    :raises DuplicateMessageError: If msg_id already exists within the chat.
     :raises SQLAlchemyError: If the DAO operation fails.
     """
     if message.msg_id is not None:
@@ -73,9 +73,7 @@ def insert_message(message: Message) -> int:
                 "in chat_ref_id=%d.",
                 str(message.msg_id), message.chat_ref_id
             )
-            raise IntegrityError(
-                "Duplicate msg_id in this chat.", params=None, orig=None
-            )
+            raise DuplicateMessageError("Duplicate msg_id in this chat.")
 
     pk = insert_message_record(message)
     logger.info(
@@ -91,7 +89,8 @@ def update_message(message: Message) -> None:
 
     :param message: Message instance with updated data (must have ID).
     :raises ValueError: If ID is missing.
-    :raises IntegrityError: If msg_id is not unique within the chat.
+    :raises MessageNotFoundError: If the message to update does not exist.
+    :raises DuplicateMessageError: If msg_id already exists within the chat.
     :raises SQLAlchemyError: If the DAO operation fails.
     """
     if not message.id:
@@ -103,7 +102,7 @@ def update_message(message: Message) -> None:
             logger.warning(
                 "[MESSAGES|SERVICE] Message with ID=%d not found.", message.id
             )
-            raise ValueError("Message not found for update.")
+            raise MessageNotFoundError("Message not found for update.")
         if (
             existing.msg_id != message.msg_id and
             check_message_exists(message.chat_ref_id, message.msg_id)
@@ -114,10 +113,8 @@ def update_message(message: Message) -> None:
                 str(existing.msg_id), str(message.msg_id),
                 message.chat_ref_id
             )
-            raise IntegrityError(
+            raise DuplicateMessageError(
                 "Message with this msg_id already exists in the chat.",
-                params=None,
-                orig=None
             )
     else:
         logger.debug(

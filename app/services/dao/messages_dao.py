@@ -5,14 +5,17 @@ Handles low-level database operations for retrieving, inserting,
 updating, and deleting message records. Supports access by ID and
 chat association, sorting of results, and message counting per chat.
 """
+# pylint: disable=no-member
 
 import logging
+from psycopg2 import errors
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 from app.models.message import Message
 from app.utils.db_utils import get_connection_lazy
 from app.utils.sql_utils import OrderConfig, build_order_clause
+from app.errors import DuplicateMessageError
 
 logger = logging.getLogger(__name__)
 
@@ -86,8 +89,8 @@ def insert_message_record(message: Message) -> int:
     Insert a new message record into the database.
 
     :param message: Message instance to insert.
-    :return: Primary key of the inserted message.
-    :raises IntegrityError: If msg_id is not unique within the chat.
+    :return: Primary key ID of the inserted message.
+    :raises DuplicateMessageError: If msg_id is not unique within the chat.
     :raises SQLAlchemyError: If the query fails.
     """
     query = text("""
@@ -112,11 +115,15 @@ def insert_message_record(message: Message) -> int:
         )
         return pk
     except IntegrityError as e:
-        logger.error(
-            "[MESSAGES|DAO] Insert failed due to unique msg_id conflict "
-            "(chat_ref_id=%d, msg_id=%s): %s",
-            message.chat_ref_id, str(message.msg_id), e
-        )
+        if isinstance(e.orig, errors.UniqueViolation):
+            logger.warning(
+                "[MESSAGES|DAO] Duplicate msg_id=%s for chat_ref_id=%d.",
+                str(message.msg_id), message.chat_ref_id
+            )
+            raise DuplicateMessageError(
+                "msg_id already exists within this chat."
+            ) from e
+        logger.error("[MESSAGES|DAO] Integrity error: %s", e)
         raise
     except SQLAlchemyError as e:
         logger.error("[MESSAGES|DAO] Insert failed: %s", e)
@@ -128,7 +135,7 @@ def update_message_record(message: Message) -> None:
     Update an existing message record in the database.
 
     :param message: Message instance with updated values.
-    :raises IntegrityError: If msg_id is not unique within the chat.
+    :raises DuplicateMessageError: If msg_id is not unique within the chat.
     :raises SQLAlchemyError: If the query fails.
     """
     query = text("""
@@ -151,11 +158,15 @@ def update_message_record(message: Message) -> None:
         else:
             logger.debug("[MESSAGES|DAO] Updated message ID=%d.", message.id)
     except IntegrityError as e:
-        logger.error(
-            "[MESSAGES|DAO] Update failed due to unique msg_id conflict "
-            "(chat_ref_id=%d, msg_id=%s): %s",
-            message.chat_ref_id, str(message.msg_id), e
-        )
+        if isinstance(e.orig, errors.UniqueViolation):
+            logger.warning(
+                "[MESSAGES|DAO] Duplicate msg_id=%s for chat_ref_id=%d.",
+                str(message.msg_id), message.chat_ref_id
+            )
+            raise DuplicateMessageError(
+                "msg_id already exists within this chat."
+            ) from e
+        logger.error("[MESSAGES|DAO] Insert integrity error: %s", e)
         raise
     except SQLAlchemyError as e:
         logger.error("[MESSAGES|DAO] Update failed: %s", e)

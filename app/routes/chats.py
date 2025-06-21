@@ -6,7 +6,7 @@ Supports AJAX updates, sorting, and message filtering for chat messages.
 """
 
 import logging
-from sqlite3 import DatabaseError, IntegrityError
+from sqlalchemy.exc import SQLAlchemyError
 from flask import (
     Blueprint, render_template, redirect, url_for, flash, Response
 )
@@ -19,6 +19,9 @@ from app.services.chats_service import (
 )
 from app.utils.slugify_utils import slugify, generate_unique_slug
 from app.utils.chats_utils import render_chat_list, render_chat_view
+from app.errors import (
+    DuplicateChatIDError, DuplicateSlugError, ChatNotFoundError
+)
 from app.logs.chats_logs import log_chat_action
 
 chats_bp = Blueprint("chats", __name__, url_prefix="/chats")
@@ -31,11 +34,11 @@ def list_chats() -> str:
     Display list of all chats with optional sorting and AJAX updates.
 
     :return: Rendered chat list page or table fragment.
-    :raises DatabaseError: On retrieval failure.
+    :raises SQLAlchemyError: On retrieval failure.
     """
     try:
         return render_chat_list()
-    except DatabaseError as e:
+    except SQLAlchemyError as e:
         logger.error("[DATABASE|CHATS] Failed to retrieve chats: %s", e)
         return render_template("error.html", message=f"Database error: {e}")
 
@@ -47,7 +50,7 @@ def view_chat(slug: str) -> str:
 
     :param slug: Slug identifier of the chat.
     :return: Rendered chat view page or table fragment.
-    :raises DatabaseError: On retrieval failure.
+    :raises SQLAlchemyError: On retrieval failure.
     """
     chat = get_chat_by_slug(slug)
     if not chat:
@@ -56,7 +59,7 @@ def view_chat(slug: str) -> str:
 
     try:
         return render_chat_view(chat)
-    except DatabaseError as e:
+    except SQLAlchemyError as e:
         logger.error(
             "[DATABASE|CHATS] Failed to load messages for '%s': %s", slug, e
         )
@@ -69,8 +72,9 @@ def add_chat() -> Response | str:
     Render and process form for creating a new chat.
 
     :return: Redirect on success or rendered form on GET/error.
-    :raises IntegrityError: If slug is not unique.
-    :raises DatabaseError: On insertion failure.
+    :raises DuplicateSlugError: If slug already exists.
+    :raises DuplicateChatIDError: If Telegram chat ID already exists.
+    :raises SQLAlchemyError: On insertion failure.
     """
     form = ChatForm()
 
@@ -88,21 +92,18 @@ def add_chat() -> Response | str:
             log_chat_action(action="create", chat_slug=chat.slug)
             flash(f"Chat '{chat.name}' created successfully.", "success")
             return redirect(url_for("chats.view_chat", slug=chat.slug))
-        except IntegrityError as e:
-            logger.warning("[DATABASE|CHATS] Integrity error: %s", e)
-            msg = str(e).lower()
-            if "telegram id" in msg:
-                flash(
-                    "This Telegram ID is already in use. "
-                    "Please check the value.", "error"
-                )
-            elif "slug" in msg:
-                flash(
-                    "Slug already exists. Please choose another name.", "error"
-                )
-            else:
-                flash("Integrity error. Please review your input.", "error")
-        except DatabaseError as e:
+        except DuplicateChatIDError:
+            logger.warning("[CHATS|ROUTER] Duplicate Telegram ID.")
+            flash(
+                "This Telegram ID is already in use. "
+                "Please check the value.", "error"
+            )
+        except DuplicateSlugError:
+            logger.warning("[CHATS|ROUTER] Duplicate chat slug.")
+            flash(
+                "Slug already exists. Please choose another name.", "error"
+            )
+        except SQLAlchemyError as e:
             logger.error("[DATABASE|CHATS] Failed to create chat: %s", e)
             flash(f"Failed to create chat: {e}", "error")
 
@@ -116,8 +117,10 @@ def edit_chat(slug: str) -> Response | str:
 
     :param slug: Slug of the chat to edit.
     :return: Redirect on success or rendered form on GET/error.
-    :raises IntegrityError: If new slug already exists.
-    :raises DatabaseError: On update failure.
+    :raises ChatNotFoundError: If the chat does not exist.
+    :raises DuplicateSlugError: If slug already exists.
+    :raises DuplicateChatIDError: If Telegram chat ID already exists.
+    :raises SQLAlchemyError: On update failure.
     """
     chat = get_chat_by_slug(slug)
 
@@ -144,21 +147,21 @@ def edit_chat(slug: str) -> Response | str:
                 f"Chat '{updated_chat.name}' updated successfully.", "success"
             )
             return redirect(url_for("chats.view_chat", slug=updated_chat.slug))
-        except IntegrityError as e:
-            logger.warning("[DATABASE|CHATS] Integrity error: %s", e)
-            msg = str(e).lower()
-            if "telegram id" in msg:
-                flash(
-                    "This Telegram ID is already in use. "
-                    "Please check the value.", "error"
-                )
-            elif "slug" in msg:
-                flash(
-                    "Slug already exists. Please choose another name.", "error"
-                )
-            else:
-                flash("Integrity error. Please review your input.", "error")
-        except DatabaseError as e:
+        except ChatNotFoundError:
+            flash("Chat not found.", "error")
+            return redirect(url_for("chats.list_chats"))
+        except DuplicateChatIDError:
+            logger.warning("[CHATS|ROUTER] Duplicate Telegram ID.")
+            flash(
+                "This Telegram ID is already in use. "
+                "Please check the value.", "error"
+            )
+        except DuplicateSlugError:
+            logger.warning("[CHATS|ROUTER] Duplicate chat slug.")
+            flash(
+                "Slug already exists. Please choose another name.", "error"
+            )
+        except SQLAlchemyError as e:
             logger.error("[DATABASE|CHATS] Failed to update chat: %s", e)
             flash(f"Failed to update chat: {e}", "error")
 
@@ -174,7 +177,7 @@ def delete_chat(slug: str) -> Response:
 
     :param slug: Slug of the chat to delete.
     :return: Redirect to chat list after deletion.
-    :raises DatabaseError: On deletion failure.
+    :raises SQLAlchemyError: On deletion failure.
     """
     chat = get_chat_by_slug(slug)
     if not chat:
@@ -185,7 +188,7 @@ def delete_chat(slug: str) -> Response:
         delete_chat_and_messages(slug)
         log_chat_action(action="delete", chat_slug=slug)
         flash(f"Chat '{chat.name}' deleted successfully.", "success")
-    except DatabaseError as e:
+    except SQLAlchemyError as e:
         logger.error(
             "[DATABASE|CHATS] Failed to delete chat '%s': %s", slug, e
         )

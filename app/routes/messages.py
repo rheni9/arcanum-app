@@ -6,7 +6,7 @@ All operations are linked to chats via chat_ref_id.
 """
 
 import logging
-from sqlite3 import DatabaseError, IntegrityError
+from sqlalchemy.exc import SQLAlchemyError
 from flask import (
     Blueprint, render_template, request,
     redirect, url_for, flash, Response
@@ -20,6 +20,7 @@ from app.services.messages_service import (
 )
 from app.services.chats_service import get_chat_by_slug
 from app.utils.messages_utils import render_message_view
+from app.errors import DuplicateMessageError, MessageNotFoundError
 from app.logs.messages_logs import log_message_action
 
 messages_bp = Blueprint("messages", __name__, url_prefix="/messages")
@@ -34,7 +35,7 @@ def view_message(chat_slug: str, pk: int) -> str:
     :param chat_slug: Slug identifier of the chat.
     :param pk: Internal database id of the message.
     :return: Rendered message details page.
-    :raises DatabaseError: On retrieval failure.
+    :raises SQLAlchemyError: On retrieval failure.
     """
     try:
         chat = get_chat_by_slug(chat_slug)
@@ -45,7 +46,7 @@ def view_message(chat_slug: str, pk: int) -> str:
             return redirect(url_for("chats.list_chats"))
 
         return render_message_view(chat_slug, pk)
-    except DatabaseError as e:
+    except SQLAlchemyError as e:
         logger.error(
             "[DATABASE|MESSAGES] Failed to retrieve message id=%d: %s", pk, e
         )
@@ -59,8 +60,8 @@ def add_message(chat_slug: str) -> Response | str:
 
     :param chat_slug: Slug of the target chat.
     :return: Redirect on success or rendered form on GET/error.
-    :raises IntegrityError: If msg_id is not unique within the chat.
-    :raises DatabaseError: On insertion failure.
+    :raises DuplicateMessageError: If msg_id is not unique within the chat.
+    :raises SQLAlchemyError: On insertion failure.
     """
     chat = get_chat_by_slug(chat_slug)
     if not chat:
@@ -83,12 +84,13 @@ def add_message(chat_slug: str) -> Response | str:
                         chat_slug=chat.slug,
                         pk=message.id)
             )
-        except IntegrityError as e:
+        except DuplicateMessageError:
             logger.warning(
-                "[DATABASE|MESSAGES] Integrity error in '%s': %s", chat_slug, e
+                "[DATABASE|MESSAGES] Duplicate msg_id in the chat '%s'",
+                chat_slug
             )
             flash("Duplicate msg_id in this chat.", "error")
-        except DatabaseError as e:
+        except SQLAlchemyError as e:
             logger.error(
                 "[DATABASE|MESSAGES] Failed to add message to '%s': %s",
                 chat_slug, e
@@ -112,8 +114,9 @@ def edit_message(chat_slug: str, pk: int) -> Response | str:
     :param chat_slug: Slug of the chat.
     :param pk: Database ID of the message.
     :return: Redirect on success or rendered form on GET/error.
-    :raises IntegrityError: If msg_id is not unique within the chat.
-    :raises DatabaseError: On update failure.
+    :raises MessageNotFoundError: If the message to update does not exist.
+    :raises DuplicateMessageError: If msg_id is not unique within the chat.
+    :raises SQLAlchemyError: On update failure.
     """
     chat = get_chat_by_slug(chat_slug)
     message = get_message_by_id(pk)
@@ -142,13 +145,20 @@ def edit_message(chat_slug: str, pk: int) -> Response | str:
             return redirect(
                 url_for("messages.view_message", chat_slug=chat_slug, pk=pk)
             )
-        except IntegrityError as e:
+        except DuplicateMessageError:
             logger.warning(
-                "[DATABASE|MESSAGES] Integrity error in '%s': %s",
-                chat_slug, e
+                "[MESSAGES|ROUTER] Duplicate msg_id update rejected "
+                "for chat '%s'.", chat_slug
             )
             flash("Duplicate msg_id in this chat.", "error")
-        except DatabaseError as e:
+        except MessageNotFoundError:
+            logger.warning(
+                "[MESSAGES|ROUTER] Tried to update non-existent message "
+                "ID=%d.", pk
+            )
+            flash("Message not found for update.", "error")
+            return redirect(url_for("chats.view_chat", slug=chat_slug))
+        except SQLAlchemyError as e:
             logger.error(
                 "[DATABASE|MESSAGES] Failed to update message id=%d: %s",
                 pk, e
@@ -173,7 +183,7 @@ def delete_message(chat_slug: str, pk: int) -> Response:
     :param chat_slug: Slug of the chat.
     :param pk: Database ID of the message.
     :return: Redirect to chat view after deletion.
-    :raises DatabaseError: On deletion failure.
+    :raises SQLAlchemyError: On deletion failure.
     """
     try:
         chat = get_chat_by_slug(chat_slug)
@@ -184,7 +194,7 @@ def delete_message(chat_slug: str, pk: int) -> Response:
         delete_message_by_id(pk)
         log_message_action("delete", pk, chat_slug)
         flash("Message deleted successfully.", "success")
-    except DatabaseError as e:
+    except SQLAlchemyError as e:
         logger.error(
             "[DATABASE|MESSAGES] Failed to delete message id=%d: %s", pk, e
         )
