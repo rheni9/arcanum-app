@@ -71,6 +71,15 @@
             <a href="{{ message.screenshot }}" target="_blank">
               <img src="{{ message.screenshot }}" alt="Screenshot" class="screenshot-image">
             </a>
+            <form method="post" action="{{ url_for('messages.remove_screenshot', chat_slug=chat.slug, pk=message.id) }}" class="inline-form ml-2">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-danger btn-sm"
+                      data-confirm
+                      data-type="screenshot"
+                      data-label="{{ message.screenshot.split('/')[-1] }}">
+                <span>✖ Remove</span>
+              </button>
+            </form>
           </div>
         </section>
       {% endif %}
@@ -107,6 +116,16 @@
                   </a>
                 {% endif %}
 
+                <form method="post" action="{{ url_for('messages.remove_media', chat_slug=chat.slug, pk=message.id) }}" class="inline-form mt-1">
+                  <input type="hidden" name="media_url" value="{{ media_url }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-danger btn-sm"
+                          data-confirm
+                          data-type="media"
+                          data-label="{{ media_url.split('/')[-1] }}">
+                    <span>✖ Remove</span>
+                  </button>
+                </form>
               </div>
             {% endfor %}
           </div>

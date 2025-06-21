@@ -77,6 +77,13 @@ a.btn:focus {
   color: inherit;
 }
 
+/* --- Small Buttons --- */
+.btn-sm {
+  font-size: var(--font-detail);
+  padding: 0.25rem 0.5rem;
+  line-height: 1.2;
+}
+
 /* =============================================================
    Responsive Tweaks
 ============================================================= */
@@ -87,6 +94,11 @@ a.btn:focus {
     font-size: var(--font-detail);
     padding: 0.5rem 1rem;
   }
+
+  .btn-sm {
+    font-size: var(--font-sm);
+    padding: 0.35rem 0.65rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -94,5 +106,10 @@ a.btn:focus {
     height: 2.15rem;
     font-size: var(--font-sm);
     padding: 0.5rem 0.75rem;
+  }
+
+  .btn-sm {
+    font-size: var(--font-xs);
+    padding: 0.45rem 0.75rem;
   }
 }

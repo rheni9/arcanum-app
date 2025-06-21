@@ -49,3 +49,39 @@ def log_message_action(
         "[MESSAGES|%s] Message id=%s in chat='%s'.",
         action.upper(), msg_id, chat_slug
     )
+
+
+def log_media_removal(
+    msg_id: int,
+    chat_slug: str,
+    media_url: str
+) -> None:
+    """
+    Log the removal of a media file from a message.
+
+    :param msg_id: ID of the message.
+    :param chat_slug: Related chat slug.
+    :param media_url: URL of the removed media.
+    """
+    logger.info(
+        "[MESSAGES|MEDIA_REMOVE] Removed media from message id=%s "
+        "in chat='%s' | url='%s'",
+        msg_id, chat_slug, media_url
+    )
+
+
+def log_screenshot_removal(
+    msg_id: int,
+    chat_slug: str
+) -> None:
+    """
+    Log the removal of a screenshot from a message.
+
+    :param msg_id: ID of the message.
+    :param chat_slug: Related chat slug.
+    """
+    logger.info(
+        "[MESSAGES|SCREENSHOT_REMOVE] Removed screenshot from message id=%s "
+        "in chat='%s'.",
+        msg_id, chat_slug
+    )

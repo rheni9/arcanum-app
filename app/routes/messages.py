@@ -21,7 +21,9 @@ from app.services.messages_service import (
 from app.services.chats_service import get_chat_by_slug
 from app.utils.messages_utils import render_message_view
 from app.errors import DuplicateMessageError, MessageNotFoundError
-from app.logs.messages_logs import log_message_action
+from app.logs.messages_logs import (
+    log_message_action, log_media_removal, log_screenshot_removal
+)
 
 messages_bp = Blueprint("messages", __name__, url_prefix="/messages")
 logger = logging.getLogger(__name__)
@@ -202,3 +204,75 @@ def delete_message(chat_slug: str, pk: int) -> Response:
         return redirect(request.referrer or url_for("dashboard.dashboard"))
 
     return redirect(url_for("chats.view_chat", slug=chat_slug))
+
+
+@messages_bp.route("/<chat_slug>/<int:pk>/remove_media", methods=["POST"])
+def remove_media(chat_slug: str, pk: int) -> Response:
+    """
+    Remove a specific media file from a message.
+
+    :param chat_slug: Slug of the chat.
+    :param pk: ID of the message.
+    :return: Redirect to message view after update.
+    """
+    media_url = request.form.get("media_url")
+    if not media_url:
+        flash("Missing media URL for deletion.", "error")
+        return redirect(
+            url_for("messages.view_message", chat_slug=chat_slug, pk=pk)
+        )
+
+    try:
+        message = get_message_by_id(pk)
+        if (
+            not message
+            or message.chat_ref_id != get_chat_by_slug(chat_slug).id
+        ):
+            flash("Message not found in this chat.", "error")
+            return redirect(url_for("chats.view_chat", slug=chat_slug))
+
+        updated_media = [url for url in message.media if url != media_url]
+        message.media = updated_media
+        update_message(message)
+
+        flash("Media file removed.", "success")
+        log_media_removal(pk, chat_slug, media_url)
+    except SQLAlchemyError as e:
+        logger.error("[DATABASE|MESSAGES] Media removal failed: %s", e)
+        flash("Failed to remove media file.", "error")
+
+    return redirect(
+        url_for("messages.view_message", chat_slug=chat_slug, pk=pk)
+    )
+
+
+@messages_bp.route("/<chat_slug>/<int:pk>/remove_screenshot", methods=["POST"])
+def remove_screenshot(chat_slug: str, pk: int) -> Response:
+    """
+    Remove screenshot from a message.
+
+    :param chat_slug: Slug of the chat.
+    :param pk: ID of the message.
+    :return: Redirect to message view after update.
+    """
+    try:
+        message = get_message_by_id(pk)
+        if (
+            not message
+            or message.chat_ref_id != get_chat_by_slug(chat_slug).id
+        ):
+            flash("Message not found in this chat.", "error")
+            return redirect(url_for("chats.view_chat", slug=chat_slug))
+
+        message.screenshot = None
+        update_message(message)
+
+        flash("Screenshot removed.", "success")
+        log_screenshot_removal(pk, chat_slug)
+    except SQLAlchemyError as e:
+        logger.error("[DATABASE|MESSAGES] Screenshot removal failed: %s", e)
+        flash("Failed to remove screenshot.", "error")
+
+    return redirect(
+        url_for("messages.view_message", chat_slug=chat_slug, pk=pk)
+    )
