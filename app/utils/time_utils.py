@@ -160,7 +160,17 @@ def parse_flexible_date(
     :param day_first: Interpret ambiguous formats as DD/MM/YYYY.
     :return: Tuple (date or None, error message or None).
     """
-    cleaned = text.strip().replace(".", "-").replace("/", "-")
+    cleaned = text.strip()
+
+    # Step 1: Try strict ISO 8601 format
+    try:
+        return date.fromisoformat(cleaned), None
+    except ValueError:
+        pass
+
+    # Step 2: Normalize separators and try flexible parsing
+    cleaned = cleaned.replace(".", "-").replace("/", "-")
+
     try:
         dt = dateutil_parser.parse(cleaned, dayfirst=day_first)
         return dt.date(), None
