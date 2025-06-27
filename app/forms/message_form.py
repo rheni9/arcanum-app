@@ -369,13 +369,13 @@ class MessageForm(FlaskForm):
         """
         Return timestamp from form in 'YYYYMMDD_HHMMSS' format.
 
-        Combines date and time fields manually.
+        Combines parsed date and time fields.
 
         :return: Formatted timestamp string.
         """
-        if self.date.data and self.time.data:
+        if self._parsed_date and self._parsed_time:
             return datetime.combine(
-                self.date.data,
-                self.time.data
+                self._parsed_date,
+                self._parsed_time
             ).strftime("%Y%m%d_%H%M%S")
         return "unknown"
