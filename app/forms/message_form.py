@@ -311,17 +311,20 @@ class MessageForm(FlaskForm):
         """
         timestamp = to_utc_iso(self._final_dt) if self._final_dt else None
 
-        # === Screenshot ===
+        # Screenshot
         file = request.files.get("screenshot")
         if file and file.filename:
-            screenshot_url = upload_screenshot(file, self.chat_slug)
+            timestamp_str = self.get_timestamp_string()
+            screenshot_url = upload_screenshot(
+                file, self.chat_slug, timestamp_str
+            )
         else:
             screenshot_url = (
                 self.screenshot.data if isinstance(self.screenshot.data, str)
                 else existing_screenshot
             )
 
-        # === Media files ===
+        # Media files
         uploaded_urls = []
         files = request.files.getlist("media")
         for file in files[:5]:
@@ -337,7 +340,6 @@ class MessageForm(FlaskForm):
         parsed_manual = self._parse_media_field()
         existing_media = existing_media or []
 
-        # 🧠 Уникнути дублікатів:
         combined_media = existing_media + uploaded_urls + parsed_manual
         seen = set()
         media_urls = []
@@ -346,7 +348,7 @@ class MessageForm(FlaskForm):
                 media_urls.append(url)
                 seen.add(url)
 
-        # === Final dict ===
+        # Final dict
         data = {
             "id": to_int_or_none(self.id.data),
             "chat_ref_id": empty_to_none(self.chat_ref_id.data),
@@ -362,3 +364,18 @@ class MessageForm(FlaskForm):
 
         logger.debug("[MESSAGES|FORM] Form data for model: %s", data)
         return data
+
+    def get_timestamp_string(self) -> str:
+        """
+        Return timestamp from form in 'YYYYMMDD_HHMMSS' format.
+
+        Combines date and time fields manually.
+
+        :return: Formatted timestamp string.
+        """
+        if self.date.data and self.time.data:
+            return datetime.combine(
+                self.date.data,
+                self.time.data
+            ).strftime("%Y%m%d_%H%M%S")
+        return "unknown"
