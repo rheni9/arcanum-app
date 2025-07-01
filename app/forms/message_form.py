@@ -20,13 +20,14 @@ from wtforms import (
 from wtforms.validators import (
     DataRequired, Optional, NumberRange, URL, ValidationError
 )
+from PIL import Image, UnidentifiedImageError
 
 from app.models.message import Message
 from app.utils.model_utils import empty_to_none, to_int_or_none
 from app.utils.time_utils import (
     to_utc_iso, parse_flexible_date, parse_flexible_time, DEFAULT_TZ
 )
-from app.utils.cloudinary_utils import upload_screenshot, upload_media_file
+from app.utils.backblaze_utils import upload_screenshot, upload_media_file
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +98,10 @@ class MessageForm(FlaskForm):
         "Screenshot",
         validators=[
             Optional(),
-            FileAllowed(["jpg", "jpeg", "png", "gif"], "Images only!")
+            FileAllowed(
+                ["jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff"],
+                "Invalid image file or unsupported format."
+            )
         ]
     )
 
@@ -253,6 +257,54 @@ class MessageForm(FlaskForm):
                 "Message link must start with 'http://' or 'https://'."
             )
 
+    def validate_screenshot(self, field: FileField) -> None:
+        """
+        Validate the uploaded screenshot file.
+
+        Attempts to open the uploaded file as an image to ensure
+        it is a valid and supported format. Raises a validation error
+        if the file cannot be identified as a valid image.
+
+        :param field: The screenshot file field.
+        :raises ValidationError: If the file is not a valid image.
+        """
+        file = field.data
+        if file and file.filename:
+            try:
+                Image.open(file).verify()
+                file.stream.seek(0)  # Reset stream position after verify
+            except (UnidentifiedImageError, OSError) as e:
+                logger.warning(
+                    "[MESSAGES|FORM] Invalid screenshot file: %s", e
+                )
+                raise ValidationError(
+                    "Invalid image file or unsupported format."
+                ) from e
+
+    def validate_media(self, _field):
+        """
+        Validate uploaded media files: images must be valid,
+        non-image files are skipped.
+        """
+        files = request.files.getlist("media")
+        for file in files[:5]:
+            if file and file.filename:
+                if file.filename.lower().endswith(
+                    ('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff')
+                ):
+                    try:
+                        Image.open(file).verify()
+                        file.stream.seek(0)
+                    except (UnidentifiedImageError, OSError) as e:
+                        logger.warning(
+                            "[MESSAGES|FORM] Invalid image in media upload: "
+                            "%s", e
+                        )
+                        raise ValidationError(
+                            "One or more media files are invalid images "
+                            "or unsupported format."
+                        ) from e
+
     def process_tags(self) -> list[str]:
         """
         Process and normalize the tags field.
@@ -308,16 +360,24 @@ class MessageForm(FlaskForm):
         :param existing_media: List of current media URLs (from DB).
         :param existing_screenshot: Existing screenshot URL (from DB).
         :return: Dictionary for creating/updating a Message.
+        :raises ValidationError: If screenshot upload fails.
         """
         timestamp = to_utc_iso(self._final_dt) if self._final_dt else None
 
         # Screenshot
-        file = request.files.get("screenshot")
+        file = self.screenshot.data
         if file and file.filename:
             timestamp_str = self.get_timestamp_string()
-            screenshot_url = upload_screenshot(
-                file, self.chat_slug, timestamp_str
-            )
+            try:
+                screenshot_url = upload_screenshot(
+                    file, self.chat_slug, timestamp_str
+                )
+            except RuntimeError as e:
+                logger.warning(
+                    "[MESSAGES|FORM] Failed to upload screenshot: %s", e
+                )
+                self.screenshot.errors.append("Invalid image file or format.")
+                raise ValidationError("Screenshot upload failed.") from e
         else:
             screenshot_url = (
                 self.screenshot.data if isinstance(self.screenshot.data, str)
@@ -335,6 +395,9 @@ class MessageForm(FlaskForm):
                 except RuntimeError as e:
                     logger.warning(
                         "[MESSAGES|FORM] Failed to upload media file: %s", e
+                    )
+                    self.media.errors.append(
+                        "Some files could not be uploaded."
                     )
 
         parsed_manual = self._parse_media_field()

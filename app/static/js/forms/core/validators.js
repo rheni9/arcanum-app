@@ -357,3 +357,45 @@ export function validateFilterFormStrict(form, action = null) {
 
   return validateSingleDate(startInput);
 }
+
+
+/* ============================================================================
+   File Upload Validation
+============================================================================ */
+
+/**
+ * Validates that the selected file is an allowed image type.
+ *
+ * Supports formats: JPG, JPEG, PNG, GIF, WebP, BMP, TIFF.
+ *
+ * @param {HTMLInputElement} input - The input[type="file"] element.
+ * @returns {boolean} True if valid or empty.
+ */
+export function validateImageFile(input) {
+  clearError(input);
+  removeInlineMessage(input);
+
+  if (!input || !input.files.length) return true;
+
+  const allowed = [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "image/bmp",
+    "image/tiff"
+  ];
+
+  const file = input.files[0];
+
+  if (!allowed.includes(file.type)) {
+    highlightError(input);
+    insertInlineMessage(
+      input,
+      "Please upload a valid image (JPG, PNG, GIF, WebP, BMP, or TIFF)."
+    );
+    return false;
+  }
+
+  return true;
+}

@@ -1,8 +1,8 @@
 """
-Configuration classes for the Arcanum Flask application.
+Configuration classes for the Arcanum application.
 
-Supports development, testing, and production environments.
-Handles environment variable validation and application settings.
+Handles environment-specific settings, validates required variables,
+and prepares runtime configuration for extensions.
 
 Required environment variables:
 - FLASK_SECRET_KEY: Secret key for sessions and CSRF protection.
@@ -10,17 +10,15 @@ Required environment variables:
 - DATABASE_URL: Database connection URI (optional fallback provided).
 
 Optional environment variables:
-- FLASK_ENV: Application environment ('development', 'testing',
-             'production'). Defaults to 'production'.
+- FLASK_ENV: Application environment ('development', 'testing', 'production').
 - LOG_LEVEL: Logging level ('DEBUG', 'INFO', 'WARNING', 'ERROR').
-             Defaults to 'INFO'.
-- WTF_CSRF_SECRET_KEY: Secret key for WTForms CSRF.
-                       Defaults to FLASK_SECRET_KEY.
+- WTF_CSRF_SECRET_KEY: Secret key for WTForms CSRF
+                       (defaults to FLASK_SECRET_KEY).
 - FORCE_HTTPS: Force HTTPS redirection ('true' or 'false').
-               Defaults to 'false'.
 - PORT: Custom Flask server port. Defaults to 5000.
 - APP_ROOT_DIR: Application root directory (absolute path).
-                Defaults to the project base directory.
+- Cloudinary keys.
+- Backblaze B2 S3 keys.
 """
 
 import os
@@ -32,69 +30,58 @@ logger = logging.getLogger(__name__)
 
 
 class ConfigValidationError(Exception):
-    """Represents a configuration validation error."""
+    """Raised when critical configuration is missing or invalid."""
 
 
 # pylint: disable=too-few-public-methods
 class Config:
     """
-    Represents the base configuration class.
+    Base configuration for the Arcanum application.
 
-    Provides default and environment-specific settings.
+    Defines defaults and environment-specific flags.
     """
 
-    # Database settings
+    # === Database ===
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URL",
-        (
-            "sqlite:///" + os.path.join(
-                basedir, "..", "data", "chatvault_new6.sqlite"
-            )
-        )
+        f"sqlite:///{os.path.join(basedir, '..', 'data', 'chatvault.sqlite')}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # Optional app settings
+    # === Core App Flags ===
     WTF_CSRF_ENABLED = True
     FORCE_HTTPS = os.getenv("FORCE_HTTPS", "false").lower() == "true"
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
-    APP_ROOT_DIR = os.getenv(
-        "APP_ROOT_DIR", os.path.abspath(os.path.join(basedir, ".."))
-    )
     PORT = int(os.getenv("PORT", "5000"))
+    APP_ROOT_DIR = os.getenv(
+        "APP_ROOT_DIR",
+        os.path.abspath(os.path.join(basedir, ".."))
+    )
 
-    # Flask runtime
     ENV = os.getenv("FLASK_ENV", "production")
     DEBUG = ENV == "development"
     TESTING = False
 
-    # Cloudinary
-    CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
-    CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
-    CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
-
+    # === Runtime Initialization ===
     @classmethod
     def init_app(cls: type, app: Flask) -> None:
         """
-        Validate required environment variables and apply defaults.
+        Validate and apply runtime configuration.
+
+        Loads secrets, Cloudinary, and Backblaze B2 configs.
 
         :param app: Flask app instance.
-        :raises ConfigValidationError: If required env variables are missing.
+        :raises ConfigValidationError: If required settings are missing.
+        :raises RuntimeError: If Backblaze config is incomplete.
         """
+
+        # Core secrets
         cls._validate_secret_key(app)
         cls._validate_admin_password(app)
+        cls._validate_cloudinary_config(app)
+        cls._validate_backblaze_config(app)
 
-        app.config["CLOUDINARY_CLOUD_NAME"] = cls.CLOUDINARY_CLOUD_NAME
-        app.config["CLOUDINARY_API_KEY"] = cls.CLOUDINARY_API_KEY
-        app.config["CLOUDINARY_API_SECRET"] = cls.CLOUDINARY_API_SECRET
-
-        if not all([
-            cls.CLOUDINARY_CLOUD_NAME,
-            cls.CLOUDINARY_API_KEY,
-            cls.CLOUDINARY_API_SECRET
-        ]):
-            logger.warning("[CONFIG|INIT] Cloudinary config incomplete.")
-
+        # CSRF secret fallback
         app.config["WTF_CSRF_SECRET_KEY"] = os.getenv(
             "WTF_CSRF_SECRET_KEY",
             app.config["SECRET_KEY"]
@@ -105,10 +92,11 @@ class Config:
             cls.ENV
         )
 
+    # === Secret Key ===
     @staticmethod
     def _validate_secret_key(app: Flask) -> None:
         """
-        Validate that the secret key is set.
+        Ensure that FLASK_SECRET_KEY is set.
 
         :param app: Flask app instance.
         :raises ConfigValidationError: If secret key is missing.
@@ -117,14 +105,14 @@ class Config:
         if not app.config["SECRET_KEY"]:
             logger.error("[CONFIG|VALIDATION] 'FLASK_SECRET_KEY' is missing.")
             raise ConfigValidationError(
-                "Environment variable 'FLASK_SECRET_KEY' is required "
-                "but not set."
+                "'FLASK_SECRET_KEY' must be set in environment variables."
             )
 
+    # === Admin Password ===
     @staticmethod
     def _validate_admin_password(app: Flask) -> None:
         """
-        Validate that the admin password is set.
+        Ensure that APP_ADMIN_PASSWORD is set.
 
         :param app: Flask app instance.
         :raises ConfigValidationError: If admin password is missing.
@@ -135,25 +123,72 @@ class Config:
                 "[CONFIG|VALIDATION] 'APP_ADMIN_PASSWORD' is missing."
             )
             raise ConfigValidationError(
-                "Environment variable 'APP_ADMIN_PASSWORD' is required "
-                "but not set."
+                "'APP_ADMIN_PASSWORD' must be set in environment variables."
             )
+
+    # === Cloudinary ===
+    @staticmethod
+    def _validate_cloudinary_config(app: Flask) -> None:
+        """
+        Load and validate Cloudinary configuration.
+
+        Logs a warning if required Cloudinary env variables are missing.
+
+        :param app: Flask app instance.
+        """
+        app.config["CLOUDINARY_CLOUD_NAME"] = os.getenv(
+            "CLOUDINARY_CLOUD_NAME"
+        )
+        app.config["CLOUDINARY_API_KEY"] = os.getenv("CLOUDINARY_API_KEY")
+        app.config["CLOUDINARY_API_SECRET"] = os.getenv(
+            "CLOUDINARY_API_SECRET"
+        )
+
+        if not all([
+            app.config["CLOUDINARY_CLOUD_NAME"],
+            app.config["CLOUDINARY_API_KEY"],
+            app.config["CLOUDINARY_API_SECRET"]
+        ]):
+            logger.warning(
+                "[CONFIG|INIT] Cloudinary configuration is incomplete."
+            )
+
+    # === Backblaze B2 ===
+    @staticmethod
+    def _validate_backblaze_config(app: Flask) -> None:
+        """
+        Load and validate Backblaze B2 S3 configuration.
+
+        :param app: Flask app instance.
+        :raises RuntimeError: if required Backblaze env variables are missing.
+        """
+        app.config["B2_S3_ENDPOINT_URL"] = os.getenv("B2_S3_ENDPOINT_URL")
+        app.config["B2_S3_BUCKET_NAME"] = os.getenv("B2_S3_BUCKET_NAME")
+        app.config["B2_S3_ACCESS_KEY_ID"] = os.getenv("B2_S3_ACCESS_KEY_ID")
+        app.config["B2_S3_SECRET_ACCESS_KEY"] = os.getenv(
+            "B2_S3_SECRET_ACCESS_KEY"
+        )
+
+        if not all([
+            app.config["B2_S3_ENDPOINT_URL"],
+            app.config["B2_S3_BUCKET_NAME"],
+            app.config["B2_S3_ACCESS_KEY_ID"],
+            app.config["B2_S3_SECRET_ACCESS_KEY"]
+        ]):
+            logger.critical(
+                "[CONFIG|INIT] Backblaze B2 configuration is incomplete!"
+            )
+            raise RuntimeError("Backblaze B2 S3 configuration is incomplete!")
 
 
 class DevelopmentConfig(Config):
-    """
-    Represents the configuration for the development environment.
-    """
+    """Configuration for development environment."""
     ENV = "development"
     DEBUG = True
 
 
 class TestingConfig(Config):
-    """
-    Represents the configuration for the testing environment.
-
-    Disables CSRF protection for easier testing.
-    """
+    """Configuration for testing environment."""
     ENV = "testing"
     DEBUG = False
     TESTING = True
@@ -161,8 +196,6 @@ class TestingConfig(Config):
 
 
 class ProductionConfig(Config):
-    """
-    Represents the configuration for the production environment.
-    """
+    """Configuration for production environment."""
     ENV = "production"
     DEBUG = False

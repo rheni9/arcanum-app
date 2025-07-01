@@ -20,6 +20,7 @@ from app.services.messages_service import (
 )
 from app.services.chats_service import get_chat_by_slug
 from app.utils.messages_utils import render_message_view
+from app.utils.backblaze_utils import clean_url
 from app.errors import DuplicateMessageError, MessageNotFoundError
 from app.logs.messages_logs import (
     log_message_action, log_media_removal, log_screenshot_removal
@@ -215,8 +216,8 @@ def remove_media(chat_slug: str, pk: int) -> Response:
     :param pk: ID of the message.
     :return: Redirect to message view after update.
     """
-    media_url = request.form.get("media_url")
-    if not media_url:
+    submitted_url = request.form.get("media_url")
+    if not submitted_url:
         flash("Missing media URL for deletion.", "error")
         return redirect(
             url_for("messages.view_message", chat_slug=chat_slug, pk=pk)
@@ -224,25 +225,32 @@ def remove_media(chat_slug: str, pk: int) -> Response:
 
     try:
         message = get_message_by_id(pk)
-        if (
-            not message
-            or message.chat_ref_id != get_chat_by_slug(chat_slug).id
-        ):
+        chat = get_chat_by_slug(chat_slug)
+        if not message or not chat or message.chat_ref_id != chat.id:
             flash("Message not found in this chat.", "error")
             return redirect(url_for("chats.view_chat", slug=chat_slug))
 
-        updated_media = [url for url in message.media if url != media_url]
-        message.media = updated_media
-        update_message(message)
+        clean_submitted = clean_url(submitted_url)
+        original_media = message.media or []
 
-        flash("Media file removed.", "success")
-        log_media_removal(pk, chat_slug, media_url)
+        updated_media = [
+            url for url in original_media if clean_url(url) != clean_submitted
+        ]
+
+        if len(updated_media) == len(original_media):
+            flash("Could not find matching media for removal.", "warning")
+        else:
+            message.media = updated_media
+            update_message(message)
+            flash("Media file removed.", "success")
+            log_media_removal(pk, chat_slug, clean_submitted)
+
     except SQLAlchemyError as e:
         logger.error("[DATABASE|MESSAGES] Media removal failed: %s", e)
         flash("Failed to remove media file.", "error")
 
-    return redirect(
-        url_for("messages.view_message", chat_slug=chat_slug, pk=pk)
+    return redirect(url_for(
+        "messages.view_message", chat_slug=chat_slug, pk=pk)
     )
 
 
@@ -257,18 +265,19 @@ def remove_screenshot(chat_slug: str, pk: int) -> Response:
     """
     try:
         message = get_message_by_id(pk)
-        if (
-            not message
-            or message.chat_ref_id != get_chat_by_slug(chat_slug).id
-        ):
+        chat = get_chat_by_slug(chat_slug)
+        if not message or not chat or message.chat_ref_id != chat.id:
             flash("Message not found in this chat.", "error")
             return redirect(url_for("chats.view_chat", slug=chat_slug))
 
-        message.screenshot = None
-        update_message(message)
+        if not message.screenshot:
+            flash("Could not find matching screenshot for removal.", "warning")
+        else:
+            message.screenshot = None
+            update_message(message)
+            flash("Screenshot removed.", "success")
+            log_screenshot_removal(pk, chat_slug)
 
-        flash("Screenshot removed.", "success")
-        log_screenshot_removal(pk, chat_slug)
     except SQLAlchemyError as e:
         logger.error("[DATABASE|MESSAGES] Screenshot removal failed: %s", e)
         flash("Failed to remove screenshot.", "error")

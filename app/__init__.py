@@ -1,14 +1,17 @@
 """
 Application factory for the Arcanum Flask application.
 
-Creates and configures the Flask app instance, registers blueprints,
-Jinja filters, global request hooks, logging, and CSRF protection.
+Creates and configures the Flask app instance, loads environment variables,
+applies validated configuration, initializes logging, blueprints, filters,
+CSRF protection, and global hooks.
 """
 
 import os
 import logging
 from datetime import datetime
 from dotenv import load_dotenv
+import boto3
+from botocore.config import Config as BotoConfig
 
 from flask import Flask
 from flask_wtf import CSRFProtect
@@ -28,7 +31,6 @@ from app.routes.search import search_bp
 from app.extensions import db
 
 logger = logging.getLogger(__name__)
-
 csrf = CSRFProtect()
 
 
@@ -36,52 +38,47 @@ def create_app(config_class: type = None) -> Flask:
     """
     Create and configure the Flask application instance.
 
-    Loads environment variables, validates configuration, initializes
-    logging, CSRF, blueprints, Jinja filters, and global hooks.
+    Loads environment variables, configures logging, validates configuration,
+    initializes Cloudinary, Backblaze B2, CSRF, database, blueprints, filters,
+    and request hooks.
 
     :param config_class: Optional configuration class.
     :return: Configured Flask app instance.
     :raises ConfigValidationError: If required env variables are missing.
     """
 
-    # Load environment variables (early logging)
+    # === Load Environment Variables from .env ===
     load_dotenv()
     configure_logging(os.getenv("LOG_LEVEL", "INFO"))
 
-    # Select configuration class if not provided
+    # === Select Configuration Class ===
     if not config_class:
         config_class = {
             "development": DevelopmentConfig,
             "testing": TestingConfig,
         }.get(os.getenv("FLASK_ENV", "production"), ProductionConfig)
 
-    logger.debug(
-        "[CONFIG|INIT] Loaded configuration class: %s",
-        config_class.__name__
-    )
+    logger.debug("[CONFIG|INIT] Using config class: %s", config_class.__name__)
 
-    # Initialize Flask app
+    # === Initialize Flask Application ===
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    # Initialize SQLAlchemy
+    # === Initialize Database & Context Processors ===
     db.init_app(app)
 
     @app.context_processor
     def inject_current_year():
-        """
-        Inject the current year into Jinja templates as 'current_year'.
-
-        Useful for footers or legal notices that require a dynamic year.
-        """
+        """Inject 'current_year' for all templates."""
         return {"current_year": datetime.utcnow().year}
 
-    # Second-stage logging config (from app.config)
+    # === Re-configure Logging with App Settings ===
     configure_logging(app.config.get("LOG_LEVEL"))
 
-    # Initialize configuration
+    # === Validate & Apply Configuration ===
     config_class.init_app(app)
 
+    # === Initialize Cloudinary ===
     cloudinary_config(
         cloud_name=app.config["CLOUDINARY_CLOUD_NAME"],
         api_key=app.config["CLOUDINARY_API_KEY"],
@@ -89,17 +86,28 @@ def create_app(config_class: type = None) -> Flask:
     )
     logger.debug("[CLOUDINARY|INIT] Cloudinary configured successfully.")
 
-    # Initialize CSRF protection
+    # === Initialize Backblaze B2 S3 ===
+    app.s3_client = boto3.client(
+        "s3",
+        endpoint_url=app.config["B2_S3_ENDPOINT_URL"],
+        aws_access_key_id=app.config["B2_S3_ACCESS_KEY_ID"],
+        aws_secret_access_key=app.config["B2_S3_SECRET_ACCESS_KEY"],
+        config=BotoConfig(signature_version="s3v4")
+    )
+    logger.debug("[B2|INIT] Backblaze B2 S3 client initialized successfully.")
+
+    # === Initialize CSRF Protection ===
     csrf.init_app(app)
 
-    # Ensure the database exists on startup
+    # === Ensure Database Exists ===
     with app.app_context():
         ensure_db_exists()
 
+    # === Register Filters & Blueprints ===
     _register_filters(app)
     _register_blueprints(app)
 
-    # Enforce access restrictions globally
+    # === Global Request Hooks ===
     app.before_request(restrict_access)
 
     @app.teardown_request

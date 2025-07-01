@@ -68,8 +68,8 @@
         <section class="section">
           <h2 class="section-subtitle">Screenshot</h2>
           <div class="media-with-delete screenshot-preview">
-            <a href="{{ message.screenshot }}" target="_blank">
-              <img src="{{ message.screenshot }}" alt="Screenshot" class="screenshot-image">
+            <a href="{{ signed_screenshot_url }}" target="_blank">
+              <img src="{{ signed_screenshot_url }}" alt="Screenshot" class="screenshot-image">
             </a>
             <form method="post"
                   action="{{ url_for('messages.remove_screenshot', chat_slug=chat.slug, pk=message.id) }}"
@@ -87,28 +87,29 @@
       {% endif %}
 
       {# === Media Attachments === #}
-      {% if message.media %}
+      {% if signed_media_urls %}
         <section class="section">
           <h2 class="section-subtitle">Attachments</h2>
           <div class="media-gallery">
-            {% for media_url in message.media %}
+            {% for media_url in signed_media_urls %}
               {% set lower_url = media_url.lower() %}
               <div class="media-item media-with-delete">
+                {% set url_path = media_url.split('?')[0].lower() %}
 
                 {# === Image === #}
-                {% if lower_url.endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp')) %}
+                {% if url_path.endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp')) %}
                   <a href="{{ media_url }}" target="_blank">
                     <img src="{{ media_url }}" alt="Image" class="media-thumb">
                   </a>
 
                 {# === Video === #}
-                {% elif lower_url.endswith(('.mp4', '.webm', '.ogg')) %}
+                {% elif url_path.endswith(('.mp4', '.webm', '.ogg')) %}
                   <video src="{{ media_url }}" controls class="media-thumb" preload="metadata">
                     Your browser does not support the video tag.
                   </video>
 
                 {# === Audio === #}
-                {% elif lower_url.endswith(('.mp3', '.wav', '.aac')) %}
+                {% elif url_path.endswith(('.mp3', '.wav', '.aac')) %}
                   <audio controls preload="metadata" class="media-audio">
                     <source src="{{ media_url }}">
                     Your browser does not support the audio tag.
@@ -116,8 +117,9 @@
 
                 {# === Other files === #}
                 {% else %}
+                  {% set clean_name = media_url.split('?')[0].split('/')[-1] %}
                   <a href="{{ media_url }}" target="_blank" class="media-link">
-                    📎 {{ media_url.split('/')[-1] }}
+                    📎 {{ clean_name }}
                   </a>
                 {% endif %}
 
@@ -125,12 +127,13 @@
                 <form method="post"
                       action="{{ url_for('messages.remove_media', chat_slug=chat.slug, pk=message.id) }}"
                       class="delete-overlay-form">
+                  {% set clean_name = media_url.split('?')[0].split('/')[-1] %}
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <input type="hidden" name="media_url" value="{{ media_url }}">
                   <button type="submit" class="btn btn-danger btn-icon delete-overlay-btn btn-sm"
                           data-confirm
                           data-type="media"
-                          data-label="{{ media_url.split('/')[-1] }}">
+                          data-label="{{ clean_name }}">
                     <img src="{{ url_for('static', filename='img/delete_icon.png') }}" alt="Delete">
                   </button>
                 </form>

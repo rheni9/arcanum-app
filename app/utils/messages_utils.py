@@ -12,6 +12,7 @@ from flask import render_template, request, redirect, url_for, flash
 from app.models.filters import MessageFilters
 from app.services.messages_service import get_message_by_id
 from app.services.chats_service import get_chat_by_slug
+from app.utils.backblaze_utils import generate_signed_s3_url
 from app.logs.messages_logs import log_message_view
 
 logger = logging.getLogger(__name__)
@@ -60,7 +61,7 @@ def render_message_view(chat_slug: str, pk: int) -> str:
     Render full message view with back URL and context.
 
     :param chat_slug: Chat slug.
-    :param pk: Message id.
+    :param pk: Message ID.
     :return: Rendered HTML string.
     """
     chat = get_chat_by_slug(chat_slug)
@@ -71,7 +72,7 @@ def render_message_view(chat_slug: str, pk: int) -> str:
 
     log_message_view(
         pk, chat.slug, message.timestamp,
-        message.get_short_text(10)
+        message.get_short_text(30)
     )
 
     filters = MessageFilters.from_request(request)
@@ -90,11 +91,27 @@ def render_message_view(chat_slug: str, pk: int) -> str:
                            **filters.to_query_args())
         back_label = "Back to Chat"
 
+    # Generate signed URL for screenshot if it exists
+    signed_screenshot_url = ""
+    if message.screenshot:
+        signed_screenshot_url = generate_signed_s3_url(
+            message.screenshot
+        )
+
+    # Generate signed URLs for media if any exist
+    signed_media_urls = []
+    if message.media:
+        signed_media_urls = [
+            generate_signed_s3_url(url) for url in message.media
+        ]
+
     return render_template(
         "messages/view.html",
         message=message,
         chat=chat,
         filters=filters,
+        signed_screenshot_url=signed_screenshot_url,
+        signed_media_urls=signed_media_urls,
         back_url=back_url,
         back_label=back_label
     )

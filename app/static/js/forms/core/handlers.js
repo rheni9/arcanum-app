@@ -15,7 +15,8 @@ import {
   validateRequiredDate,
   validateRequiredTime,
   validateSearchQueryStrict,
-  validateFilterFormStrict
+  validateFilterFormStrict,
+  validateImageFile
 } from "./validators.js";
 import {
   validateModeSelected,
@@ -39,8 +40,12 @@ export function bindInputValidation(form, validators) {
     if (!input) continue;
 
     const handler = () => validator(input);
-    input.addEventListener("blur", handler);
-    input.addEventListener("input", handler);
+    if (input.type === "file") {
+      input.addEventListener("change", handler);
+    } else {
+      input.addEventListener("blur", handler);
+      input.addEventListener("input", handler);
+    }
   }
 }
 
@@ -117,7 +122,8 @@ export function bindMessageForm() {
              validatePastOrNow(form.date, i, form);
     },
     link: validateUrl,
-    text: (i) => validateText(i, true)
+    text: (i) => validateText(i, true),
+    screenshot: validateImageFile
   };
 
   bindInputValidation(form, validators);
@@ -128,7 +134,8 @@ export function bindMessageForm() {
       validators.date(form.date) &&
       validators.time(form.time) &&
       validators.link(form.link) &&
-      validators.text(form.text);
+      validators.text(form.text) &&
+      validators.screenshot(form.screenshot);
 
     return ok;
   });
