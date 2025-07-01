@@ -17,10 +17,12 @@
 
   /* --- Link Colors --- */
   --link-default:         #153061;
-  --link-hover:           #3066be;  
+  --link-hover:           #3066be;
 
   /* --- Status Colors --- */
   --color-success:      #27b846;
+  --color-info:         #2684ff;
+  --color-warning:      #f5a623;
   --color-error:        #d80032;
   --color-danger:       #db2b39;
 
@@ -32,6 +34,8 @@
   --bg-section:         #eef5fb;
   --bg-highlight:       #dce4f2;
   --bg-success-light:   #e6f8ea;
+  --bg-info-light:      #e6f0ff;
+  --bg-warning-light:   #fff9e6;
   --bg-error-light:     #fff6f6;
   --toggle-bg-off:      #dedede;
 

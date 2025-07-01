@@ -46,7 +46,12 @@
             {% if messages %}
               <div class="flash-messages">
                 {% for category, message in messages %}
-                  <div class="alert {{ 'alert-success' if category == 'success' else 'alert-error' }}">
+                  <div class="alert
+                              {% if category == 'success' %}alert-success
+                              {% elif category == 'error' %}alert-error
+                              {% elif category == 'warning' %}alert-warning
+                              {% elif category == 'info' %}alert-info
+                              {% else %}alert-default{% endif %}">
                     {{ message }}
                   </div>
                 {% endfor %}

@@ -32,6 +32,20 @@
   border: 1px solid var(--color-success);
 }
 
+/* --- Info message --- */
+.alert-info {
+  background-color: var(--bg-info-light);
+  color: var(--color-info);
+  border: 1px solid var(--color-info);
+}
+
+/* --- Warning message --- */
+.alert-warning {
+  background-color: var(--bg-warning-light);
+  color: var(--color-warning);
+  border: 1px solid var(--color-warning);
+}
+
 /* --- Error message --- */
 .alert-error {
   background-color: var(--bg-error-light);
