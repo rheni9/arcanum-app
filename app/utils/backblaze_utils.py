@@ -100,7 +100,7 @@ def upload_screenshot(file_storage, chat_slug: str, timestamp_str: str) -> str:
     """
     unique_suffix = uuid4().hex[:8]
     filename = f"screenshot_{timestamp_str}_{unique_suffix}.webp"
-    key = f"arcanum/chats/screenshots/{chat_slug}/{filename}"
+    key = f"arcanum/chats/{chat_slug}/screenshots/{filename}"
 
     logger.debug("[B2|UPLOAD] Preparing screenshot '%s'", key)
 
@@ -135,6 +135,7 @@ def upload_media_file(file_storage, chat_slug: str) -> str:
     Upload a media file to B2 bucket.
 
     Images are converted to WebP; other files are stored as-is.
+    Stores media under the folder 'arcanum/chats/<chat_slug>/media'.
 
     :param file_storage: Werkzeug FileStorage object from form.
     :param chat_slug: Chat slug for organizing storage.
@@ -146,7 +147,7 @@ def upload_media_file(file_storage, chat_slug: str) -> str:
 
     if is_image_file(file_storage):
         filename = f"{original_name}_{unique_suffix}.webp"
-        key = f"arcanum/chats/media/{chat_slug}/{filename}"
+        key = f"arcanum/chats/{chat_slug}/media/{filename}"
         logger.debug("[B2|UPLOAD] Preparing image file '%s'", key)
 
         try:
@@ -171,7 +172,7 @@ def upload_media_file(file_storage, chat_slug: str) -> str:
     else:
         ext = file_storage.filename.rsplit(".", 1)[-1].lower()
         filename = f"{original_name}_{unique_suffix}.{ext}"
-        key = f"arcanum/chats/media/{chat_slug}/{filename}"
+        key = f"arcanum/chats/{chat_slug}/media/{filename}"
         logger.debug("[B2|UPLOAD] Preparing non-image media file '%s'", key)
 
         try:
