@@ -81,3 +81,14 @@ def log_chat_action(action: str, chat_slug: str) -> None:
     :param chat_slug: Chat slug identifier.
     """
     logger.info("[CHATS|%s] Chat '%s'.", action.upper(), chat_slug)
+
+
+def log_chat_image_removal(slug: str) -> None:
+    """
+    Log the removal of a chat avatar image.
+
+    :param slug: Slug of the chat whose image was removed.
+    """
+    logger.info(
+        "[CHATS|IMAGE|REMOVE] Removed avatar image for chat '%s'.", slug
+    )

@@ -19,6 +19,7 @@ from app.services.filters_service import (
     resolve_message_query, normalize_filter_action
 )
 from app.utils.sort_utils import get_sort_order
+from app.utils.backblaze_utils import generate_signed_s3_url
 from app.logs.chats_logs import log_chat_list, log_chat_view
 
 logger = logging.getLogger(__name__)
@@ -94,6 +95,11 @@ def render_chat_view(chat: Chat) -> str | Response:
 
     log_chat_view(chat.slug, filters, count, is_ajax)
 
+    # Generate signed URL for chat image
+    signed_image_url = ""
+    if chat.image:
+        signed_image_url = generate_signed_s3_url(chat.image)
+
     return render_template(
         template,
         chat=chat,
@@ -103,6 +109,7 @@ def render_chat_view(chat: Chat) -> str | Response:
         order=order,
         filters=filters,
         info_message=info_message,
+        signed_image_url=signed_image_url,
         search_action=url_for("chats.view_chat", slug=chat.slug),
         clear_url=url_for("chats.view_chat", slug=chat.slug),
         extra_args=_get_extra_args(),

@@ -21,6 +21,7 @@
           <form method="post"
                 action="{{ url_for('chats.edit_chat', slug=chat.slug) if is_edit else url_for('chats.add_chat') }}"
                 class="form chat-form"
+                enctype="multipart/form-data"
                 novalidate
                 autocomplete="off">
             {{ form.hidden_tag() }}
@@ -93,6 +94,18 @@
               ) }}
               <div class="form-message-wrapper"></div>
               {% for error in form.joined.errors %}
+                <div class="error">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            {# === Chat Image === #}
+            <div class="form-group">
+              <label for="{{ form.image.id }}" class="form-label">
+                {{ form.image.label.text }}
+              </label>
+              {{ form.image(class="form-control-file" ~ (' input-error' if form.image.errors else '')) }}
+              <small class="form-hint">Supported: JPG, PNG, GIF, WEBP, BMP, TIFF</small>
+              {% for error in form.image.errors %}
                 <div class="error">{{ error }}</div>
               {% endfor %}
             </div>

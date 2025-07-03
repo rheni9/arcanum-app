@@ -117,9 +117,9 @@ def insert_chat_record(chat: Chat) -> int:
     """
     query = text("""
         INSERT INTO chats
-            (chat_id, slug, name, link, type, joined,
+            (chat_id, slug, name, link, type, image, joined,
              is_active, is_member, is_public, notes)
-        VALUES (:chat_id, :slug, :name, :link, :type, :joined,
+        VALUES (:chat_id, :slug, :name, :link, :type, :image, :joined,
                 :is_active, :is_member, :is_public, :notes)
         RETURNING id;
     """)
@@ -165,8 +165,9 @@ def update_chat_record(chat: Chat) -> None:
     query = text("""
         UPDATE chats
         SET chat_id = :chat_id, slug = :slug, name = :name, link = :link,
-            type = :type, joined = :joined, is_active = :is_active,
-            is_member = :is_member, is_public = :is_public, notes = :notes
+            type = :type, image = :image, joined = :joined,
+            is_active = :is_active, is_member = :is_member,
+            is_public = :is_public, notes = :notes
         WHERE id = :id;
     """)
     try:

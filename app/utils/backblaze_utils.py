@@ -43,11 +43,54 @@ def is_image_file(file_storage) -> bool:
     ))
 
 
+def upload_image(file_storage, chat_slug: str) -> str:
+    """
+    Upload chat image to B2 bucket as WebP.
+
+    Stores image under the folder 'arcanum/chats/<chat_slug>/images'.
+
+    :param file_storage: Werkzeug FileStorage object from form.
+    :param chat_slug: Chat slug for organizing storage.
+    :return: Public B2 URL for the uploaded image.
+    :raises RuntimeError: If image is invalid or upload fails.
+    """
+    unique_suffix = uuid4().hex[:8]
+    filename = f"image_{unique_suffix}.webp"
+    key = f"arcanum/chats/{chat_slug}/images/{filename}"
+
+    logger.debug("[B2|UPLOAD] Preparing image '%s'", key)
+
+    try:
+        webp_bytes = convert_to_webp(file_storage)
+
+        # Upload using boto3 S3 client from current_app
+        current_app.s3_client.upload_fileobj(
+            webp_bytes,
+            current_app.config["B2_S3_BUCKET_NAME"],
+            key,
+            ExtraArgs={"ContentType": "image/webp"}
+        )
+        logger.info("[B2|UPLOAD] Image uploaded: %s", key)
+
+        # Return constructed public URL
+        return (
+            f"{current_app.config['B2_S3_ENDPOINT_URL']}/"
+            f"{current_app.config['B2_S3_BUCKET_NAME']}/{key}"
+        )
+
+    except (UnidentifiedImageError, OSError) as e:
+        logger.error("[B2|UPLOAD] Invalid image file: %s", e)
+        raise RuntimeError(f"Invalid image file: {e}") from e
+    except ClientError as e:
+        logger.error("[B2|UPLOAD] B2 upload failed: %s", e)
+        raise RuntimeError(f"B2 upload failed: {e}") from e
+
+
 def upload_screenshot(file_storage, chat_slug: str, timestamp_str: str) -> str:
     """
     Upload screenshot to B2 bucket as WebP.
 
-    Stores image under the folder 'arcanum/screenshots/<chat_slug>'.
+    Stores screenshot under the folder 'arcanum/chats/<chat_slug>/screenshots'.
 
     :param file_storage: Werkzeug FileStorage object from form.
     :param chat_slug: Chat slug for organizing storage.

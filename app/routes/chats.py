@@ -15,14 +15,13 @@ from app.models.chat import Chat
 from app.forms.chat_form import ChatForm
 from app.services.chats_service import (
     get_chat_by_slug, insert_chat, update_chat,
-    delete_chat_and_messages, slug_exists
+    delete_chat_and_messages
 )
-from app.utils.slugify_utils import slugify, generate_unique_slug
 from app.utils.chats_utils import render_chat_list, render_chat_view
 from app.errors import (
     DuplicateChatIDError, DuplicateSlugError, ChatNotFoundError
 )
-from app.logs.chats_logs import log_chat_action
+from app.logs.chats_logs import log_chat_action, log_chat_image_removal
 
 chats_bp = Blueprint("chats", __name__, url_prefix="/chats")
 logger = logging.getLogger(__name__)
@@ -79,12 +78,7 @@ def add_chat() -> Response | str:
     form = ChatForm()
 
     if form.validate_on_submit():
-        slug = slugify(form.name.data)
-        if slug_exists(slug):
-            slug = generate_unique_slug(slug, form.link.data or "")
-
         chat_data = form.to_model_dict()
-        chat_data["slug"] = slug
         chat = Chat.from_dict(chat_data)
 
         try:
@@ -131,12 +125,8 @@ def edit_chat(slug: str) -> Response | str:
     form = ChatForm(obj=chat)
 
     if form.validate_on_submit():
-        new_slug = slugify(form.name.data)
-        if new_slug != chat.slug and slug_exists(new_slug):
-            new_slug = generate_unique_slug(new_slug, form.link.data or "")
-
-        updated_data = form.to_model_dict()
-        updated_data["slug"] = new_slug
+        updated_data = form.to_model_dict(existing_image=chat.image,
+                                          original_slug=chat.slug)
         updated_data["id"] = chat.id
         updated_chat = Chat.from_dict(updated_data)
 
@@ -195,3 +185,32 @@ def delete_chat(slug: str) -> Response:
         flash(f"Failed to delete chat: {e}", "error")
 
     return redirect(url_for("chats.list_chats"))
+
+
+@chats_bp.route("/<slug>/remove_image", methods=["POST"])
+def remove_chat_image(slug: str) -> Response:
+    """
+    Remove the avatar image from a chat.
+
+    :param slug: Slug of the chat.
+    :return: Redirect to chat view after update.
+    """
+    try:
+        chat = get_chat_by_slug(slug)
+        if not chat:
+            flash("Chat not found.", "error")
+            return redirect(url_for("chats.list_chats"))
+
+        if not chat.image:
+            flash("No image to remove.", "warning")
+        else:
+            chat.image = None
+            update_chat(chat)
+            flash("Chat image removed.", "success")
+            log_chat_image_removal(slug)
+
+    except SQLAlchemyError as e:
+        logger.error("[DATABASE|CHATS] Chat image removal failed: %s", e)
+        flash("Failed to remove chat image.", "error")
+
+    return redirect(url_for("chats.view_chat", slug=slug))

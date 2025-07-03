@@ -17,6 +17,27 @@
     <div class="meta-info-block">
       <section class="section">
         <h1 class="section-title">{{ chat.name }}</h1>
+        {% if signed_image_url  %}
+          <div class="chat-avatar-wrapper">
+            <div class="chat-avatar-container">
+              <a href="{{ signed_image_url }}" target="_blank">
+                <img src="{{ signed_image_url }}" alt="Chat Avatar" class="chat-avatar">
+              </a>
+              <form method="post" action="{{ url_for('chats.remove_chat_image', slug=chat.slug) }}"
+                    class="chat-avatar-remove-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="chat-avatar-remove-btn" data-confirm
+                        data-type="avatar" data-label="{{ chat.name }}">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                      fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </form>
+            </div>
+          </div>
+        {% endif %}
         {% include "chats/_chat_summary_table.html" %}
       </section>
     </div>

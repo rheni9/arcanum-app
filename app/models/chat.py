@@ -31,6 +31,7 @@ class Chat:
     :param chat_id: Telegram chat ID (if available).
     :param link: Optional link to the chat.
     :param type: Chat type (e.g., 'group', 'channel').
+    :param image: Optional chat image URL.
     :param joined: Date the user joined the chat.
     :param is_active: Whether the chat is currently active.
     :param is_member: Whether the user is a member.
@@ -43,6 +44,7 @@ class Chat:
     chat_id: int | None = None
     link: str | None = None
     type: str | None = None
+    image: str | None = None
     joined: date | None = None
     is_active: bool = False
     is_member: bool = False
@@ -76,6 +78,7 @@ class Chat:
             chat_id=to_int_or_none(row.get("chat_id")),
             link=empty_to_none(row.get("link")),
             type=empty_to_none(row.get("type")),
+            image=empty_to_none(row.get("image")),
             joined=parse_to_date(row.get("joined")),
             is_active=row.get("is_active", False),
             is_member=row.get("is_member", False),
@@ -100,6 +103,7 @@ class Chat:
             chat_id=to_int_or_none(data.get("chat_id")),
             link=empty_to_none(data.get("link")),
             type=empty_to_none(data.get("type")),
+            image=empty_to_none(data.get("image")),
             joined=parse_to_date(data.get("joined")),
             is_active=data.get("is_active", False),
             is_member=data.get("is_member", False),
@@ -128,7 +132,7 @@ class Chat:
         Normalizes and serializes fields required for SQL INSERT/UPDATE.
 
         Field order:
-        (chat_id, slug, name, link, type, joined,
+        (chat_id, slug, name, link, type, image, joined,
          is_active, is_member, is_public, notes)
 
         :return: Dictionary of normalized fields for SQL execution.
@@ -140,6 +144,7 @@ class Chat:
             "name": self.name,
             "link": self.link,
             "type": self.type,
+            "image": self.image,
             "joined": joined_str,
             "is_active": self.is_active,
             "is_member": self.is_member,

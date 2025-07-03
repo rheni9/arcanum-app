@@ -38,3 +38,72 @@
   width: clamp(64px, 10vw, 120px);
   opacity: 0.9;
 }
+
+/* --- Chat image --- */
+.chat-avatar-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.chat-avatar-container {
+  position: relative;
+  display: inline-block;
+}
+
+.chat-avatar {
+  display: block;
+  width: clamp(56px, 10vw, 100px);
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid var(--border-default);
+  box-shadow: var(--shadow-soft);
+}
+
+.chat-avatar-remove-form {
+  position: absolute;
+  top: 3%;
+  right: 3%;
+}
+
+.chat-avatar-remove-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-hover-soft);
+  border: none;
+  border-radius: 50%;
+  padding: 0.2em;
+  width: clamp(16px, 2vw, 20px);
+  height: clamp(16px, 2vw, 20px);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.chat-avatar-remove-btn svg {
+  width: 100%;
+  height: 100%;
+}
+
+.chat-avatar-remove-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 4px rgba(0,0,0,0.2);
+}
+
+@media (max-width: 768px) {
+  .chat-avatar-wrapper {
+    margin-bottom: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-avatar-wrapper {
+    margin-bottom: 0.75rem;
+  }
+
+  .chat-avatar-remove-form {
+    top: 3%;
+    right: 3%;
+  }
+}
