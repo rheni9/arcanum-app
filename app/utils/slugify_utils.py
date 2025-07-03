@@ -9,6 +9,7 @@ import re
 import unicodedata
 import hashlib
 import logging
+from uuid import uuid4
 
 from app.services.chats_service import slug_exists
 
@@ -79,7 +80,7 @@ def slugify(text: str, max_words: int = 3) -> str:
 
 
 def generate_unique_slug(
-    base_slug: str, seed: str, max_tries: int = 10
+    base_slug: str, seed: str = "", max_tries: int = 10
 ) -> str:
     """
     Ensure a slug is unique among existing chats.
@@ -87,13 +88,14 @@ def generate_unique_slug(
     Appends short hash suffix to base_slug in case of collisions.
 
     :param base_slug: Primary slug candidate.
-    :param seed: Seed for hash generation (e.g., name + link).
+    :param seed: Seed for hash generation.
     :param max_tries: Maximum attempts to resolve collision.
     :return: Unique slug string.
     :raises ValueError: If unique slug cannot be generated.
     """
     for i in range(max_tries):
-        suffix = generate_short_hash(seed + str(i))
+        unique_input = f"{seed}-{uuid4().hex}"
+        suffix = generate_short_hash(unique_input)
         new_slug = f"{base_slug}_{suffix}"
         if not slug_exists(new_slug):
             if i > 0:
