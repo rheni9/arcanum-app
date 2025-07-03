@@ -28,18 +28,23 @@ export function bindDeleteConfirmations() {
 
       if (type === "chat") {
         if (count === 0) {
-          message = `Delete chat “${label}”? This cannot be undone.`;
+          message = `Are you sure you want to delete the chat “${label}”? This cannot be undone.`;
         } else if (count === 1) {
-          message = `Delete chat “${label}” with 1 message? This cannot be undone.`;
+          message = `Are you sure you want to delete the chat “${label}” with 1 message? This cannot be undone.`;
         } else {
-          message = `Delete chat “${label}” with ${count} messages? This cannot be undone.`;
+          message = `Are you sure you want to delete the chat “${label}” with ${count} messages? This cannot be undone.`;
         }
+      } else if (type === "chat-avatar") {
+        message = `Are you sure you want to delete the avatar for chat “${label}”? This cannot be undone.`;
       } else if (type === "message") {
-        message = `Delete message “${label}”? This cannot be undone.`;
+        message = `Are you sure you want to delete the message “${label}”? This cannot be undone.`;
+      } else if (type === "screenshot") {
+        message = `Are you sure you want to delete the screenshot for message “${label}”? This cannot be undone.`;
+      } else if (type === "media") {
+        message = `Are you sure you want to delete the media file “${label}”? This cannot be undone.`;
       } else {
-        message = `Are you sure you want to delete “${label}”?`;
+        message = `Are you sure you want to delete “${label}”? This cannot be undone.`;
       }
-
       showModal("Confirm Deletion", message, () => {
         if (form) form.submit();
       });
