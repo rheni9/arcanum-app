@@ -122,7 +122,7 @@ def upload_screenshot(file_storage, chat_slug: str, timestamp_str: str) -> str:
             f"{current_app.config['B2_S3_BUCKET_NAME']}/{key}"
         )
 
-    except UnidentifiedImageError as e:
+    except (UnidentifiedImageError, OSError) as e:
         logger.error("[B2|UPLOAD] Invalid screenshot file: %s", e)
         raise RuntimeError(f"Invalid screenshot file: {e}") from e
     except ClientError as e:
