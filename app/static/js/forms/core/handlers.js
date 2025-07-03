@@ -87,6 +87,7 @@ export function bindChatForm() {
     type: () => true,
     link: validateUrl,
     chat_id: validateIdField,
+    image: validateImageFile,
     joined: (i) => {
       if (isEmpty(i.value)) return true;
       return validateDate(i) && validateNotFutureDate(i);
@@ -100,6 +101,7 @@ export function bindChatForm() {
       validators.name(form.name) &&
       validators.link(form.link) &&
       validators.chat_id(form.chat_id) &&
+      validators.image(form.image) &&
       validators.joined(form.joined);
     return ok;
   });
@@ -137,8 +139,8 @@ export function bindMessageForm() {
       validators.time(form.time) &&
       validators.link(form.link) &&
       validators.text(form.text) &&
-      validators.screenshot(form.screenshot);
-
+      validators.screenshot(form.screenshot) &&
+      validators.media(form.media);
     return ok;
   });
 }
