@@ -128,7 +128,7 @@
               </label>
               {{ form.screenshot(class="form-control-file" ~ (' input-error' if form.screenshot.errors else '')) }}
               <div class="form-message-wrapper"></div>
-              <small class="form-hint">Optional. Upload PNG, JPG, or GIF image.</small>
+              <small class="form-hint">Supported: JPG, PNG, GIF, WEBP, BMP, TIFF</small>
               {% for error in form.screenshot.errors %}
                 <div class="error">{{ error }}</div>
               {% endfor %}
