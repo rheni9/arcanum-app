@@ -64,7 +64,7 @@ def log_media_removal(
     :param media_url: URL of the removed media.
     """
     logger.info(
-        "[MESSAGES|MEDIA_REMOVE] Removed media from message id=%s "
+        "[MESSAGES|MEDIA|REMOVE] Removed media from message id=%s "
         "in chat='%s' | url='%s'",
         msg_id, chat_slug, media_url
     )
@@ -81,7 +81,7 @@ def log_screenshot_removal(
     :param chat_slug: Related chat slug.
     """
     logger.info(
-        "[MESSAGES|SCREENSHOT_REMOVE] Removed screenshot from message id=%s "
+        "[MESSAGES|SCREENSHOT|REMOVE] Removed screenshot from message id=%s "
         "in chat='%s'.",
         msg_id, chat_slug
     )
