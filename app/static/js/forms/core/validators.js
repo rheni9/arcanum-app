@@ -399,3 +399,25 @@ export function validateImageFile(input) {
 
   return true;
 }
+
+/**
+ * Validates that multiple files input does not exceed a limit.
+ *
+ * @param {HTMLInputElement} input - The input[type="file"][multiple] element.
+ * @param {number} maxCount - Maximum allowed files.
+ * @returns {boolean} True if valid.
+ */
+export function validateMultipleFiles(input, maxCount = 5) {
+  clearError(input);
+  removeInlineMessage(input);
+
+  if (!input || !input.files.length) return true;
+
+  if (input.files.length > maxCount) {
+    highlightError(input);
+    insertInlineMessage(input, `You can upload up to ${maxCount} files.`);
+    return false;
+  }
+
+  return true;
+}

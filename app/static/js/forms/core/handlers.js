@@ -16,7 +16,8 @@ import {
   validateRequiredTime,
   validateSearchQueryStrict,
   validateFilterFormStrict,
-  validateImageFile
+  validateImageFile,
+  validateMultipleFiles
 } from "./validators.js";
 import {
   validateModeSelected,
@@ -123,7 +124,8 @@ export function bindMessageForm() {
     },
     link: validateUrl,
     text: (i) => validateText(i, true),
-    screenshot: validateImageFile
+    screenshot: validateImageFile,
+    media: (i) => validateMultipleFiles(i, 5)
   };
 
   bindInputValidation(form, validators);
