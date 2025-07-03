@@ -78,7 +78,7 @@
               <button type="submit" class="btn btn-danger btn-icon delete-overlay-btn btn-sm"
                       data-confirm
                       data-type="screenshot"
-                      data-label="{{ message.screenshot.split('/')[-1] }}">
+                      data-label="{{ (message.text or '#' ~ message.id) | truncate(50, True) }}">
                 <img src="{{ url_for('static', filename='img/delete_icon.png') }}" alt="Delete">
               </button>
             </form>
