@@ -56,4 +56,6 @@ def build_order_clause(
         field_ref, order
     )
 
-    return f"{field_ref} {order}"
+    nulls = "NULLS LAST" if sort_by == "last_message" else ""
+
+    return f"{field_ref} {order} {nulls}".strip()
