@@ -13,7 +13,7 @@ from dateutil.parser import isoparse
 from pytz import timezone as PytzTimeZone
 from pytz.tzinfo import BaseTzInfo
 
-DEFAULT_TZ = PytzTimeZone("Europe/Kyiv")  # Default UI timezone
+from flask import current_app
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +66,25 @@ def _parse_ymd_string(text: str) -> date | None:
         return None
 
 
+def get_default_tz() -> BaseTzInfo:
+    """
+    Return the default timezone object from Flask app config.
+
+    :return: pytz timezone object.
+    :raises RuntimeError: if called outside Flask app context
+                          or if 'DEFAULT_TZ' not set.
+    """
+    try:
+        tz = current_app.config["DEFAULT_TZ"]
+    except RuntimeError as exc:
+        raise RuntimeError(
+            "get_default_tz() must be called within a Flask app context."
+        ) from exc
+    if tz is None:
+        raise RuntimeError("'DEFAULT_TZ' is not set in Flask configuration.")
+    return tz
+
+
 def to_utc_iso(dt: datetime) -> str:
     """
     Convert the datetime object to UTC ISO 8601 string.
@@ -74,27 +93,32 @@ def to_utc_iso(dt: datetime) -> str:
     :return: ISO 8601 string in UTC.
     """
     if dt.tzinfo is None:
+        default_tz = get_default_tz()
         logger.warning(
             "[TIME|CONVERT] Naive datetime received; localized to '%s'.",
-            DEFAULT_TZ.zone
+            default_tz.zone
         )
-        dt = DEFAULT_TZ.localize(dt)
+        dt = default_tz.localize(dt)
     dt_utc = dt.astimezone(dt_timezone.utc)
     return dt_utc.isoformat().replace('+00:00', 'Z')
 
 
 def from_utc_iso(
     str_utc: str,
-    target_tz: str | BaseTzInfo = DEFAULT_TZ
+    target_tz: str | BaseTzInfo | None = None
 ) -> datetime:
     """
     Convert the UTC ISO 8601 string into a localized datetime object.
 
     :param str_utc: UTC ISO datetime string.
     :param target_tz: Target timezone (name or timezone object).
+                      If None, uses default timezone from config.
     :return: Localized datetime object.
     :raises ValueError: If input is naive (no timezone info).
     """
+    if target_tz is None:
+        target_tz = get_default_tz()
+
     dt_utc = isoparse(str_utc)
     if dt_utc.tzinfo is None:
         logger.error(
@@ -109,7 +133,7 @@ def from_utc_iso(
 
 def parse_datetime(
     text: str,
-    default_tz: BaseTzInfo = DEFAULT_TZ,
+    default_tz: BaseTzInfo | None = None,
     day_first: bool = True,
 ) -> str | None:
     """
@@ -121,9 +145,13 @@ def parse_datetime(
 
     :param text: User-provided datetime string.
     :param default_tz: Default timezone for naive inputs.
+                       If None, uses default timezone from config.
     :param day_first: Interpret ambiguous dates as DD/MM/YYYY.
     :return: UTC ISO string or None if parsing fails.
     """
+    if default_tz is None:
+        default_tz = get_default_tz()
+
     text = text.strip()
 
     try:
@@ -289,15 +317,22 @@ def parse_to_date(val: date | datetime | str | None) -> date | None:
     return None
 
 
-def get_utc_day_bounds(local_date_str: str, tz=DEFAULT_TZ) -> tuple[str, str]:
+def get_utc_day_bounds(
+    local_date_str: str,
+    tz: BaseTzInfo | None = None
+) -> tuple[str, str]:
     """
     Given a date string in YYYY-MM-DD (local date), return the UTC ISO
     start and end timestamps covering that entire local day.
 
     :param local_date_str: Local date string.
-    :param tz: pytz timezone object for local timezone.
+    :param tz: Target timezone (name or tz object).
+               If None, uses default timezone from config.
     :return: Tuple (start_utc_iso, end_utc_iso).
     """
+    if tz is None:
+        tz = get_default_tz()
+
     local_date = datetime.strptime(local_date_str, "%Y-%m-%d").date()
     start_local = datetime.combine(local_date, time.min).replace(tzinfo=None)
     end_local = datetime.combine(local_date, time.max).replace(tzinfo=None)
@@ -316,7 +351,7 @@ def get_utc_day_bounds(local_date_str: str, tz=DEFAULT_TZ) -> tuple[str, str]:
 def datetimeformat(
     value: str | datetime | date | None,
     format_type: str = "datetime",
-    tz: str | BaseTzInfo = DEFAULT_TZ
+    tz: str | BaseTzInfo | None = None
 ) -> str:
     """
     Format a datetime/date/string for UI display.
@@ -327,8 +362,12 @@ def datetimeformat(
     :param value: Datetime, date, or ISO string to format.
     :param format_type: Format style (e.g., "long_date_time").
     :param tz: Target timezone (name or tz object).
+               If None, uses default timezone from config.
     :return: Human-readable string.
     """
+    if tz is None:
+        tz = get_default_tz()
+
     if not value:
         return ""
 
@@ -356,11 +395,11 @@ def datetimeformat(
     if dt.tzinfo is None:
         logger.warning(
             "[TIME|FORMAT] Naive datetime formatted; localized to '%s'.",
-            DEFAULT_TZ.zone
+            tz.zone
         )
-        dt = DEFAULT_TZ.localize(dt)
+        dt = tz.localize(dt)
     else:
-        dt = dt.astimezone(DEFAULT_TZ)
+        dt = dt.astimezone(tz)
 
     return _format_datetime(dt, format_type)
 

@@ -10,7 +10,7 @@ from dataclasses import dataclass, asdict
 from typing import Literal
 from flask import Request
 
-from app.utils.time_utils import DEFAULT_TZ, get_utc_day_bounds
+from app.utils.time_utils import get_default_tz, get_utc_day_bounds
 
 logger = logging.getLogger(__name__)
 
@@ -180,7 +180,7 @@ class MessageFilters():
 
         :return: List of date strings or an empty list.
         """
-        tz = DEFAULT_TZ
+        tz = get_default_tz()
 
         if self.date_mode in {"on", "before", "after"} and self.start_date:
             start_utc, end_utc = get_utc_day_bounds(self.start_date, tz)

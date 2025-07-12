@@ -25,7 +25,7 @@ from PIL import Image, UnidentifiedImageError
 from app.models.message import Message
 from app.utils.model_utils import empty_to_none, to_int_or_none
 from app.utils.time_utils import (
-    to_utc_iso, parse_flexible_date, parse_flexible_time, DEFAULT_TZ
+    to_utc_iso, parse_flexible_date, parse_flexible_time, get_default_tz
 )
 from app.utils.backblaze_utils import upload_screenshot, upload_media_file
 
@@ -224,8 +224,8 @@ class MessageForm(FlaskForm):
 
         if self._parsed_date and self._parsed_time:
             local_dt = datetime.combine(self._parsed_date, self._parsed_time)
-            local_dt = DEFAULT_TZ.localize(local_dt)
-            if local_dt > datetime.now(DEFAULT_TZ):
+            local_dt = get_default_tz().localize(local_dt)
+            if local_dt > datetime.now(get_default_tz()):
                 logger.debug(
                     "[MESSAGES|FORM] Date/time in future: %s", local_dt
                 )
@@ -335,7 +335,7 @@ class MessageForm(FlaskForm):
         self.chat_ref_id.data = message.chat_ref_id
         self.msg_id.data = message.msg_id
         if message.timestamp:
-            local_dt = message.timestamp.astimezone(DEFAULT_TZ)
+            local_dt = message.timestamp.astimezone(get_default_tz())
             self.date.data = local_dt.date()
             self.time.data = local_dt.time()
         else:

@@ -12,6 +12,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 import boto3
 from botocore.config import Config as BotoConfig
+from pytz import timezone as PytzTimeZone
 
 from flask import Flask
 from flask_wtf import CSRFProtect
@@ -66,6 +67,9 @@ def create_app(config_class: type = None) -> Flask:
 
     # === Initialize Database & Context Processors ===
     db.init_app(app)
+
+    # === Initialize tz object from config ===
+    app.config["DEFAULT_TZ"] = PytzTimeZone(app.config["DEFAULT_TZ_NAME"])
 
     @app.context_processor
     def inject_current_year():

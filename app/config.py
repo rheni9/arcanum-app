@@ -10,6 +10,8 @@ Required environment variables:
 - DATABASE_URL: Database connection URI (optional fallback provided).
 
 Optional environment variables:
+- DEFAULT_TIMEZONE: Default timezone name for UI and date/time conversions
+                    (defaults to 'Europe/Kyiv').
 - FLASK_ENV: Application environment ('development', 'testing', 'production').
 - LOG_LEVEL: Logging level ('DEBUG', 'INFO', 'WARNING', 'ERROR').
 - WTF_CSRF_SECRET_KEY: Secret key for WTForms CSRF
@@ -57,6 +59,9 @@ class Config:
         "APP_ROOT_DIR",
         os.path.abspath(os.path.join(basedir, ".."))
     )
+
+    # === Timezone ===
+    DEFAULT_TZ_NAME = os.getenv("DEFAULT_TIMEZONE", "Europe/Kyiv")
 
     ENV = os.getenv("FLASK_ENV", "production")
     DEBUG = ENV == "development"
