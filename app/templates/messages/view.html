@@ -95,6 +95,7 @@
               {% set lower_url = media_url.lower() %}
               <div class="media-item media-with-delete">
                 {% set url_path = media_url.split('?')[0].lower() %}
+                {% set url_basename = url_path.split('/')[-1] %}
 
                 {# === Image === #}
                 {% if url_path.endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp')) %}
@@ -109,7 +110,7 @@
                   </video>
 
                 {# === Audio === #}
-                {% elif url_path.endswith(('.mp3', '.wav', '.aac', '.oga')) %}
+                {% elif url_basename.endswith(('.mp3', '.wav', '.aac', '.oga')) %}
                   <audio controls preload="metadata" class="media-audio">
                     <source src="{{ media_url }}">
                     Your browser does not support the audio tag.
