@@ -109,7 +109,7 @@
                   </video>
 
                 {# === Audio === #}
-                {% elif url_path.endswith(('.mp3', '.wav', '.aac')) %}
+                {% elif url_path.endswith(('.mp3', '.wav', '.aac', '.oga')) %}
                   <audio controls preload="metadata" class="media-audio">
                     <source src="{{ media_url }}">
                     Your browser does not support the audio tag.
