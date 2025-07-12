@@ -92,6 +92,7 @@
           <h2 class="section-subtitle">Attachments</h2>
           <div class="media-gallery">
             {% for media_url in signed_media_urls %}
+            <p>{{ signed_media_urls }}</p>
               {% set lower_url = media_url.lower() %}
               <div class="media-item media-with-delete">
                 {% set url_path = media_url.split('?')[0].lower() %}
