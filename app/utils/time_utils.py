@@ -289,6 +289,30 @@ def parse_to_date(val: date | datetime | str | None) -> date | None:
     return None
 
 
+def get_utc_day_bounds(local_date_str: str, tz=DEFAULT_TZ) -> tuple[str, str]:
+    """
+    Given a date string in YYYY-MM-DD (local date), return the UTC ISO
+    start and end timestamps covering that entire local day.
+
+    :param local_date_str: Local date string.
+    :param tz: pytz timezone object for local timezone.
+    :return: Tuple (start_utc_iso, end_utc_iso).
+    """
+    local_date = datetime.strptime(local_date_str, "%Y-%m-%d").date()
+    start_local = datetime.combine(local_date, time.min).replace(tzinfo=None)
+    end_local = datetime.combine(local_date, time.max).replace(tzinfo=None)
+
+    # Localize naive datetimes to tz
+    start_localized = tz.localize(start_local)
+    end_localized = tz.localize(end_local)
+
+    # Convert to UTC
+    start_utc = start_localized.astimezone(PytzTimeZone("UTC"))
+    end_utc = end_localized.astimezone(PytzTimeZone("UTC"))
+
+    return start_utc.isoformat(), end_utc.isoformat()
+
+
 def datetimeformat(
     value: str | datetime | date | None,
     format_type: str = "datetime",

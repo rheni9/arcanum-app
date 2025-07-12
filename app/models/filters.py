@@ -10,6 +10,8 @@ from dataclasses import dataclass, asdict
 from typing import Literal
 from flask import Request
 
+from app.utils.time_utils import DEFAULT_TZ, get_utc_day_bounds
+
 logger = logging.getLogger(__name__)
 
 
@@ -163,16 +165,13 @@ class MessageFilters():
         :return: SQL clause fragment or empty string.
         """
         if self.date_mode == "on":
-            return "DATE(m.timestamp) = DATE(:start_date)"
+            return "m.timestamp >= :start_utc AND m.timestamp <= :end_utc"
         if self.date_mode == "before":
-            return "DATE(m.timestamp) < DATE(:start_date)"
+            return "m.timestamp < :start_utc"
         if self.date_mode == "after":
-            return "DATE(m.timestamp) >= DATE(:start_date)"
+            return "m.timestamp >= :start_utc"
         if self.date_mode == "between":
-            return (
-                "DATE(m.timestamp) BETWEEN DATE(:start_date) "
-                "AND DATE(:end_date)"
-            )
+            return "m.timestamp >= :start_utc AND m.timestamp <= :end_utc"
         return ""
 
     def get_date_params(self) -> list[str]:
@@ -181,17 +180,26 @@ class MessageFilters():
 
         :return: List of date strings or an empty list.
         """
+        tz = DEFAULT_TZ
+
         if self.date_mode in {"on", "before", "after"} and self.start_date:
-            return {"start_date": self.start_date}
+            start_utc, end_utc = get_utc_day_bounds(self.start_date, tz)
+            if self.date_mode == "on":
+                return {"start_utc": start_utc, "end_utc": end_utc}
+            elif self.date_mode == "before":
+                # before start of local day in UTC
+                return {"start_utc": start_utc}
+            elif self.date_mode == "after":
+                # after or equal start of local day in UTC
+                return {"start_utc": start_utc}
         if (
             self.date_mode == "between"
             and self.start_date
             and self.end_date
         ):
-            return {
-                "start_date": self.start_date,
-                "end_date": self.end_date
-            }
+            start_utc_start, _ = get_utc_day_bounds(self.start_date, tz)
+            _, end_utc_end = get_utc_day_bounds(self.end_date, tz)
+            return {"start_utc": start_utc_start, "end_utc": end_utc_end}
         return {}
 
     @classmethod
