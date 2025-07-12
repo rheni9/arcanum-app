@@ -92,7 +92,6 @@
           <h2 class="section-subtitle">Attachments</h2>
           <div class="media-gallery">
             {% for media_url in signed_media_urls %}
-            <p>{{ signed_media_urls }}</p>
               {% set lower_url = media_url.lower() %}
               <div class="media-item media-with-delete">
                 {% set url_path = media_url.split('?')[0].lower() %}
@@ -113,7 +112,7 @@
                 {# === Audio === #}
                 {% elif url_basename.endswith(('.mp3', '.wav', '.aac', '.oga')) %}
                   <audio controls preload="metadata" class="media-audio">
-                    <source src="{{ media_url }}">
+                    <source src="{{ media_url }}" type="audio/mpeg">
                     Your browser does not support the audio tag.
                   </audio>
 
