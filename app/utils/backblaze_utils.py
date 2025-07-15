@@ -98,9 +98,35 @@ def upload_screenshot(file_storage, chat_slug: str, timestamp_str: str) -> str:
     :return: Public B2 URL for the uploaded screenshot.
     :raises RuntimeError: If image is invalid or upload fails.
     """
+    s3_client = current_app.s3_client
+    bucket = current_app.config["B2_S3_BUCKET_NAME"]
+
+    # Base folder ===
+    base_path = f"arcanum/chats/{chat_slug}/screenshots/"
+
+    # Count existing screenshots with same timestamp
+    prefix = f"{base_path}screenshot_{timestamp_str}_"
+    logger.debug("[B2|UPLOAD] Listing objects with prefix: %s", prefix)
+
+    try:
+        response = s3_client.list_objects_v2(
+            Bucket=bucket,
+            Prefix=prefix
+        )
+        existing = response.get("Contents", [])
+        count = len(existing) + 1   # next number
+        counter = f"{count:02d}"    # 2-digit zero padded
+
+    except ClientError as e:
+        logger.error("[B2|UPLOAD] Failed to list objects: %s", e)
+        raise RuntimeError(f"B2 listing failed: {e}") from e
+
+    # Unique hash
     unique_suffix = uuid4().hex[:8]
-    filename = f"screenshot_{timestamp_str}_{unique_suffix}.webp"
-    key = f"arcanum/chats/{chat_slug}/screenshots/{filename}"
+
+    # New filename with timestamp + counter + uuid
+    filename = f"screenshot_{timestamp_str}_{counter}_{unique_suffix}.webp"
+    key = f"{base_path}{filename}"
 
     logger.debug("[B2|UPLOAD] Preparing screenshot '%s'", key)
 
@@ -119,7 +145,7 @@ def upload_screenshot(file_storage, chat_slug: str, timestamp_str: str) -> str:
         # Return constructed public URL
         return (
             f"{current_app.config['B2_S3_ENDPOINT_URL']}/"
-            f"{current_app.config['B2_S3_BUCKET_NAME']}/{key}"
+            f"{bucket}/{key}"
         )
 
     except (UnidentifiedImageError, OSError) as e:
