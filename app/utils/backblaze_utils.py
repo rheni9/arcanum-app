@@ -1,14 +1,16 @@
 """
 B2 S3 upload utilities for the Arcanum application.
 
-Provides helper functions for uploading screenshots and other media
-to Backblaze B2 via S3-compatible API with optional WebP conversion.
+Provides helper functions for uploading screenshots, chat images,
+and other media to Backblaze B2 via S3-compatible API.
+Supports optional WebP conversion and ordering with counters.
 """
 
 import logging
 from uuid import uuid4
 from urllib.parse import urlparse
 from io import BytesIO
+from werkzeug.datastructures import FileStorage
 from PIL import Image, UnidentifiedImageError
 from botocore.exceptions import ClientError
 from flask import current_app
@@ -16,9 +18,9 @@ from flask import current_app
 logger = logging.getLogger(__name__)
 
 
-def convert_to_webp(file_storage) -> BytesIO:
+def convert_to_webp(file_storage: FileStorage) -> BytesIO:
     """
-    Open uploaded image and convert to WebP in memory.
+    Open uploaded image and convert it to WebP format in memory.
 
     :param file_storage: Werkzeug FileStorage object.
     :return: BytesIO containing WebP data.
@@ -31,9 +33,9 @@ def convert_to_webp(file_storage) -> BytesIO:
     return webp_bytes
 
 
-def is_image_file(file_storage) -> bool:
+def is_image_file(file_storage: FileStorage) -> bool:
     """
-    Determine if uploaded file is an image based on extension.
+    Determine if an uploaded file is an image based on its extension.
 
     :param file_storage: Werkzeug FileStorage object.
     :return: True if file has image extension, False otherwise.
@@ -43,39 +45,62 @@ def is_image_file(file_storage) -> bool:
     ))
 
 
-def upload_image(file_storage, chat_slug: str) -> str:
+def upload_generic_webp(
+    file_storage: FileStorage,
+    bucket: str,
+    base_path: str,
+    prefix: str,
+    filename_pattern: str
+) -> str:
     """
-    Upload chat image to B2 bucket as WebP.
+    Upload a WebP image with counter and UUID to B2 bucket.
 
-    Stores image under the folder 'arcanum/chats/<chat_slug>/images'.
+    Handles counting existing files to maintain order.
 
-    :param file_storage: Werkzeug FileStorage object from form.
-    :param chat_slug: Chat slug for organizing storage.
-    :return: Public B2 URL for the uploaded image.
-    :raises RuntimeError: If image is invalid or upload fails.
+    :param file_storage: Werkzeug FileStorage object.
+    :param bucket: B2 bucket name.
+    :param base_path: Folder path inside the bucket.
+    :param prefix: Prefix to list existing objects for counting.
+    :param filename_pattern: Pattern with placeholders for counter and UUID.
+    :return: Public B2 URL for the uploaded file.
+    :raises RuntimeError: If upload fails.
     """
+    s3_client = current_app.s3_client
+
+    logger.debug("[B2|UPLOAD] Listing objects with prefix: %s", prefix)
+    try:
+        response = s3_client.list_objects_v2(
+            Bucket=bucket,
+            Prefix=prefix
+        )
+        existing = response.get("Contents", [])
+        count = len(existing) + 1
+        counter = f"{count:02d}"
+
+    except ClientError as e:
+        logger.error("[B2|UPLOAD] Failed to list objects: %s", e)
+        raise RuntimeError(f"B2 listing failed: {e}") from e
+
     unique_suffix = uuid4().hex[:8]
-    filename = f"image_{unique_suffix}.webp"
-    key = f"arcanum/chats/{chat_slug}/images/{filename}"
+    filename = filename_pattern.format(counter=counter, uuid=unique_suffix)
+    key = f"{base_path}{filename}"
 
-    logger.debug("[B2|UPLOAD] Preparing image '%s'", key)
+    logger.debug("[B2|UPLOAD] Preparing WebP '%s'", key)
 
     try:
         webp_bytes = convert_to_webp(file_storage)
 
-        # Upload using boto3 S3 client from current_app
-        current_app.s3_client.upload_fileobj(
+        s3_client.upload_fileobj(
             webp_bytes,
-            current_app.config["B2_S3_BUCKET_NAME"],
+            bucket,
             key,
             ExtraArgs={"ContentType": "image/webp"}
         )
-        logger.info("[B2|UPLOAD] Image uploaded: %s", key)
+        logger.info("[B2|UPLOAD] Uploaded: %s", key)
 
-        # Return constructed public URL
         return (
             f"{current_app.config['B2_S3_ENDPOINT_URL']}/"
-            f"{current_app.config['B2_S3_BUCKET_NAME']}/{key}"
+            f"{bucket}/{key}"
         )
 
     except (UnidentifiedImageError, OSError) as e:
@@ -86,88 +111,64 @@ def upload_image(file_storage, chat_slug: str) -> str:
         raise RuntimeError(f"B2 upload failed: {e}") from e
 
 
-def upload_screenshot(file_storage, chat_slug: str, timestamp_str: str) -> str:
+def upload_image(file_storage: FileStorage, chat_slug: str) -> str:
     """
-    Upload screenshot to B2 bucket as WebP.
+    Upload chat image with counter and UUID to B2 bucket.
 
-    Stores screenshot under the folder 'arcanum/chats/<chat_slug>/screenshots'.
+    Stores image under 'arcanum/chats/<chat_slug>/images/'.
 
-    :param file_storage: Werkzeug FileStorage object from form.
-    :param chat_slug: Chat slug for organizing storage.
-    :param timestamp_str: Timestamp string (YYYYMMDD_HHMMSS).
-    :return: Public B2 URL for the uploaded screenshot.
-    :raises RuntimeError: If image is invalid or upload fails.
+    :param file_storage: Werkzeug FileStorage object.
+    :param chat_slug: Chat slug for folder structure.
+    :return: Public B2 URL.
     """
-    s3_client = current_app.s3_client
     bucket = current_app.config["B2_S3_BUCKET_NAME"]
+    base_path = f"arcanum/chats/{chat_slug}/images/"
+    prefix = f"{base_path}image_"
+    pattern = "image_{counter}_{uuid}.webp"
 
-    # Base folder ===
+    return upload_generic_webp(
+        file_storage, bucket, base_path, prefix, pattern
+    )
+
+
+def upload_screenshot(
+    file_storage: FileStorage,
+    chat_slug: str,
+    timestamp_str: str
+) -> str:
+    """
+    Upload screenshot with timestamp, counter, and UUID to B2 bucket.
+
+    Stores under 'arcanum/chats/<chat_slug>/screenshots/'.
+
+    :param file_storage: Werkzeug FileStorage object.
+    :param chat_slug: Chat slug for folder structure.
+    :param timestamp_str: Timestamp string (YYYYMMDD_HHMMSS).
+    :return: Public B2 URL.
+    """
+    bucket = current_app.config["B2_S3_BUCKET_NAME"]
     base_path = f"arcanum/chats/{chat_slug}/screenshots/"
-
-    # Count existing screenshots with same timestamp
     prefix = f"{base_path}screenshot_{timestamp_str}_"
-    logger.debug("[B2|UPLOAD] Listing objects with prefix: %s", prefix)
+    pattern = f"screenshot_{timestamp_str}_{{counter}}_{{uuid}}.webp"
 
-    try:
-        response = s3_client.list_objects_v2(
-            Bucket=bucket,
-            Prefix=prefix
-        )
-        existing = response.get("Contents", [])
-        count = len(existing) + 1   # next number
-        counter = f"{count:02d}"    # 2-digit zero padded
-
-    except ClientError as e:
-        logger.error("[B2|UPLOAD] Failed to list objects: %s", e)
-        raise RuntimeError(f"B2 listing failed: {e}") from e
-
-    # Unique hash
-    unique_suffix = uuid4().hex[:8]
-
-    # New filename with timestamp + counter + uuid
-    filename = f"screenshot_{timestamp_str}_{counter}_{unique_suffix}.webp"
-    key = f"{base_path}{filename}"
-
-    logger.debug("[B2|UPLOAD] Preparing screenshot '%s'", key)
-
-    try:
-        webp_bytes = convert_to_webp(file_storage)
-
-        # Upload using boto3 S3 client from current_app
-        current_app.s3_client.upload_fileobj(
-            webp_bytes,
-            current_app.config["B2_S3_BUCKET_NAME"],
-            key,
-            ExtraArgs={"ContentType": "image/webp"}
-        )
-        logger.info("[B2|UPLOAD] Screenshot uploaded: %s", key)
-
-        # Return constructed public URL
-        return (
-            f"{current_app.config['B2_S3_ENDPOINT_URL']}/"
-            f"{bucket}/{key}"
-        )
-
-    except (UnidentifiedImageError, OSError) as e:
-        logger.error("[B2|UPLOAD] Invalid screenshot file: %s", e)
-        raise RuntimeError(f"Invalid screenshot file: {e}") from e
-    except ClientError as e:
-        logger.error("[B2|UPLOAD] B2 upload failed: %s", e)
-        raise RuntimeError(f"B2 upload failed: {e}") from e
+    return upload_generic_webp(
+        file_storage, bucket, base_path, prefix, pattern
+    )
 
 
-def upload_media_file(file_storage, chat_slug: str) -> str:
+def upload_media_file(file_storage: FileStorage, chat_slug: str) -> str:
     """
     Upload a media file to B2 bucket.
 
     Images are converted to WebP; other files are stored as-is.
-    Stores media under the folder 'arcanum/chats/<chat_slug>/media'.
+    Media files are stored under 'arcanum/chats/<chat_slug>/media/'.
 
-    :param file_storage: Werkzeug FileStorage object from form.
-    :param chat_slug: Chat slug for organizing storage.
+    :param file_storage: Werkzeug FileStorage object.
+    :param chat_slug: Chat slug for folder structure.
     :return: Public B2 URL for the uploaded file.
     :raises RuntimeError: If upload or conversion fails.
     """
+    bucket = current_app.config["B2_S3_BUCKET_NAME"]
     original_name = file_storage.filename.rsplit(".", 1)[0]
     unique_suffix = uuid4().hex[:8]
 
@@ -181,7 +182,7 @@ def upload_media_file(file_storage, chat_slug: str) -> str:
 
             current_app.s3_client.upload_fileobj(
                 webp_bytes,
-                current_app.config["B2_S3_BUCKET_NAME"],
+                bucket,
                 key,
                 ExtraArgs={"ContentType": "image/webp"}
             )
@@ -204,7 +205,7 @@ def upload_media_file(file_storage, chat_slug: str) -> str:
         try:
             current_app.s3_client.upload_fileobj(
                 file_storage,
-                current_app.config["B2_S3_BUCKET_NAME"],
+                bucket,
                 key,
                 ExtraArgs={"ContentType": file_storage.mimetype}
             )
@@ -216,7 +217,7 @@ def upload_media_file(file_storage, chat_slug: str) -> str:
 
     return (
         f"{current_app.config['B2_S3_ENDPOINT_URL']}/"
-        f"{current_app.config['B2_S3_BUCKET_NAME']}/{key}"
+        f"{bucket}/{key}"
     )
 
 
@@ -227,9 +228,9 @@ def generate_signed_s3_url(
     """
     Generate a signed URL for any stored B2 file.
 
-    Works for screenshots, media, or other private objects.
+    Works for screenshots, images, or other private objects.
 
-    :param file_url: Full stored file URL from DB.
+    :param file_url: Full stored file URL from database.
     :param expires_in: Expiration time in seconds.
     :return: Signed URL for temporary access.
     """
