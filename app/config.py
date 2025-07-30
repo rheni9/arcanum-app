@@ -48,6 +48,10 @@ class Config:
         "DATABASE_URL",
         f"sqlite:///{os.path.join(basedir, '..', 'data', 'chatvault.sqlite')}"
     )
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,
+        "pool_recycle": 1800,   # 30 min
+    }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # === Core App Flags ===

@@ -9,6 +9,7 @@ compatibility.
 """
 
 import logging
+import time
 from contextlib import contextmanager
 from typing import Generator
 from sqlalchemy import text
@@ -82,20 +83,37 @@ def get_connection() -> Generator[Connection, None, None]:
         logger.debug("[DATABASE|STANDALONE] Closed standalone connection.")
 
 
-def ensure_db_exists() -> None:
+def ensure_db_exists(retries: int = 5, delay: float = 2.0) -> None:
     """
     Check if the PostgreSQL database is reachable.
 
     Executes 'SELECT 1' to verify connectivity.
+    Retries multiple times with delay if the database is not reachable.
 
-    Logs info if reachable, warning if not.
+    :param retries: Number of times to retry connection.
+    :param delay: Delay in seconds between retries.
+    :raises RuntimeError: If database is unreachable after all retries.
     """
-    try:
-        with db.engine.connect() as conn:
-            conn.execute(text("SELECT 1"))
-        logger.info("[DATABASE|CHECK] Database connection successful.")
-    except SQLAlchemyError as e:
-        logger.warning("[DATABASE|CHECK] Database not reachable: %s", e)
+    attempt = 0
+    while attempt <= retries:
+        try:
+            with db.engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+            logger.info("[DATABASE|CHECK] Database connection successful.")
+            return
+        except SQLAlchemyError as e:
+            attempt += 1
+            logger.warning(
+                "[DATABASE|CHECK] Database not reachable (attempt %d/%d): %s",
+                attempt, retries, e
+            )
+            if attempt > retries:
+                logger.error(
+                    "[DATABASE|CHECK] Could not connect to database after %d "
+                    "attempts.", retries
+                )
+                raise RuntimeError("Database is not available.") from e
+            time.sleep(delay)
 
 
 def execute_and_commit(query: str, params: tuple) -> None:
