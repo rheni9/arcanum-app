@@ -41,10 +41,30 @@
     {# === Table Body: List of Chats === #}
     <tbody>
       {% for chat in chats %}
-      <tr class="clickable-row" data-href="{{ url_for('chats.view_chat', slug=chat.slug) }}">
+      <tr class="clickable-row {{ 'inactive' if not chat.is_active else '' }} {{ 'not-member' if not chat.is_member else '' }}"
+        data-href="{{ url_for('chats.view_chat', slug=chat.slug) }}">
+
         <td class="col-index">{{ loop.index }}</td>
-        <td>{{ chat.name }}</td>
+
+        {# === Chat name with status dot + member icon (no <a>, to keep row clickable) === #}
+        <td>
+          <span class="meta-composite">
+            <span class="meta-link {{ 'meta-link-active' if chat.is_active else 'meta-link-inactive' }}">
+              {{ chat.name }}
+            </span>
+            <span class="meta-status-group">
+              <span class="meta-dot {{ 'online' if chat.is_active else 'offline' }}"
+                    title="{{ 'Active' if chat.is_active else 'Inactive' }}"></span>
+              {% if chat.is_member %}
+                <img src="{{ url_for('static', filename='img/member_icon.png') }}"
+                    alt="Member" title="Member" class="meta-status-icon">
+              {% endif %}
+            </span>
+          </span>
+        </td>
+
         <td>{{ chat.message_count }}</td>
+
         <td>
           {% if chat.last_message %}
             <div class="table-timestamp">
