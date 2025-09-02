@@ -84,6 +84,52 @@ def fetch_messages_by_chat(
         raise
 
 
+def fetch_previous_message(chat_ref_id: int, current_ts) -> Message | None:
+    """
+    Retrieve the message before the given timestamp within the same chat.
+
+    :param chat_ref_id: ID of the chat (foreign key in messages table).
+    :param current_ts: Timestamp of the current message (exclusive).
+    :return: The previous Message instance if found, otherwise None.
+    :raises SQLAlchemyError: If the query fails.
+    """
+    query = text("""
+        SELECT * FROM messages
+        WHERE chat_ref_id = :chat_ref_id AND timestamp < :current_ts
+        ORDER BY timestamp DESC
+        LIMIT 1;
+    """)
+    conn = get_connection_lazy()
+    result = conn.execute(
+        query, {"chat_ref_id": chat_ref_id, "current_ts": current_ts}
+    )
+    row = result.mappings().fetchone()
+    return Message.from_row(dict(row)) if row else None
+
+
+def fetch_next_message(chat_ref_id: int, current_ts) -> Message | None:
+    """
+    Retrieve the message after the given timestamp within the same chat.
+
+    :param chat_ref_id: ID of the chat (foreign key in messages table).
+    :param current_ts: Timestamp of the current message (exclusive).
+    :return: The next Message instance if found, otherwise None.
+    :raises SQLAlchemyError: If the query fails.
+    """
+    query = text("""
+        SELECT * FROM messages
+        WHERE chat_ref_id = :chat_ref_id AND timestamp > :current_ts
+        ORDER BY timestamp ASC
+        LIMIT 1;
+    """)
+    conn = get_connection_lazy()
+    result = conn.execute(
+        query, {"chat_ref_id": chat_ref_id, "current_ts": current_ts}
+    )
+    row = result.mappings().fetchone()
+    return Message.from_row(dict(row)) if row else None
+
+
 def insert_message_record(message: Message) -> int:
     """
     Insert a new message record into the database.

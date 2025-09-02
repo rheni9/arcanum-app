@@ -56,12 +56,16 @@ def group_messages_by_chat(
     return grouped
 
 
-def render_message_view(chat_slug: str, pk: int) -> str:
+def render_message_view(
+    chat_slug: str, pk: int, prev_message=None, next_message=None
+) -> str:
     """
     Render full message view with back URL and context.
 
     :param chat_slug: Chat slug.
     :param pk: Message ID.
+    :param prev_message: Optional previous message object.
+    :param next_message: Optional next message object.
     :return: Rendered HTML string.
     """
     chat = get_chat_by_slug(chat_slug)
@@ -113,5 +117,7 @@ def render_message_view(chat_slug: str, pk: int) -> str:
         signed_screenshot_url=signed_screenshot_url,
         signed_media_urls=signed_media_urls,
         back_url=back_url,
-        back_label=back_label
+        back_label=back_label,
+        prev_message=prev_message,
+        next_message=next_message
     )

@@ -16,6 +16,7 @@ from app.models.message import Message
 from app.forms.message_form import MessageForm
 from app.services.messages_service import (
     get_message_by_id, insert_message,
+    get_previous_message, get_next_message,
     update_message, delete_message as delete_message_by_id
 )
 from app.services.chats_service import get_chat_by_slug
@@ -33,7 +34,8 @@ logger = logging.getLogger(__name__)
 @messages_bp.route("/<chat_slug>/<int:pk>")
 def view_message(chat_slug: str, pk: int) -> str:
     """
-    Display details for a single message within a chat.
+    Display details for a single message within a chat,
+    including previous and next navigation.
 
     :param chat_slug: Slug identifier of the chat.
     :param pk: Internal database id of the message.
@@ -48,7 +50,16 @@ def view_message(chat_slug: str, pk: int) -> str:
             flash("Message not found in this chat.", "error")
             return redirect(url_for("chats.list_chats"))
 
-        return render_message_view(chat_slug, pk)
+        prev_message = get_previous_message(chat.id, message.timestamp)
+        next_message = get_next_message(chat.id, message.timestamp)
+
+        return render_message_view(
+            chat_slug,
+            pk,
+            prev_message=prev_message,
+            next_message=next_message
+        )
+
     except SQLAlchemyError as e:
         logger.error(
             "[DATABASE|MESSAGES] Failed to retrieve message id=%d: %s", pk, e

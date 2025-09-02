@@ -63,6 +63,25 @@
         </div>
       </section>
 
+      <section class="section">
+        <div class="btn-navigation">
+          {% if prev_message %}
+            <a href="{{ url_for('messages.view_message', chat_slug=chat.slug, pk=prev_message.id) }}"
+              class="btn btn-secondary btn-icon">
+              <img src="{{ url_for('static', filename='img/back_icon.png') }}" alt="Previous">
+              <span>Previous</span>
+            </a>
+          {% endif %}
+          {% if next_message %}
+            <a href="{{ url_for('messages.view_message', chat_slug=chat.slug, pk=next_message.id) }}"
+              class="btn btn-secondary btn-icon">
+              <span>Next</span>
+              <img src="{{ url_for('static', filename='img/next_icon.png') }}" alt="Next">
+            </a>
+          {% endif %}
+        </div>
+      </section>
+
       {# === Screenshot Preview === #}
       {% if message.screenshot %}
         <section class="section">

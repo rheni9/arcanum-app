@@ -11,6 +11,7 @@ import logging
 from app.models.message import Message
 from app.services.dao.messages_dao import (
     fetch_message_by_id, fetch_messages_by_chat,
+    fetch_previous_message, fetch_next_message,
     insert_message_record, update_message_record,
     delete_message_record, check_message_exists,
     count_messages_for_chat
@@ -55,6 +56,40 @@ def get_messages_by_chat_slug(
         "sorted by '%s' (%s).", chat_slug, sort_by, order
     )
     return fetch_messages_by_chat(chat_slug, sort_by, order)
+
+
+def get_previous_message(chat_ref_id: int, current_ts) -> Message | None:
+    """
+    Retrieve the message sent before the given timestamp in the same chat.
+
+    :param chat_ref_id: ID of the chat (foreign key in messages table).
+    :param current_ts: Timestamp of the current message (exclusive).
+    :return: The previous Message instance if found, otherwise None.
+    :raises SQLAlchemyError: If the DAO operation fails.
+    """
+    logger.debug(
+        "[MESSAGES|SERVICE] Fetching previous message "
+        "before %s in chat_ref_id=%d.",
+        current_ts, chat_ref_id
+    )
+    return fetch_previous_message(chat_ref_id, current_ts)
+
+
+def get_next_message(chat_ref_id: int, current_ts) -> Message | None:
+    """
+    Retrieve the message sent after the given timestamp in the same chat.
+
+    :param chat_ref_id: ID of the chat (foreign key in messages table).
+    :param current_ts: Timestamp of the current message (exclusive).
+    :return: The next Message instance if found, otherwise None.
+    :raises SQLAlchemyError: If the DAO operation fails.
+    """
+    logger.debug(
+        "[MESSAGES|SERVICE] Fetching next message "
+        "after %s in chat_ref_id=%d.",
+        current_ts, chat_ref_id
+    )
+    return fetch_next_message(chat_ref_id, current_ts)
 
 
 def insert_message(message: Message) -> int:

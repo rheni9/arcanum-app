@@ -131,6 +131,16 @@
   height: auto;
 }
 
+/* --- Message Navigation Buttons --- */
+.btn-navigation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+  flex-grow: 1;
+}
+
 /* =============================================================
    Responsive Adjustments
 ============================================================= */
@@ -152,6 +162,12 @@
     top: 4px;
     right: 4px;
     padding: 0.25rem;
+  }
+
+  .btn-navigation .btn {
+    flex: 1 1 0;
+    text-align: center;
+    min-width: 0;
   }
 }
 
