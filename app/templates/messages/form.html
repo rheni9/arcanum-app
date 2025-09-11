@@ -157,11 +157,14 @@
             {# === Action Buttons === #}
             <div class="form-actions-centered">
               <button type="submit" class="btn btn-primary btn-icon">
-                <img src="{{ url_for('static', filename='img/save_icon.png') }}" alt="Save" class="icon-btn">
+                <img src="{{ url_for('static', filename='img/save_icon.png') }}" alt="Save" aria-hidden="true" class="icon-btn">
                 {{ "Update" if is_edit else "Save" }}
               </button>
               <a href="{% if is_edit %}{{ url_for('messages.view_message', chat_slug=chat.slug, pk=message.id) }}{% else %}{{ url_for('chats.view_chat', slug=chat.slug) }}{% endif %}"
-                 class="btn btn-secondary">Cancel</a>
+                 class="btn btn-secondary">
+                 <img src="{{ url_for('static', filename='img/cancel_icon.png') }}" alt="Cancel" aria-hidden="true" class="icon-btn">
+                 Cancel
+              </a>
             </div>
 
           </form>

@@ -9,8 +9,14 @@
     <h2 class="modal-title" id="modal-title">Confirm</h2>
     <div class="modal-body" id="modal-body">Are you sure you want to proceed?</div>
     <div class="modal-actions">
-      <button id="modal-confirm" class="btn btn-danger">Confirm</button>
-      <button id="modal-cancel" class="btn btn-secondary">Cancel</button>
+      <button id="modal-confirm" class="btn btn-danger">
+        <img src="{{ url_for('static', filename='img/confirm_icon.png') }}" alt="Confirm" aria-hidden="true" class="icon-btn">
+        Confirm
+      </button>
+      <button id="modal-cancel" class="btn btn-secondary">
+        <img src="{{ url_for('static', filename='img/cancel_icon.png') }}" alt="Cancel" aria-hidden="true" class="icon-btn">
+        Cancel
+      </button>
     </div>
   </div>
 </div>
