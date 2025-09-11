@@ -67,6 +67,10 @@ class Config:
     # === Timezone ===
     DEFAULT_TZ_NAME = os.getenv("DEFAULT_TIMEZONE", "Europe/Kyiv")
 
+    # === Localization / i18n ===
+    LANGUAGES = os.getenv("APP_LANGUAGES", "en,ua").split(",")
+    DEFAULT_LOCALE = os.getenv("APP_DEFAULT_LOCALE", "en")
+
     ENV = os.getenv("FLASK_ENV", "production")
     DEBUG = ENV == "development"
     TESTING = False
