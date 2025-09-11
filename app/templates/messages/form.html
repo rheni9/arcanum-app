@@ -161,8 +161,8 @@
                 {{ "Update" if is_edit else "Save" }}
               </button>
               <a href="{% if is_edit %}{{ url_for('messages.view_message', chat_slug=chat.slug, pk=message.id) }}{% else %}{{ url_for('chats.view_chat', slug=chat.slug) }}{% endif %}"
-                 class="btn btn-secondary">
-                 <img src="{{ url_for('static', filename='img/cancel_icon.png') }}" alt="Cancel" aria-hidden="true" class="btn-icon">
+                 class="btn btn-secondary btn-icon">
+                 <img src="{{ url_for('static', filename='img/cancel_icon.png') }}" alt="Cancel" aria-hidden="true">
                  Cancel
               </a>
             </div>

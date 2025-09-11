@@ -158,8 +158,8 @@
                 {{ "Update" if is_edit else "Create" }}
               </button>
               <a href="{{ url_for('chats.view_chat', slug=chat.slug) if is_edit else url_for('chats.list_chats') }}"
-                 class="btn btn-secondary">
-                 <img src="{{ url_for('static', filename='img/cancel_icon.png') }}" alt="Cancel" aria-hidden="true" class="btn-icon">
+                 class="btn btn-secondary btn-icon">
+                 <img src="{{ url_for('static', filename='img/cancel_icon.png') }}" alt="Cancel" aria-hidden="true">
                  Cancel
               </a>
             </div>
