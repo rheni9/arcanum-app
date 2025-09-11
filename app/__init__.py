@@ -2,8 +2,8 @@
 Application factory for the Arcanum Flask application.
 
 Creates and configures the Flask app instance, loads environment variables,
-applies validated configuration, initializes logging, blueprints, filters,
-CSRF protection, and global hooks.
+applies validated configuration, initializes logging, database, Babel (i18n),
+Cloudinary, Backblaze B2, CSRF protection, blueprints, filters, and hooks.
 """
 
 import os
@@ -14,8 +14,9 @@ import boto3
 from botocore.config import Config as BotoConfig
 from pytz import timezone as PytzTimeZone
 
-from flask import Flask
+from flask import Flask, session, request
 from flask_wtf import CSRFProtect
+from flask_babel import Babel
 from cloudinary import config as cloudinary_config
 
 from app.config import DevelopmentConfig, TestingConfig, ProductionConfig
@@ -33,6 +34,7 @@ from app.extensions import db
 
 logger = logging.getLogger(__name__)
 csrf = CSRFProtect()
+babel = Babel()
 
 
 def create_app(config_class: type = None) -> Flask:
@@ -40,8 +42,8 @@ def create_app(config_class: type = None) -> Flask:
     Create and configure the Flask application instance.
 
     Loads environment variables, configures logging, validates configuration,
-    initializes Cloudinary, Backblaze B2, CSRF, database, blueprints, filters,
-    and request hooks.
+    initializes Cloudinary, Backblaze B2, CSRF, Babel (i18n), database,
+    blueprints, filters, and request hooks.
 
     :param config_class: Optional configuration class.
     :return: Configured Flask app instance.
@@ -67,6 +69,25 @@ def create_app(config_class: type = None) -> Flask:
 
     # === Initialize Database & Context Processors ===
     db.init_app(app)
+
+    # === Initialize Babel ===
+    def get_locale():
+        langs = app.config.get("LANGUAGES", ["en"])
+        lang = session.get("lang")
+        if lang in langs:
+            return lang
+        return (
+            request.accept_languages.best_match(langs)
+            or app.config.get("DEFAULT_LOCALE", "en")
+        )
+
+    babel.init_app(app, locale_selector=get_locale)
+
+    logger.debug(
+        "[BABEL|INIT] Babel configured | Languages=%s | Default=%s",
+        app.config.get("LANGUAGES"),
+        app.config.get("DEFAULT_LOCALE"),
+    )
 
     # === Initialize tz object from config ===
     app.config["DEFAULT_TZ"] = PytzTimeZone(app.config["DEFAULT_TZ_NAME"])
