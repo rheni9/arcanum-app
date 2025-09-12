@@ -6,7 +6,7 @@
 {% if request.endpoint == 'home.home' or request.endpoint == 'auth.login' %}
   <div class="footer-content">
     <p class="footer-text">
-      © {{ current_year }} Arcanum. All rights reserved.
+      © {{ current_year }} Arcanum. {{ _('All rights reserved.') }}
     </p>
   </div>
 {% endif %}

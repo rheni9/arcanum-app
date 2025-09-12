@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Arcanum 1.1\n"
 "Report-Msgid-Bugs-To: arcanum.app@meta.ua\n"
-"POT-Creation-Date: 2025-09-11 18:57+0300\n"
+"POT-Creation-Date: 2025-09-12 15:30+0300\n"
 "PO-Revision-Date: 2025-09-12 14:18+0300\n"
 "Last-Translator: Arthur Ratsa <rheni.light@gmail.com>\n"
 "Language: en\n"
@@ -18,23 +18,27 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
-#: app/templates/partials/_header.html:15
+#: app/templates/partials/_footer.html:9
+msgid "All rights reserved."
+msgstr "All rights reserved."
+
+#: app/templates/partials/_header.html:19
 msgid "Switch to English"
 msgstr "Switch to English"
 
-#: app/templates/partials/_header.html:17
+#: app/templates/partials/_header.html:25
 msgid "Switch to Ukrainian"
 msgstr "Switch to Ukrainian"
 
-#: app/templates/partials/_header.html:23
+#: app/templates/partials/_header.html:32
 msgid "Dashboard"
 msgstr "Dashboard"
 
-#: app/templates/partials/_header.html:24
+#: app/templates/partials/_header.html:33
 msgid "Sign out"
 msgstr "Sign out"
 
-#: app/templates/partials/_header.html:26
+#: app/templates/partials/_header.html:35
 msgid "Sign in"
 msgstr "Sign in"
 
