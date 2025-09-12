@@ -15,8 +15,6 @@ from botocore.config import Config as BotoConfig
 from pytz import timezone as PytzTimeZone
 
 from flask import Flask, session, request
-from flask_wtf import CSRFProtect
-from flask_babel import Babel
 from cloudinary import config as cloudinary_config
 
 from app.config import DevelopmentConfig, TestingConfig, ProductionConfig
@@ -30,11 +28,10 @@ from app.routes.dashboard import dashboard_bp
 from app.routes.chats import chats_bp
 from app.routes.messages import messages_bp
 from app.routes.search import search_bp
-from app.extensions import db
+from app.routes.lang import lang_bp
+from app.extensions import db, csrf, babel
 
 logger = logging.getLogger(__name__)
-csrf = CSRFProtect()
-babel = Babel()
 
 
 def create_app(config_class: type = None) -> Flask:
@@ -163,6 +160,7 @@ def _register_blueprints(app: Flask) -> None:
 
     :param app: Flask app instance.
     """
+    app.register_blueprint(lang_bp)
     app.register_blueprint(home_bp, url_prefix="/")
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(chats_bp, url_prefix="/chats")
