@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Arcanum 1.1\n"
 "Report-Msgid-Bugs-To: arcanum.app@meta.ua\n"
-"POT-Creation-Date: 2025-09-12 16:51+0300\n"
+"POT-Creation-Date: 2025-09-12 17:43+0300\n"
 "PO-Revision-Date: 2025-09-12 14:18+0300\n"
 "Last-Translator: Arthur Ratsa <rheni.light@gmail.com>\n"
 "Language: uk\n"
@@ -18,6 +18,31 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
+
+#: app/forms/auth_form.py:21
+msgid "Password"
+msgstr "Пароль"
+
+#: app/forms/auth_form.py:22
+msgid "Please enter your password."
+msgstr "Будь ласка, введи свій пароль."
+
+#: app/forms/auth_form.py:24 app/templates/auth/login.html:8
+#: app/templates/auth/login.html:19
+msgid "Sign In"
+msgstr "Вхід"
+
+#: app/routes/auth.py:40
+msgid "You have been logged in successfully."
+msgstr "Вхід виконано успішно."
+
+#: app/routes/auth.py:44
+msgid "Password is incorrect."
+msgstr "Неправильний пароль."
+
+#: app/routes/auth.py:61
+msgid "You have been logged out successfully."
+msgstr "Вихід виконано успішно."
 
 #: app/templates/dashboard.html:8 app/templates/dashboard.html:14
 #: app/templates/partials/_header.html:32
@@ -72,6 +97,22 @@ msgstr "Твій особистий простір"
 msgid "Access requires authorization"
 msgstr "Для доступу потрібно увійти"
 
+#: app/templates/auth/login.html:16
+msgid "Lock icon"
+msgstr "Значок замка"
+
+#: app/templates/auth/login.html:36 app/templates/partials/_header.html:35
+msgid "Sign in"
+msgstr "Увійти"
+
+#: app/templates/auth/login.html:40
+msgid "Required field"
+msgstr "Обов’язкове поле"
+
+#: app/templates/auth/login.html:45
+msgid "Logo icon"
+msgstr "Значок логотипа"
+
 #: app/templates/partials/_footer.html:9
 msgid "All rights reserved."
 msgstr "Всі права захищені."
@@ -87,10 +128,6 @@ msgstr "Перейти на українську"
 #: app/templates/partials/_header.html:33
 msgid "Sign out"
 msgstr "Вийти"
-
-#: app/templates/partials/_header.html:35
-msgid "Sign in"
-msgstr "Увійти"
 
 #: app/templates/partials/_modal.html:9 app/templates/partials/_modal.html:13
 #: app/templates/partials/_modal.html:14

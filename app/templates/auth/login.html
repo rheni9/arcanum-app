@@ -5,7 +5,7 @@
 
 {% extends "base.html" %}
 
-{% block title %}Sign In | Arcanum{% endblock %}
+{% block title %}{{ _('Sign In') }} | Arcanum{% endblock %}
 
 {% block content %}
   <div class="content-area">
@@ -13,10 +13,10 @@
 
       {# --- Lock illustration above the form --- #}
       <div class="illustration lock">
-        <img src="{{ url_for('static', filename='img/lock.png') }}" alt="Lock icon">
+        <img src="{{ url_for('static', filename='img/lock.png') }}" alt="{{ _('Lock icon') }}">
       </div>
 
-      <h1 class="section-title">Sign In</h1>
+      <h1 class="section-title">{{ _('Sign In') }}</h1>
 
       {# --- Sign-in form with CSRF token --- #}
       <div class="form-container form-box">
@@ -33,16 +33,16 @@
             {% endfor %}
           </div>
 
-          <button type="submit" class="btn btn-primary">Sign in</button>
+          <button type="submit" class="btn btn-primary">{{ _('Sign in') }}</button>
         </form>
       </div>
       <p class="form-required-note">
-        <span class="form-required-mark">*</span> Required field
+        <span class="form-required-mark">*</span> {{ _('Required field') }}
       </p>
 
       {# --- Arcanum logo illustration below the form --- #}
       <div class="illustration page-logo">
-        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo icon">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="{{ _('Logo icon') }}">
       </div>
 
     </section>

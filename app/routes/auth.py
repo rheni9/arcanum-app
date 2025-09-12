@@ -10,6 +10,7 @@ from flask import (
     Blueprint, current_app, render_template, jsonify,
     redirect, url_for, session, flash, Response
 )
+from flask_babel import _
 
 from app.forms.auth_form import AuthForm
 
@@ -36,11 +37,11 @@ def login() -> Response | str:
         if form.password.data == expected_password:
             session["logged_in"] = True
             logger.info("[AUTH|LOGIN] Login successful.")
-            flash("You have been logged in successfully.", "success")
+            flash(_("You have been logged in successfully."), "success")
             return redirect(url_for("dashboard.dashboard"))
 
         logger.warning("[AUTH|LOGIN] Incorrect password.")
-        flash("Password is incorrect.", "error")
+        flash(_("Password is incorrect."), "error")
 
     return render_template("auth/login.html", form=form)
 
@@ -57,5 +58,5 @@ def logout() -> tuple[Response, int]:
     """
     session.pop("logged_in", None)
     logger.info("[AUTH|LOGOUT] Logout successful.")
-    flash("You have been logged out successfully.", "success")
+    flash(_("You have been logged out successfully."), "success")
     return jsonify({"redirect": url_for("home.home")}), 200
