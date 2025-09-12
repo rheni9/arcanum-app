@@ -5,20 +5,22 @@
 
 {% extends "base.html" %}
 
-{% block title %}Dashboard | Arcanum{% endblock %}
+{% block title %}{{ _('Dashboard') }} | Arcanum{% endblock %}
 {% block body_class %}dashboard-page{% endblock %}
 
 {% block content %}
   <div class="content-area">
     <section class="section">
-      <h1 class="section-title">Dashboard</h1>
+      <h1 class="section-title">{{ _('Dashboard') }}</h1>
       <div class="section-content">
-        <p class="dashboard-lead">Select a section to explore your saved content.</p>
+        <p class="dashboard-lead">
+          {{ _('Select a section to explore your saved content') }}
+        </p>
       </div>
       <div class="card-grid">
         <a href="{{ url_for('chats.list_chats') }}" class="card-box">
-          <img src="{{ url_for('static', filename='img/chats.png') }}" alt="Chats icon">
-          <h2>Messages</h2>
+          <img src="{{ url_for('static', filename='img/chats.png') }}" alt="{{ _('Chats icon') }}">
+          <h2>{{ _('Messages') }}</h2>
         </a>
       </div>      
     </section>
