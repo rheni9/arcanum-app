@@ -5,16 +5,16 @@
 
 {% extends "base.html" %}
 
-{% block title %}Error | Arcanum{% endblock %}
+{% block title %}{{ _('Error') }} | Arcanum{% endblock %}
 
 {% block content %}
   <div class="content-area">
     <section class="section">
 
-      <h1 class="section-title">Something went wrong</h1>
+      <h1 class="section-title">{{ _('Oops... Something went wrong') }}</h1>
 
       <div class="illustration error-icon">
-        <img src="{{ url_for('static', filename='img/error.png') }}" alt="Error icon">
+        <img src="{{ url_for('static', filename='img/error.png') }}" alt="{{ _('Error icon') }}">
       </div>
 
       {% if message %}
@@ -27,11 +27,11 @@
 
       <div class="btn-bar centered mt-4">
         <a href="{{ url_for('home.home') }}" class="btn btn-primary btn-icon">
-          Back to Home
+          {{ _('Back to Home') }}
         </a>
         {% if session.get("logged_in") %}
           <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-secondary">
-            Go to Dashboard
+            {{ _('Go to Dashboard') }}
           </a>
         {% endif %}
       </div>
