@@ -102,7 +102,19 @@
   outline-offset: 2px;
 }
 
-/* --- Language switcher --- */
+/* --- Container for lang + auth navigation --- */
+.nav-group {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* --- Language navigation --- */
+.lang-nav {
+  display: flex;
+  align-items: center;
+}
+
 .lang-switch {
   display: flex;
   align-items: center;
