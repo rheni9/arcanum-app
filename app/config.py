@@ -68,8 +68,14 @@ class Config:
     DEFAULT_TZ_NAME = os.getenv("DEFAULT_TIMEZONE", "Europe/Kyiv")
 
     # === Localization / i18n ===
-    LANGUAGES = os.getenv("APP_LANGUAGES", "en,ua").split(",")
+    LANGUAGES = os.getenv("APP_LANGUAGES", "en,uk").split(",")
     DEFAULT_LOCALE = os.getenv("APP_DEFAULT_LOCALE", "en")
+    BABEL_TRANSLATION_DIRECTORIES = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        "..",
+        "translations"
+    )
+    BABEL_DEFAULT_DOMAIN = "messages"
 
     ENV = os.getenv("FLASK_ENV", "production")
     DEBUG = ENV == "development"
