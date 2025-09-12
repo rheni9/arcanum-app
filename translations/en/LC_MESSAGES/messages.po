@@ -1,0 +1,40 @@
+# English translations for Arcanum.
+# Copyright (C) 2025 Arcanum App
+# This file is distributed under the same license as the Arcanum project.
+# Arthur Ratsa <rheni.light@gmail.com>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Arcanum 1.1\n"
+"Report-Msgid-Bugs-To: arcanum.app@meta.ua\n"
+"POT-Creation-Date: 2025-09-11 18:57+0300\n"
+"PO-Revision-Date: 2025-09-12 14:18+0300\n"
+"Last-Translator: Arthur Ratsa <rheni.light@gmail.com>\n"
+"Language: en\n"
+"Language-Team: en <arcanum.app@meta.ua>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: app/templates/partials/_header.html:15
+msgid "Switch to English"
+msgstr "Switch to English"
+
+#: app/templates/partials/_header.html:17
+msgid "Switch to Ukrainian"
+msgstr "Switch to Ukrainian"
+
+#: app/templates/partials/_header.html:23
+msgid "Dashboard"
+msgstr "Dashboard"
+
+#: app/templates/partials/_header.html:24
+msgid "Sign out"
+msgstr "Sign out"
+
+#: app/templates/partials/_header.html:26
+msgid "Sign in"
+msgstr "Sign in"
+
