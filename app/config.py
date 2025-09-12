@@ -8,19 +8,22 @@ Required environment variables:
 - FLASK_SECRET_KEY: Secret key for sessions and CSRF protection.
 - APP_ADMIN_PASSWORD: Password for single-user access.
 - DATABASE_URL: Database connection URI (optional fallback provided).
+- Backblaze B2 S3 keys: B2_S3_ENDPOINT_URL, B2_S3_BUCKET_NAME,
+                        B2_S3_ACCESS_KEY_ID, B2_S3_SECRET_ACCESS_KEY.
 
 Optional environment variables:
 - DEFAULT_TIMEZONE: Default timezone name for UI and date/time conversions
                     (defaults to 'Europe/Kyiv').
+- APP_LANGUAGES: Comma-separated list of supported languages.
+- APP_DEFAULT_LOCALE: Default locale code (defaults to 'en').
 - FLASK_ENV: Application environment ('development', 'testing', 'production').
 - LOG_LEVEL: Logging level ('DEBUG', 'INFO', 'WARNING', 'ERROR').
 - WTF_CSRF_SECRET_KEY: Secret key for WTForms CSRF
                        (defaults to FLASK_SECRET_KEY).
 - FORCE_HTTPS: Force HTTPS redirection ('true' or 'false').
-- PORT: Custom Flask server port. Defaults to 5000.
+- PORT: Custom Flask server port (defaults to 5000).
 - APP_ROOT_DIR: Application root directory (absolute path).
 - Cloudinary keys.
-- Backblaze B2 S3 keys.
 """
 
 import os
