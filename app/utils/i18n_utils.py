@@ -1,13 +1,33 @@
 """
 Internationalization (i18n) utilities for the Arcanum application.
 
-Provides helper functions for locale detection and selection,
-integrated with Flask-Babel. These utilities ensure consistent
-handling of language preferences across the application, including
-session overrides and request header negotiation.
+Provides helper tools for managing language selection and message
+translation. It integrates with Flask-Babel to ensure consistent
+handling of user-facing messages across the application.
+
+It supports locale detection and selection based on session preferences
+or request headers. It also provides a `TranslatableMsg` class that
+separates user-facing translations from logging messages, so logs always
+remain in English while the user interface is localized.
 """
 
 from flask import current_app, session, request
+from flask_babel import _
+
+
+class TranslatableMsg(str):
+    """
+    A string wrapper that separates UI translations from log output.
+    """
+    @property
+    def ui(self) -> str:
+        """Return localized version of the message for user-facing output."""
+        return _(self)
+
+    @property
+    def log(self) -> str:
+        """Return the original English version of the message for logging."""
+        return str(self)
 
 
 def get_locale() -> str:
