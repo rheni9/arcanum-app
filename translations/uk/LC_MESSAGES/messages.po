@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Arcanum 1.1\n"
 "Report-Msgid-Bugs-To: arcanum.app@meta.ua\n"
-"POT-Creation-Date: 2025-09-12 17:43+0300\n"
+"POT-Creation-Date: 2025-09-12 23:26+0300\n"
 "PO-Revision-Date: 2025-09-12 14:18+0300\n"
 "Last-Translator: Arthur Ratsa <rheni.light@gmail.com>\n"
 "Language: uk\n"
@@ -43,6 +43,12 @@ msgstr "Неправильний пароль."
 #: app/routes/auth.py:61
 msgid "You have been logged out successfully."
 msgstr "Вихід виконано успішно."
+
+#: app/services/filters_service.py:219
+msgid "Use the search bar or date filters above to find messages."
+msgstr ""
+"Скористайся рядком пошуку або фільтрами за датою вище, щоб знайти "
+"повідомлення."
 
 #: app/templates/dashboard.html:8 app/templates/dashboard.html:14
 #: app/templates/partials/_header.html:32
@@ -113,6 +119,54 @@ msgstr "Обов’язкове поле"
 msgid "Logo icon"
 msgstr "Значок логотипа"
 
+#: app/templates/components/_search_filter_block.html:24
+msgid "Search messages..."
+msgstr "Пошук повідомлень..."
+
+#: app/templates/components/_search_filter_block.html:28
+msgid "Search icon"
+msgstr "Значок пошуку"
+
+#: app/templates/components/_search_filter_block.html:29
+msgid "Search"
+msgstr "Пошук"
+
+#: app/templates/components/_search_filter_block.html:50
+msgid "Select"
+msgstr "Обрати"
+
+#: app/templates/components/_search_filter_block.html:51
+msgid "On"
+msgstr "У день"
+
+#: app/templates/components/_search_filter_block.html:52
+msgid "Before"
+msgstr "До"
+
+#: app/templates/components/_search_filter_block.html:53
+msgid "After"
+msgstr "Після"
+
+#: app/templates/components/_search_filter_block.html:54
+msgid "Between"
+msgstr "Між"
+
+#: app/templates/components/_search_filter_block.html:70
+msgid "Filter icon"
+msgstr "Значок фільтра"
+
+#: app/templates/components/_search_filter_block.html:71
+msgid "Filter"
+msgstr "Фільтр"
+
+#: app/templates/components/_search_filter_block.html:76
+msgid "Reset icon"
+msgstr "Значок скидання"
+
+#: app/templates/components/_search_filter_block.html:77
+msgid "Clear filters"
+msgstr "Очистити фільтри"
+
 #: app/templates/partials/_footer.html:9
 msgid "All rights reserved."
 msgstr "Всі права захищені."
@@ -142,3 +196,46 @@ msgstr "Ти впевнений, що хочеш продовжити?"
 msgid "Cancel"
 msgstr "Скасувати"
 
+#: app/utils/filters_utils.py:79
+msgid "Please enter a search query."
+msgstr "Введи пошуковий запит."
+
+#: app/utils/filters_utils.py:85
+msgid "Please enter a search query or tag."
+msgstr "Введи пошуковий запит або тег."
+
+#: app/utils/filters_utils.py:97
+msgid "Please enter a tag after #."
+msgstr "Введи тег після #."
+
+#: app/utils/filters_utils.py:108
+msgid "Please provide a valid date."
+msgstr "Введи правильну дату."
+
+#: app/utils/filters_utils.py:115 app/utils/filters_utils.py:148
+msgid "Invalid format."
+msgstr "Неправильний формат."
+
+#: app/utils/filters_utils.py:135
+msgid "Please provide both start and end dates."
+msgstr "Вкажи і початкову, і кінцеву дати."
+
+#: app/utils/filters_utils.py:138
+msgid "Start date is required."
+msgstr "Потрібно вказати початкову дату."
+
+#: app/utils/filters_utils.py:140
+msgid "End date is required."
+msgstr "Потрібно вказати кінцеву дату."
+
+#: app/utils/filters_utils.py:167
+msgid "Start date must be before or equal to end date."
+msgstr "Початкова дата має бути раніше або збігатися з кінцевою."
+
+#: app/utils/filters_utils.py:195
+msgid "Please select a date filter mode."
+msgstr "Вибери режим фільтрації за датою."
+
+#: app/utils/filters_utils.py:205
+msgid "Please enter a search query, tag, or select a date filter."
+msgstr "Введи пошуковий запит або тег чи вибери фільтр за датою."

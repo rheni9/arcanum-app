@@ -10,6 +10,7 @@ import logging
 from sqlite3 import DatabaseError
 
 from app.models.filters import MessageFilters
+from app.utils.i18n_utils import TranslatableMsg
 from app.services.dao.filters_dao import fetch_filtered_messages
 from app.utils.filters_utils import (
     normalize_filter_action,
@@ -37,7 +38,7 @@ def resolve_message_query(
     :return: Result dictionary with data and metadata.
     :raises DatabaseError: If the DAO operation fails.
     """
-    status, message = preprocess_filters(filters)
+    status, msg = preprocess_filters(filters)
 
     if status == "cleared":
         logger.info(
@@ -46,8 +47,8 @@ def resolve_message_query(
         return _result_cleared(filters)
 
     if status == "invalid":
-        logger.warning("[FILTERS|SERVICE] Invalid filters: %s", message)
-        return _result_invalid(filters, message)
+        logger.warning("[FILTERS|SERVICE] Invalid filters.")
+        return _result_invalid(filters, msg)
 
     try:
         messages = fetch_filtered_messages(filters, sort_by, order)
@@ -70,6 +71,7 @@ def preprocess_filters(filters: MessageFilters) -> tuple[str, str | None]:
     Normalize and validate message filters.
 
     Distinguishes between 'search', 'tag', and 'filter' modes.
+    Returns a status and optional localized message.
 
     :param filters: Filter parameters to process.
     :return: Tuple of validation status and message (if any).
@@ -109,30 +111,27 @@ def _route_validation(filters: MessageFilters) -> tuple[str, str | None]:
         return _validate_date_filter(filters)
     if not filters.has_active() and not filters.action:
         return "cleared", None
-    return "invalid", "Please enter a search query or select date filters."
+
+    # Fallback: delegate to utilities to decide exact error message.
+    valid, msg = validate_search_filters(filters)
+    return ("valid", None) if valid else ("invalid", msg)
 
 
 def _validate_search_query(filters: MessageFilters) -> tuple[str, str | None]:
     """
-    Validate standard text search query or convert to tag search
-    if prefixed with '#'.
+    Validate standard text search query or convert to tag search if the
+    query is prefixed with '#'.
 
     :param filters: Filter parameters.
     :return: Tuple with status and optional validation message.
     """
+
+    # Convert '#tag' into tag search
     if filters.query and filters.query.strip().startswith("#"):
         filters.tag = filters.query.strip().lstrip("#")
         filters.query = None
         filters.action = "tag"
         return _validate_tag_search(filters)
-
-    filters.tag = None
-    filters.date_mode = None
-    filters.start_date = None
-    filters.end_date = None
-
-    if not filters.query:
-        return "invalid", "Please enter a search query."
 
     valid, msg = validate_search_filters(filters)
     return ("valid", None) if valid else ("invalid", msg)
@@ -145,14 +144,6 @@ def _validate_tag_search(filters: MessageFilters) -> tuple[str, str | None]:
     :param filters: Filter parameters.
     :return: Tuple with status and optional validation message.
     """
-    filters.query = None
-    filters.date_mode = None
-    filters.start_date = None
-    filters.end_date = None
-
-    if not filters.tag:
-        return "invalid", "Please enter a search query or tag."
-
     valid, msg = validate_search_filters(filters)
     return ("valid", None) if valid else ("invalid", msg)
 
@@ -164,12 +155,6 @@ def _validate_date_filter(filters: MessageFilters) -> tuple[str, str | None]:
     :param filters: Filter parameters.
     :return: Tuple with status and optional validation message.
     """
-    filters.query = None
-    filters.tag = None
-
-    if not filters.date_mode:
-        return "invalid", "Please select a date filter mode."
-
     valid, msg = validate_search_filters(filters)
     return ("valid", None) if valid else ("invalid", msg)
 
@@ -201,21 +186,21 @@ def _result_valid(
     }
 
 
-def _result_invalid(filters: MessageFilters, message: str) -> tuple[str, dict]:
+def _result_invalid(filters: MessageFilters, msg: str) -> tuple[str, dict]:
     """
     Return an empty result for invalid filters.
 
     Includes the validation error message for user feedback.
 
     :param filters: Filters that failed validation.
-    :param message: Error message to display.
+    :param msg: Error message to display.
     :return: Result tuple with 'invalid' status and metadata.
     """
     return "invalid", {
         "messages": [],
         "count": 0,
         "grouped": {},
-        "info_message": message,
+        "info_message": msg,
         "filters": filters,
         "cleared": False,
     }
@@ -230,12 +215,14 @@ def _result_cleared(filters: MessageFilters) -> tuple[str, dict]:
     :param filters: Filters that were cleared.
     :return: Result tuple with 'cleared' status and metadata.
     """
-    info_message = "Use the search bar or date filters above to find messages."
+    msg = TranslatableMsg(
+        "Use the search bar or date filters above to find messages."
+    ).ui
     return "cleared", {
         "messages": [],
         "count": 0,
         "grouped": {},
-        "info_message": info_message,
+        "info_message": msg,
         "filters": filters,
         "cleared": True,
     }
@@ -254,11 +241,12 @@ def _result_error(
     :param error: Exception raised during execution.
     :return: Result tuple with 'error' status and metadata.
     """
+    msg = TranslatableMsg(f"Database error: {error}").ui
     return "error", {
         "messages": [],
         "count": 0,
         "grouped": {},
-        "info_message": f"Database error: {error}",
+        "info_message": msg,
         "filters": filters,
         "cleared": False,
     }
