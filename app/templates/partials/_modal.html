@@ -6,16 +6,16 @@
 <div id="confirm-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
   <div class="modal-overlay"></div>
   <div class="modal-content" role="document">
-    <h2 class="modal-title" id="modal-title">Confirm</h2>
-    <div class="modal-body" id="modal-body">Are you sure you want to proceed?</div>
+    <h2 class="modal-title" id="modal-title">{{ _('Confirm') }}</h2>
+    <div class="modal-body" id="modal-body">{{ _('Are you sure you want to proceed?') }}</div>
     <div class="modal-actions">
       <button id="modal-confirm" class="btn btn-danger btn-icon">
-        <img src="{{ url_for('static', filename='img/confirm_icon.png') }}" alt="Confirm" aria-hidden="true">
-        Confirm
+        <img src="{{ url_for('static', filename='img/confirm_icon.png') }}" alt="{{ _('Confirm') }}" aria-hidden="true">
+        {{ _('Confirm') }}
       </button>
       <button id="modal-cancel" class="btn btn-secondary btn-icon">
-        <img src="{{ url_for('static', filename='img/cancel_icon.png') }}" alt="Cancel" aria-hidden="true">
-        Cancel
+        <img src="{{ url_for('static', filename='img/cancel_icon.png') }}" alt="{{ _('Cancel') }}" aria-hidden="true">
+        {{ _('Cancel') }}
       </button>
     </div>
   </div>

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Arcanum 1.1\n"
 "Report-Msgid-Bugs-To: arcanum.app@meta.ua\n"
-"POT-Creation-Date: 2025-09-12 15:30+0300\n"
+"POT-Creation-Date: 2025-09-12 15:35+0300\n"
 "PO-Revision-Date: 2025-09-12 14:18+0300\n"
 "Last-Translator: Arthur Ratsa <rheni.light@gmail.com>\n"
 "Language: en\n"
@@ -41,4 +41,17 @@ msgstr "Sign out"
 #: app/templates/partials/_header.html:35
 msgid "Sign in"
 msgstr "Sign in"
+
+#: app/templates/partials/_modal.html:9 app/templates/partials/_modal.html:13
+#: app/templates/partials/_modal.html:14
+msgid "Confirm"
+msgstr "Confirm"
+
+#: app/templates/partials/_modal.html:10
+msgid "Are you sure you want to proceed?"
+msgstr "Are you sure you want to proceed?"
+
+#: app/templates/partials/_modal.html:17 app/templates/partials/_modal.html:18
+msgid "Cancel"
+msgstr "Cancel"
 
