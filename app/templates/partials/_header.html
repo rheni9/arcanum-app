@@ -9,20 +9,32 @@
     <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="site-logo" />
     <span class="site-title">Arcanum</span>
   </a>
-  <nav class="auth-nav">
-    <!-- Language switcher -->
-    <span class="lang-switch">
-      <a href="#" class="header-link lang-link {% if lang == 'en' %}active{% endif %}">EN</a>
-      <span class="lang-divider">|</span>
-      <a href="#" class="header-link lang-link {% if lang == 'ua' %}active{% endif %}">UA</a>
-    </span>
 
-    <!-- Auth Navigation -->
-    {% if session.get('logged_in') %}
-      <a href="{{ url_for('dashboard.dashboard') }}" class="header-link">Dashboard</a>
-      <a href="{{ url_for('auth.logout') }}" class="header-link logout-link">Sign out</a>
-    {% else %}
-      <a href="{{ url_for('auth.login') }}" class="header-link">Sign in</a>
-    {% endif %}
-  </nav>
+  <div class="nav-group">
+    <!-- Language Navigation -->
+    <nav class="lang-nav">
+      <span class="lang-switch">
+        <a href="{{ url_for('lang.set_language', lang_code='en') }}"
+          class="header-link lang-link {% if lang == 'en' %}active{% endif %}"
+          title="{{ _('Switch to English') }}">EN</a>
+
+        <span class="lang-divider">|</span>
+
+        <a href="{{ url_for('lang.set_language', lang_code='uk') }}"
+          class="header-link lang-link {% if lang == 'uk' %}active{% endif %}"
+          title="{{ _('Switch to Ukrainian') }}">UA</a>
+      </span>
+    </nav>
+
+    <!-- Authentication Navigation -->
+    <nav class="auth-nav">
+      {% if session.get('logged_in') %}
+        <a href="{{ url_for('dashboard.dashboard') }}" class="header-link">{{ _('Dashboard') }}</a>
+        <a href="{{ url_for('auth.logout') }}" class="header-link logout-link">{{ _('Sign out') }}</a>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}" class="header-link">{{ _('Sign in') }}</a>
+      {% endif %}
+    </nav>
+
+  </div>
 </div>
