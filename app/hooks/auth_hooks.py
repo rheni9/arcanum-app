@@ -19,7 +19,13 @@ def restrict_access() -> Response | None:
 
     :return: Redirect response to login page if unauthorized, otherwise None.
     """
-    allowed_routes = {"home.home", "auth.login", "auth.logout", "static"}
+    allowed_routes = {
+        "home.home",
+        "auth.login",
+        "auth.logout",
+        "lang.set_language",
+        "static"
+    }
 
     # Do nothing if endpoint is missing (static file, etc)
     if request.endpoint is None:
