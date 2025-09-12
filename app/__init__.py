@@ -15,7 +15,7 @@ import boto3
 from botocore.config import Config as BotoConfig
 from pytz import timezone as PytzTimeZone
 
-from flask import Flask, session
+from flask import Flask
 from cloudinary import config as cloudinary_config
 
 from app.config import DevelopmentConfig, TestingConfig, ProductionConfig
@@ -80,8 +80,8 @@ def create_app(config_class: type = None) -> Flask:
 
     @app.context_processor
     def inject_lang():
-        """Inject current language code for templates."""
-        return {"lang": session.get("lang", get_locale())}
+        """Inject current UI language code into all templates."""
+        return {"lang": get_locale()}
 
     # === Initialize tz object from config ===
     app.config["DEFAULT_TZ"] = PytzTimeZone(app.config["DEFAULT_TZ_NAME"])
