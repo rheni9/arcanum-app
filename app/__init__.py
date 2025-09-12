@@ -15,7 +15,7 @@ import boto3
 from botocore.config import Config as BotoConfig
 from pytz import timezone as PytzTimeZone
 
-from flask import Flask, session, request
+from flask import Flask, session
 from cloudinary import config as cloudinary_config
 
 from app.config import DevelopmentConfig, TestingConfig, ProductionConfig
@@ -23,6 +23,7 @@ from app.hooks.auth_hooks import restrict_access
 from app.utils.logging_utils import configure_logging
 from app.utils.time_utils import datetimeformat, dateonlyformat
 from app.utils.db_utils import close_request_connection, ensure_db_exists
+from app.utils.i18n_utils import get_locale
 from app.routes.home import home_bp
 from app.routes.auth import auth_bp
 from app.routes.dashboard import dashboard_bp
@@ -70,23 +71,17 @@ def create_app(config_class: type = None) -> Flask:
     db.init_app(app)
 
     # === Initialize Babel ===
-    def get_locale():
-        langs = app.config.get("LANGUAGES", ["en"])
-        lang = session.get("lang")
-        if lang in langs:
-            return lang
-        return (
-            request.accept_languages.best_match(langs)
-            or app.config.get("DEFAULT_LOCALE", "en")
-        )
-
     babel.init_app(app, locale_selector=get_locale)
-
     logger.debug(
         "[BABEL|INIT] Babel configured | Languages=%s | Default=%s",
         app.config.get("LANGUAGES"),
         app.config.get("DEFAULT_LOCALE"),
     )
+
+    @app.context_processor
+    def inject_lang():
+        """Inject current language code for templates."""
+        return {"lang": session.get("lang", get_locale())}
 
     # === Initialize tz object from config ===
     app.config["DEFAULT_TZ"] = PytzTimeZone(app.config["DEFAULT_TZ_NAME"])
