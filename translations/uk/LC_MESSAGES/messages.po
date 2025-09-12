@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Arcanum 1.1\n"
 "Report-Msgid-Bugs-To: arcanum.app@meta.ua\n"
-"POT-Creation-Date: 2025-09-12 15:35+0300\n"
+"POT-Creation-Date: 2025-09-12 16:17+0300\n"
 "PO-Revision-Date: 2025-09-12 14:18+0300\n"
 "Last-Translator: Arthur Ratsa <rheni.light@gmail.com>\n"
 "Language: uk\n"
@@ -19,21 +19,33 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
+#: app/templates/index.html:15
+msgid "Welcome to Arcanum"
+msgstr "Вітаємо в Arcanum"
+
+#: app/templates/index.html:17
+msgid "Your private space"
+msgstr "Твій особистий простір"
+
+#: app/templates/index.html:35
+msgid "Access requires authorization"
+msgstr "Для доступу потрібно увійти"
+
 #: app/templates/partials/_footer.html:9
 msgid "All rights reserved."
 msgstr "Всі права захищені."
 
 #: app/templates/partials/_header.html:19
 msgid "Switch to English"
-msgstr "Перемкнути на англійську"
+msgstr "Перейти на англійську"
 
 #: app/templates/partials/_header.html:25
 msgid "Switch to Ukrainian"
-msgstr "Перемкнути на українську"
+msgstr "Перейти на українську"
 
 #: app/templates/partials/_header.html:32
 msgid "Dashboard"
-msgstr "Панель"
+msgstr "Кабінет"
 
 #: app/templates/partials/_header.html:33
 msgid "Sign out"
@@ -50,7 +62,7 @@ msgstr "Підтвердити"
 
 #: app/templates/partials/_modal.html:10
 msgid "Are you sure you want to proceed?"
-msgstr "Ви впевнені, що хочете продовжити?"
+msgstr "Ти впевнений, що хочеш продовжити?"
 
 #: app/templates/partials/_modal.html:17 app/templates/partials/_modal.html:18
 msgid "Cancel"

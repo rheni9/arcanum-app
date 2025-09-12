@@ -12,9 +12,9 @@
   <div class="content-area">
     {# --- Welcome message section --- #}
     <section class="section">
-      <h1 class="section-title">Welcome to Arcanum</h1>
+      <h1 class="section-title">{{ _('Welcome to Arcanum') }}</h1>
       <div class="section-content">
-        <p>This is your private space.</p>
+        <p>{{ _('Your private space') }}</p>
       </div>
     </section>
 
@@ -32,7 +32,7 @@
   {# --- Guest-only footer message --- #}
   {% if not session.get('logged_in') %}
     <div class="auth-notice full-width">
-      Access requires authorization
+      {{ _('Access requires authorization') }}
     </div>
   {% endif %}
 {% endblock %}
