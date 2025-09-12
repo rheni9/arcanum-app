@@ -3,7 +3,8 @@ Application factory for the Arcanum Flask application.
 
 Creates and configures the Flask app instance, loads environment variables,
 applies validated configuration, initializes logging, database, Babel (i18n),
-Cloudinary, Backblaze B2, CSRF protection, blueprints, filters, and hooks.
+timezone, Cloudinary, Backblaze B2, CSRF protection, blueprints, filters,
+and request hooks.
 """
 
 import os
@@ -39,8 +40,9 @@ def create_app(config_class: type = None) -> Flask:
     Create and configure the Flask application instance.
 
     Loads environment variables, configures logging, validates configuration,
-    initializes Cloudinary, Backblaze B2, CSRF, Babel (i18n), database,
-    blueprints, filters, and request hooks.
+    initializes extensions (database, Babel for i18n, CSRF), timezone,
+    and third-party integrations (Cloudinary, Backblaze B2).
+    Registers blueprints, Jinja filters, and request hooks.
 
     :param config_class: Optional configuration class.
     :return: Configured Flask app instance.
