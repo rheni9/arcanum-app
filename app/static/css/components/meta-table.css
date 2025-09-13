@@ -42,7 +42,8 @@
   color: var(--color-primary);
   width: 12rem;
   flex-shrink: 0;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .meta-value {
