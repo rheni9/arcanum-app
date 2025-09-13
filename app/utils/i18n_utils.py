@@ -9,10 +9,17 @@ It supports locale detection and selection based on session preferences
 or request headers. It also provides a `TranslatableMsg` class that
 separates user-facing translations from logging messages, so logs always
 remain in English while the user interface is localized.
+
+Note: English ("en") is internally mapped to British English ("en_GB").
 """
 
 from flask import current_app, session, request
 from flask_babel import _
+
+LANG_MAP = {
+    "en": "en_GB",
+    "uk": "uk",
+}
 
 
 class TranslatableMsg(str):
@@ -39,15 +46,17 @@ def get_locale() -> str:
     the best language from the request's Accept-Language headers. Falls
     back to the default locale if no match is found.
 
-    :return: Locale code string (e.g., 'en', 'uk').
+    :return: Locale code string (e.g., 'en_GB', 'uk').
     """
     langs = current_app.config.get("LANGUAGES", ["en"])
     lang = session.get("lang")
 
     if lang in langs:
-        return lang
+        return LANG_MAP.get(lang, lang)
+
+    best = request.accept_languages.best_match(langs)
 
     return (
-        request.accept_languages.best_match(langs)
-        or current_app.config.get("DEFAULT_LOCALE", "en")
+        LANG_MAP.get(best, best)
+        or current_app.config.get("DEFAULT_LOCALE", "en_GB")
     )

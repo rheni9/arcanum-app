@@ -72,7 +72,7 @@ class Config:
 
     # === Localization / i18n ===
     LANGUAGES = os.getenv("APP_LANGUAGES", "en,uk").split(",")
-    DEFAULT_LOCALE = os.getenv("APP_DEFAULT_LOCALE", "en")
+    DEFAULT_LOCALE = os.getenv("APP_DEFAULT_LOCALE", "en_GB")
     BABEL_TRANSLATION_DIRECTORIES = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),
         "..",
@@ -80,6 +80,7 @@ class Config:
     )
     BABEL_DEFAULT_DOMAIN = "messages"
 
+    # === Environment Flags ===
     ENV = os.getenv("FLASK_ENV", "production")
     DEBUG = ENV == "development"
     TESTING = False

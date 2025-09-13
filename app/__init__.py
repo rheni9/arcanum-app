@@ -81,7 +81,11 @@ def create_app(config_class: type = None) -> Flask:
     @app.context_processor
     def inject_lang():
         """Inject current UI language code into all templates."""
-        return {"lang": get_locale()}
+        locale = get_locale()
+        return {
+            "lang": locale,
+            "lang_code": locale.split("_")[0]
+        }
 
     # === Initialize tz object from config ===
     app.config["DEFAULT_TZ"] = PytzTimeZone(app.config["DEFAULT_TZ_NAME"])

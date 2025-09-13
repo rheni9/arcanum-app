@@ -15,13 +15,13 @@
     <nav class="lang-nav">
       <span class="lang-switch">
         <a href="{{ url_for('lang.set_language', lang_code='en') }}"
-          class="header-link lang-link {% if lang == 'en' %}active{% endif %}"
+          class="header-link lang-link {% if lang_code == 'en' %}active{% endif %}"
           title="{{ _('Switch to English') }}">EN</a>
 
         <span class="lang-divider">|</span>
 
         <a href="{{ url_for('lang.set_language', lang_code='uk') }}"
-          class="header-link lang-link {% if lang == 'uk' %}active{% endif %}"
+          class="header-link lang-link {% if lang_code == 'uk' %}active{% endif %}"
           title="{{ _('Switch to Ukrainian') }}">UA</a>
       </span>
     </nav>
