@@ -107,6 +107,12 @@
   color: var(--text-muted);
 }
 
+.table .table-timestamp.muted {
+  color: var(--text-muted);
+  text-align: right;
+  white-space: nowrap;
+}
+
 /* --- Chat-specific layout --- */
 .table.chats-table td:nth-child(1),
 .table.chats-table td:nth-child(3),
@@ -180,6 +186,10 @@
   .table .table-timestamp .time {
     font-size: var(--font-sm);
   }
+
+  .table .table-timestamp.muted {
+    font-size: var(--font-detail);
+  }
 }
 
 @media (max-width: 480px) {
@@ -195,5 +205,9 @@
 
   .table .table-timestamp .time {
     font-size: var(--font-xs);
+  }
+
+  .table .table-timestamp.muted {
+    font-size: var(--font-sm);
   }
 }
