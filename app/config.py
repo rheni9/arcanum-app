@@ -69,6 +69,7 @@ class Config:
 
     # === Timezone ===
     DEFAULT_TZ_NAME = os.getenv("DEFAULT_TIMEZONE", "Europe/Kyiv")
+    BABEL_DEFAULT_TIMEZONE = DEFAULT_TZ_NAME
 
     # === Localization / i18n ===
     LANGUAGES = os.getenv("APP_LANGUAGES", "en,uk").split(",")

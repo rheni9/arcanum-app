@@ -23,11 +23,14 @@ def ui_date(dt: date) -> str:
     """
     Format a date with localized month names.
 
+    Expects a value already localized to the app timezone.
+    If a datetime is passed, only the date part is used.
+
     :param dt: Date to format.
     :return: Formatted string.
     """
     if isinstance(dt, datetime):
-        dt = dt.replace(tzinfo=None)
+        dt = dt.date()
     return format_date(dt, format="d MMMM yyyy")
 
 
@@ -35,6 +38,7 @@ def ui_datetime(dt: datetime, format_type: str) -> str:
     """
     Format a localized datetime object into a UI string.
 
+    Expects a value already localized to the app timezone.
     Uses Babel's localized date/time formatting to return a UI string.
 
     :param dt: Datetime object to format.
@@ -45,13 +49,16 @@ def ui_datetime(dt: datetime, format_type: str) -> str:
                         - "time": time only
     :return: Formatted string.
     """
-    dt_naive = dt.replace(tzinfo=None)
+    if not isinstance(dt, datetime):
+        return str(dt)
 
     format_map = {
-        "datetime": format_datetime(dt_naive, format="yyyy-MM-dd HH:mm:ss"),
-        "long_date": format_date(dt_naive, format="d MMMM yyyy"),
-        "long_date_time": format_datetime(dt_naive, format="long"),
-        "time": format_time(dt_naive, format="medium"),
+        "datetime": format_datetime(
+            dt, format="yyyy-MM-dd HH:mm:ss", rebase=False
+        ),
+        "long_date": format_date(dt, format="d MMMM yyyy"),
+        "long_date_time": format_datetime(dt, format="long", rebase=False),
+        "time": format_time(dt, format="medium", rebase=False),
     }
     if format_type not in format_map:
         logger.warning("[TIME|FORMAT] Unknown format type '%s'.", format_type)

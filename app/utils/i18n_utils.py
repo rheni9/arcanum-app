@@ -1,14 +1,15 @@
 """
 Internationalization (i18n) utilities for the Arcanum application.
 
-Provides helper tools for managing language selection and message
-translation. It integrates with Flask-Babel to ensure consistent
-handling of user-facing messages across the application.
+Provides helper tools for managing language and timezone selection.
+It integrates with Flask-Babel to ensure consistent handling of
+user-facing messages across the application.
 
 It supports locale detection and selection based on session preferences
-or request headers. It also provides a `TranslatableMsg` class that
-separates user-facing translations from logging messages, so logs always
-remain in English while the user interface is localized.
+or request headers. A TranslatableMsg wrapper separates user-facing
+translations from logging messages so that logs always remain in English.
+A timezone accessor is also provided to ensure all displayed times use
+the configured application timezone.
 
 Note: English ("en") is internally mapped to British English ("en_GB").
 """
@@ -43,8 +44,8 @@ def get_locale() -> str:
 
     Checks the session for a stored language preference. If the stored
     language is supported, it is returned. Otherwise, attempts to match
-    the best language from the request's Accept-Language headers. Falls
-    back to the default locale if no match is found.
+    the best language from the request's Accept-Language headers.
+    Falls back to the default locale if no match is found.
 
     :return: Locale code string (e.g., 'en_GB', 'uk').
     """
@@ -60,3 +61,15 @@ def get_locale() -> str:
         LANG_MAP.get(best, best)
         or current_app.config.get("DEFAULT_LOCALE", "en_GB")
     )
+
+
+def get_timezone() -> str:
+    """
+    Return timezone string for Babel.
+
+    This ensures that all formatted times in the UI are displayed
+    in the configured application timezone.
+
+    :return: Timezone name string.
+    """
+    return current_app.config.get("DEFAULT_TZ_NAME", "Europe/Kyiv")

@@ -23,7 +23,7 @@ from app.hooks.auth_hooks import restrict_access
 from app.utils.logging_utils import configure_logging
 from app.utils.time_utils import datetimeformat, dateonlyformat
 from app.utils.db_utils import close_request_connection, ensure_db_exists
-from app.utils.i18n_utils import get_locale
+from app.utils.i18n_utils import get_locale, get_timezone
 from app.routes.home import home_bp
 from app.routes.auth import auth_bp
 from app.routes.dashboard import dashboard_bp
@@ -71,11 +71,15 @@ def create_app(config_class: type = None) -> Flask:
     db.init_app(app)
 
     # === Initialize Babel ===
-    babel.init_app(app, locale_selector=get_locale)
+    babel.init_app(
+        app, locale_selector=get_locale, timezone_selector=get_timezone
+    )
     logger.debug(
-        "[BABEL|INIT] Babel configured | Languages=%s | Default=%s",
+        "[BABEL|INIT] Babel configured | Languages=%s | Default locale=%s "
+        "| Default timezone=%s",
         app.config.get("LANGUAGES"),
         app.config.get("DEFAULT_LOCALE"),
+        app.config.get("BABEL_DEFAULT_TIMEZONE"),
     )
 
     @app.context_processor
