@@ -14,35 +14,44 @@ from pytz import timezone as PytzTimeZone
 from pytz.tzinfo import BaseTzInfo
 
 from flask import current_app
+from flask_babel import format_date, format_time, format_datetime
 
 logger = logging.getLogger(__name__)
 
 
-def _format_day(dt: date) -> str:
+def ui_date(dt: date) -> str:
     """
-    Format a date without leading zero in the day.
+    Format a date with localized month names.
 
     :param dt: Date to format.
     :return: Formatted string.
     """
-    return f"{dt.day} {dt.strftime('%B %Y')}"
+    if isinstance(dt, datetime):
+        dt = dt.replace(tzinfo=None)
+    return format_date(dt, format="d MMMM yyyy")
 
 
-def _format_datetime(dt: datetime, format_type: str) -> str:
+def ui_datetime(dt: datetime, format_type: str) -> str:
     """
-    Format datetime object into a UI string based on format_type.
+    Format a localized datetime object into a UI string.
+
+    Uses Babel's localized date/time formatting to return a UI string.
 
     :param dt: Datetime object to format.
-    :param format_type: Format style keyword.
+    :param format_type: Format style keyword:
+                        - "datetime": ISO-like timestamp
+                        - "long_date": full date with month names
+                        - "long_date_time": localized long format
+                        - "time": time only
     :return: Formatted string.
     """
+    dt_naive = dt.replace(tzinfo=None)
+
     format_map = {
-        "datetime": dt.strftime("%Y-%m-%d %H:%M:%S"),
-        "long_date": _format_day(dt.date()),
-        "long_date_time": (
-            f"{_format_day(dt.date())} {dt.strftime('%H:%M:%S')}"
-        ),
-        "time": dt.strftime("%H:%M:%S")
+        "datetime": format_datetime(dt_naive, format="yyyy-MM-dd HH:mm:ss"),
+        "long_date": format_date(dt_naive, format="d MMMM yyyy"),
+        "long_date_time": format_datetime(dt_naive, format="long"),
+        "time": format_time(dt_naive, format="medium"),
     }
     if format_type not in format_map:
         logger.warning("[TIME|FORMAT] Unknown format type '%s'.", format_type)
@@ -354,7 +363,7 @@ def datetimeformat(
     tz: str | BaseTzInfo | None = None
 ) -> str:
     """
-    Format a datetime/date/string for UI display.
+    Format a datetime, date, or ISO string for UI display.
 
     Tries to parse strings as ISO, localizes datetimes,
     and applies a predefined formatting style.
@@ -401,7 +410,7 @@ def datetimeformat(
     else:
         dt = dt.astimezone(tz)
 
-    return _format_datetime(dt, format_type)
+    return ui_datetime(dt, format_type)
 
 
 def dateonlyformat(
@@ -434,7 +443,7 @@ def dateonlyformat(
         return str(value)
 
     format_map = {
-        "long_date": _format_day(dt),
+        "long_date": ui_date(dt),
         "short_date": dt.strftime("%d.%m.%Y"),
     }
 
