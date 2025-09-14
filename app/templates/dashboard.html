@@ -20,7 +20,7 @@
       <div class="card-grid">
         <a href="{{ url_for('chats.list_chats') }}" class="card-box">
           <img src="{{ url_for('static', filename='img/chats.png') }}" alt="{{ _('Chats icon') }}">
-          <h2>{{ _('Messages') }}</h2>
+          <h2>{{ pgettext("dashboard", "Messages") }}</h2>
         </a>
       </div>      
     </section>

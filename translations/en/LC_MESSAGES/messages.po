@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Arcanum 1.1\n"
 "Report-Msgid-Bugs-To: arcanum.app@meta.ua\n"
-"POT-Creation-Date: 2025-09-12 23:26+0300\n"
+"POT-Creation-Date: 2025-09-14 16:46+0300\n"
 "PO-Revision-Date: 2025-09-12 14:18+0300\n"
 "Last-Translator: Arthur Ratsa <rheni.light@gmail.com>\n"
 "Language: en\n"
@@ -61,6 +61,7 @@ msgid "Chats icon"
 msgstr "Chats icon"
 
 #: app/templates/dashboard.html:23
+msgctxt "dashboard"
 msgid "Messages"
 msgstr "Messages"
 
@@ -115,6 +116,93 @@ msgstr "Required field"
 #: app/templates/auth/login.html:45
 msgid "Logo icon"
 msgstr "Logo icon"
+
+#: app/templates/chats/_chats_table.html:16
+msgid "Chat"
+msgstr "Chat"
+
+#: app/templates/chats/_chats_table.html:24
+msgctxt "message_count_tooltip"
+msgid "Number of messages"
+msgstr "Number of messages"
+
+#: app/templates/chats/_chats_table.html:26
+msgctxt "message_count_header"
+msgid "Messages"
+msgstr "Messages"
+
+#: app/templates/chats/_chats_table.html:29
+msgctxt "message_count_header_short"
+msgid "Msgs"
+msgstr "Msgs"
+
+#: app/templates/chats/_chats_table.html:40
+msgctxt "last_message_tooltip"
+msgid "Last message"
+msgstr "Last message"
+
+#: app/templates/chats/_chats_table.html:41
+msgctxt "last_message_header"
+msgid "Last message"
+msgstr "Last message"
+
+#: app/templates/chats/_chats_table.html:67
+msgid "Active"
+msgstr "Active"
+
+#: app/templates/chats/_chats_table.html:67
+msgid "Inactive"
+msgstr "Inactive"
+
+#: app/templates/chats/_chats_table.html:70
+msgid "Member"
+msgstr "Member"
+
+#: app/templates/chats/_chats_table.html:85
+msgid "No messages"
+msgstr "No messages"
+
+#: app/templates/chats/_global_stats_table.html:11
+msgid "Number of chats:"
+msgstr "Number of chats:"
+
+#: app/templates/chats/_global_stats_table.html:17
+msgid "Number of messages:"
+msgstr "Number of messages:"
+
+#: app/templates/chats/_global_stats_table.html:23
+msgid "Messages with media:"
+msgstr "Messages with media:"
+
+#: app/templates/chats/_global_stats_table.html:29
+msgid "Most active chat:"
+msgstr "Most active chat:"
+
+#: app/templates/chats/_global_stats_table.html:38
+msgid "message"
+msgid_plural "messages"
+msgstr[0] "message"
+msgstr[1] "messages"
+
+#: app/templates/chats/_global_stats_table.html:49
+msgid "Last message timestamp:"
+msgstr "Last message timestamp:"
+
+#: app/templates/chats/_global_stats_table.html:58
+msgid "Date"
+msgstr "Date"
+
+#: app/templates/chats/_global_stats_table.html:62
+msgid "Time"
+msgstr "Time"
+
+#: app/templates/chats/index.html:10 app/templates/chats/index.html:19
+msgid "Chats"
+msgstr "Chats"
+
+#: app/templates/chats/index.html:25 app/templates/chats/index.html:26
+msgid "Add Chat"
+msgstr "Add Chat"
 
 #: app/templates/components/_search_filter_block.html:24
 msgid "Search messages..."

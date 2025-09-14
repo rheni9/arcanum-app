@@ -125,6 +125,13 @@
   width: 100%;
 }
 
+.table.chats-table th:nth-child(3) .label-full {
+  display: inline;
+}
+.table.chats-table th:nth-child(3) .label-short {
+  display: none;
+}
+
 /* --- Message-specific layout --- */
 .table.messages-table td:nth-child(1),
 .table.messages-table td:nth-child(2),
@@ -189,6 +196,15 @@
 
   .table .table-timestamp.muted {
     font-size: var(--font-detail);
+  }
+}
+
+@media (max-width: 540px) {
+  .table.chats-table th:nth-child(3) .label-full {
+    display: none;
+  }
+  .table.chats-table th:nth-child(3) .label-short {
+    display: inline;
   }
 }
 

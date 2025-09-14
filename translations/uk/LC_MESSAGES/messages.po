@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Arcanum 1.1\n"
 "Report-Msgid-Bugs-To: arcanum.app@meta.ua\n"
-"POT-Creation-Date: 2025-09-12 23:26+0300\n"
+"POT-Creation-Date: 2025-09-14 16:46+0300\n"
 "PO-Revision-Date: 2025-09-12 14:18+0300\n"
 "Last-Translator: Arthur Ratsa <rheni.light@gmail.com>\n"
 "Language: uk\n"
@@ -64,6 +64,7 @@ msgid "Chats icon"
 msgstr "Значок чатів"
 
 #: app/templates/dashboard.html:23
+msgctxt "dashboard"
 msgid "Messages"
 msgstr "Повідомлення"
 
@@ -118,6 +119,94 @@ msgstr "Обов’язкове поле"
 #: app/templates/auth/login.html:45
 msgid "Logo icon"
 msgstr "Значок логотипа"
+
+#: app/templates/chats/_chats_table.html:16
+msgid "Chat"
+msgstr "Чат"
+
+#: app/templates/chats/_chats_table.html:24
+msgctxt "message_count_tooltip"
+msgid "Number of messages"
+msgstr "Кількість повідомлень"
+
+#: app/templates/chats/_chats_table.html:26
+msgctxt "message_count_header"
+msgid "Messages"
+msgstr "Повідомлень"
+
+#: app/templates/chats/_chats_table.html:29
+msgctxt "message_count_header_short"
+msgid "Msgs"
+msgstr "Повід."
+
+#: app/templates/chats/_chats_table.html:40
+msgctxt "last_message_tooltip"
+msgid "Last message"
+msgstr "Останнє повідомлення"
+
+#: app/templates/chats/_chats_table.html:41
+msgctxt "last_message_header"
+msgid "Last message"
+msgstr "Останнє"
+
+#: app/templates/chats/_chats_table.html:67
+msgid "Active"
+msgstr "Активний"
+
+#: app/templates/chats/_chats_table.html:67
+msgid "Inactive"
+msgstr "Неактивний"
+
+#: app/templates/chats/_chats_table.html:70
+msgid "Member"
+msgstr "Учасник"
+
+#: app/templates/chats/_chats_table.html:85
+msgid "No messages"
+msgstr "Без повідомлень"
+
+#: app/templates/chats/_global_stats_table.html:11
+msgid "Number of chats:"
+msgstr "Кількість чатів:"
+
+#: app/templates/chats/_global_stats_table.html:17
+msgid "Number of messages:"
+msgstr "Кількість повідомлень:"
+
+#: app/templates/chats/_global_stats_table.html:23
+msgid "Messages with media:"
+msgstr "Повідомлень з медіа:"
+
+#: app/templates/chats/_global_stats_table.html:29
+msgid "Most active chat:"
+msgstr "Найактивніший чат:"
+
+#: app/templates/chats/_global_stats_table.html:38
+msgid "message"
+msgid_plural "messages"
+msgstr[0] "повідомлення"
+msgstr[1] "повідомлення"
+msgstr[2] "повідомлень"
+
+#: app/templates/chats/_global_stats_table.html:49
+msgid "Last message timestamp:"
+msgstr "Час останнього повідомлення:"
+
+#: app/templates/chats/_global_stats_table.html:58
+msgid "Date"
+msgstr "Дата"
+
+#: app/templates/chats/_global_stats_table.html:62
+msgid "Time"
+msgstr "Час"
+
+#: app/templates/chats/index.html:10 app/templates/chats/index.html:19
+msgid "Chats"
+msgstr "Чати"
+
+#: app/templates/chats/index.html:25 app/templates/chats/index.html:26
+msgid "Add Chat"
+msgstr "Додати чат"
 
 #: app/templates/components/_search_filter_block.html:24
 msgid "Search messages..."

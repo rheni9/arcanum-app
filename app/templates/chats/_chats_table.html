@@ -13,7 +13,7 @@
         <th class="col-index">#</th>
         <th class="sortable {% if sort_by == 'name' %}active-sort{% endif %}" data-sort="name">
           <div class="sort-wrapper">
-            <span class="header-label">Chat</span>
+            <span class="header-label">{{ _('Chat') }}</span>
             <span class="sort-arrow">
               {{ '▲' if sort_by == 'name' and order == 'asc' else '▼' if sort_by == 'name' else '' }}
             </span>
@@ -21,7 +21,14 @@
         </th>
         <th class="sortable {% if sort_by == 'message_count' %}active-sort{% endif %}" data-sort="message_count">
           <div class="sort-wrapper">
-            <span class="header-label">Messages</span>
+            <span class="header-label" title="{{ pgettext('message_count_tooltip', 'Number of messages') }}">
+              <span class="label-full">
+                {{ pgettext('message_count_header', 'Messages') }}
+              </span>
+              <span class="label-short" aria-hidden="true">
+                {{ pgettext('message_count_header_short', 'Msgs') }}
+              </span>
+            </span>
             <span class="sort-arrow">
               {{ '▲' if sort_by == 'message_count' and order == 'asc' else '▼' if sort_by == 'message_count' else '' }}
             </span>
@@ -29,7 +36,10 @@
         </th>
         <th class="sortable {% if sort_by == 'last_message' %}active-sort{% endif %}" data-sort="last_message">
           <div class="sort-wrapper">
-            <span class="header-label">Last message</span>
+            <span class="header-label"
+            title="{{ pgettext('last_message_tooltip', 'Last message') }}">
+              {{ pgettext('last_message_header', 'Last message') }}
+            </span>
             <span class="sort-arrow">
               {{ '▲' if sort_by == 'last_message' and order == 'asc' else '▼' if sort_by == 'last_message' else '' }}
             </span>
@@ -54,10 +64,10 @@
             </span>
             <span class="meta-status-group">
               <span class="meta-dot {{ 'online' if chat.is_active else 'offline' }}"
-                    title="{{ 'Active' if chat.is_active else 'Inactive' }}"></span>
+                    title="{{ _('Active') if chat.is_active else _('Inactive') }}"></span>
               {% if chat.is_member %}
                 <img src="{{ url_for('static', filename='img/member_icon.png') }}"
-                    alt="Member" title="Member" class="meta-status-icon">
+                    alt="{{ _('Member') }}" title="{{ _('Member') }}" class="meta-status-icon">
               {% endif %}
             </span>
           </span>
@@ -72,7 +82,7 @@
               <div class="time">{{ chat.last_message | datetimeformat("time") }}</div>
             </div>
           {% else %}
-            <div class="table-timestamp muted"><em>No messages</em></div>
+            <div class="table-timestamp muted"><em>{{ _('No messages') }}</em></div>
           {% endif %}
         </td>
       </tr>

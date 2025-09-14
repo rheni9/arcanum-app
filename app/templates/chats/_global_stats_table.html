@@ -8,32 +8,36 @@
 
   {# === Number of chats === #}
   <div class="meta-table-row">
-    <div class="meta-label">Number of chats:</div>
+    <div class="meta-label">{{ _('Number of chats:') }}</div>
     <div class="meta-value">{{ stats.total_chats }}</div>
   </div>
 
   {# === Number of messages === #}
   <div class="meta-table-row">
-    <div class="meta-label">Number of messages:</div>
+    <div class="meta-label">{{ _('Number of messages:') }}</div>
     <div class="meta-value">{{ stats.total_messages }}</div>
   </div>
 
   {# === Number of messages with media === #}
   <div class="meta-table-row">
-    <div class="meta-label">Messages with media:</div>
+    <div class="meta-label">{{ _('Messages with media:') }}</div>
     <div class="meta-value">{{ stats.media_messages }}</div>
   </div>
 
   {# === Most Active Chat === #}
   <div class="meta-table-row">
-    <div class="meta-label">Most active chat:</div>
+    <div class="meta-label">{{ _('Most active chat:') }}</div>
     <div class="meta-value">
       {% if stats.most_active_chat_name %}
         <a href="{{ url_for('chats.view_chat', slug=stats.most_active_chat_slug) }}"
            class="meta-link meta-link-active">
           {{ stats.most_active_chat_name }}
         </a>
-        <span class="meta-count">({{ stats.most_active_chat_count }} messages)</span>
+        <span class="meta-count">
+          ({{ stats.most_active_chat_count }} {{
+            ngettext("message", "messages", stats.most_active_chat_count)
+          }})
+        </span>
       {% else %}
         —
       {% endif %}
@@ -42,7 +46,7 @@
 
   {# === Last Message Timestamp === #}
   <div class="meta-table-row">
-    <div class="meta-label">Last message timestamp:</div>
+    <div class="meta-label">{{ _('Last message timestamp:') }}</div>
     <div class="meta-value">
       {% if stats.last_message_timestamp and stats.last_message_id %}
         <a href="{{ url_for('messages.view_message',
@@ -51,11 +55,11 @@
                             from_chats=1) }}">
           <div class="meta-icon-group">
             <span class="meta-icon-text">
-              <img src="{{ url_for('static', filename='img/calendar.png') }}" alt="Date">
+              <img src="{{ url_for('static', filename='img/calendar.png') }}" alt="{{ _('Date') }}">
               <span class="meta-date">{{ stats.last_message_timestamp | datetimeformat("long_date") }}</span>
             </span>
             <span class="meta-icon-text">
-              <img src="{{ url_for('static', filename='img/clock.png') }}" alt="Time">
+              <img src="{{ url_for('static', filename='img/clock.png') }}" alt="{{ _('Time') }}">
               <span class="meta-time">{{ stats.last_message_timestamp | datetimeformat("time") }}</span>
             </span>
           </div>

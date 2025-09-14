@@ -7,7 +7,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-  Chats | Arcanum
+  {{ _('Chats') }} | Arcanum
 {% endblock %}
 
 {% block content %}
@@ -16,14 +16,14 @@
     {# === Page Title and Global Statistics === #}
     <div class="meta-info-block">
       <section class="section">
-        <h1 class="section-title">Chats</h1>
+        <h1 class="section-title">{{ _('Chats') }}</h1>
         {% include "chats/_global_stats_table.html" %}
 
         {# === Add New Chat Button === #}
         <div class="action-btn-right">
           <a href="{{ url_for('chats.add_chat') }}" class="btn btn-primary btn-icon">
-            <img src="{{ url_for('static', filename='img/add_chat_icon.png') }}" alt="Add">
-            <span>Add Chat</span>
+            <img src="{{ url_for('static', filename='img/add_chat_icon.png') }}" alt="{{ _('Add Chat') }}">
+            <span>{{ _('Add Chat') }}</span>
           </a>
         </div>
       </section>
