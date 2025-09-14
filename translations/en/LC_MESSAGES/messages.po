@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Arcanum 1.1\n"
 "Report-Msgid-Bugs-To: arcanum.app@meta.ua\n"
-"POT-Creation-Date: 2025-09-14 16:46+0300\n"
+"POT-Creation-Date: 2025-09-14 17:09+0300\n"
 "PO-Revision-Date: 2025-09-12 14:18+0300\n"
 "Last-Translator: Arthur Ratsa <rheni.light@gmail.com>\n"
 "Language: en\n"
@@ -139,7 +139,7 @@ msgstr "Msgs"
 #: app/templates/chats/_chats_table.html:40
 msgctxt "last_message_tooltip"
 msgid "Last message"
-msgstr "Last message"
+msgstr "Last message timestamp"
 
 #: app/templates/chats/_chats_table.html:41
 msgctxt "last_message_header"
@@ -324,3 +324,4 @@ msgstr "Please select a date filter mode."
 #: app/utils/filters_utils.py:205
 msgid "Please enter a search query, tag, or select a date filter."
 msgstr "Please enter a search query, tag, or select a date filter."
+
