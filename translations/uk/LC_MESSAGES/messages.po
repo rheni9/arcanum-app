@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Arcanum 1.1\n"
 "Report-Msgid-Bugs-To: arcanum.app@meta.ua\n"
-"POT-Creation-Date: 2025-09-14 17:09+0300\n"
+"POT-Creation-Date: 2025-09-14 18:54+0300\n"
 "PO-Revision-Date: 2025-09-12 14:18+0300\n"
 "Last-Translator: Arthur Ratsa <rheni.light@gmail.com>\n"
 "Language: uk\n"
@@ -63,8 +63,9 @@ msgstr "Вибери розділ, щоб переглянути збереже�
 msgid "Chats icon"
 msgstr "Значок чатів"
 
-#: app/templates/dashboard.html:23
-msgctxt "dashboard"
+#: app/templates/dashboard.html:23 app/templates/search/results.html:60
+#: app/templates/search/results.html:62 app/templates/search/results.html:64
+#: app/templates/search/results.html:66
 msgid "Messages"
 msgstr "Повідомлення"
 
@@ -284,6 +285,75 @@ msgstr "Ти впевнений, що хочеш продовжити?"
 #: app/templates/partials/_modal.html:17 app/templates/partials/_modal.html:18
 msgid "Cancel"
 msgstr "Скасувати"
+
+#: app/templates/search/_grouped_msg_table.html:27
+msgid "ID"
+msgstr "ID"
+
+#: app/templates/search/_grouped_msg_table.html:33
+msgid "Message text"
+msgstr "Текст повідомлення"
+
+#: app/templates/search/_grouped_msg_table.html:38
+msgid "Sent"
+msgstr "Надіслано"
+
+#: app/templates/search/_grouped_msg_table.html:95
+#: app/templates/search/results.html:87 app/templates/search/results.html:89
+#: app/templates/search/results.html:91 app/templates/search/results.html:105
+msgid "No messages found"
+msgstr "Не знайдено повідомлень"
+
+#: app/templates/search/results.html:9 app/templates/search/results.html:17
+msgid "Search Results"
+msgstr "Результати пошуку"
+
+#: app/templates/search/results.html:42
+msgid "Back"
+msgstr "Назад"
+
+#: app/templates/search/results.html:43
+msgid "Back to Chats"
+msgstr "Назад до чатів"
+
+#: app/templates/search/results.html:55 app/templates/search/results.html:57
+msgid "Search results"
+msgstr "Результати пошуку"
+
+#: app/templates/search/results.html:55 app/templates/search/results.html:87
+msgid "for"
+msgstr "для"
+
+#: app/templates/search/results.html:57 app/templates/search/results.html:89
+msgid "for tag"
+msgstr "за тегом"
+
+#: app/templates/search/results.html:60 app/templates/search/results.html:93
+msgid "on"
+msgstr "за"
+
+#: app/templates/search/results.html:62 app/templates/search/results.html:95
+msgid "before"
+msgstr "до"
+
+#: app/templates/search/results.html:64 app/templates/search/results.html:97
+msgid "after"
+msgstr "після"
+
+#: app/templates/search/results.html:66 app/templates/search/results.html:99
+msgid "between"
+msgstr "між"
+
+#: app/templates/search/results.html:67 app/templates/search/results.html:100
+msgid "and"
+msgstr "і"
+
+#: app/templates/search/results.html:72
+msgid "message found across chats."
+msgid_plural "messages found across chats."
+msgstr[0] "повідомлення в чатах."
+msgstr[1] "повідомлення в чатах."
+msgstr[2] "повідомлень у чатах."
 
 #: app/utils/filters_utils.py:79
 msgid "Please enter a search query."

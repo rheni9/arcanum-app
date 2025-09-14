@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Arcanum 1.1\n"
 "Report-Msgid-Bugs-To: arcanum.app@meta.ua\n"
-"POT-Creation-Date: 2025-09-14 17:09+0300\n"
+"POT-Creation-Date: 2025-09-14 18:54+0300\n"
 "PO-Revision-Date: 2025-09-12 14:18+0300\n"
 "Last-Translator: Arthur Ratsa <rheni.light@gmail.com>\n"
 "Language: en\n"
@@ -60,8 +60,9 @@ msgstr "Select a section to explore your saved content"
 msgid "Chats icon"
 msgstr "Chats icon"
 
-#: app/templates/dashboard.html:23
-msgctxt "dashboard"
+#: app/templates/dashboard.html:23 app/templates/search/results.html:60
+#: app/templates/search/results.html:62 app/templates/search/results.html:64
+#: app/templates/search/results.html:66
 msgid "Messages"
 msgstr "Messages"
 
@@ -280,6 +281,74 @@ msgstr "Are you sure you want to proceed?"
 #: app/templates/partials/_modal.html:17 app/templates/partials/_modal.html:18
 msgid "Cancel"
 msgstr "Cancel"
+
+#: app/templates/search/_grouped_msg_table.html:27
+msgid "ID"
+msgstr "ID"
+
+#: app/templates/search/_grouped_msg_table.html:33
+msgid "Message text"
+msgstr "Message text"
+
+#: app/templates/search/_grouped_msg_table.html:38
+msgid "Sent"
+msgstr "Sent"
+
+#: app/templates/search/_grouped_msg_table.html:95
+#: app/templates/search/results.html:87 app/templates/search/results.html:89
+#: app/templates/search/results.html:91 app/templates/search/results.html:105
+msgid "No messages found"
+msgstr "No messages found"
+
+#: app/templates/search/results.html:9 app/templates/search/results.html:17
+msgid "Search Results"
+msgstr "Search Results"
+
+#: app/templates/search/results.html:42
+msgid "Back"
+msgstr "Back"
+
+#: app/templates/search/results.html:43
+msgid "Back to Chats"
+msgstr "Back to Chats"
+
+#: app/templates/search/results.html:55 app/templates/search/results.html:57
+msgid "Search results"
+msgstr "Search results"
+
+#: app/templates/search/results.html:55 app/templates/search/results.html:87
+msgid "for"
+msgstr "for"
+
+#: app/templates/search/results.html:57 app/templates/search/results.html:89
+msgid "for tag"
+msgstr "for tag"
+
+#: app/templates/search/results.html:60 app/templates/search/results.html:93
+msgid "on"
+msgstr "on"
+
+#: app/templates/search/results.html:62 app/templates/search/results.html:95
+msgid "before"
+msgstr "before"
+
+#: app/templates/search/results.html:64 app/templates/search/results.html:97
+msgid "after"
+msgstr "after"
+
+#: app/templates/search/results.html:66 app/templates/search/results.html:99
+msgid "between"
+msgstr "between"
+
+#: app/templates/search/results.html:67 app/templates/search/results.html:100
+msgid "and"
+msgstr "and"
+
+#: app/templates/search/results.html:72
+msgid "message found across chats."
+msgid_plural "messages found across chats."
+msgstr[0] "message found across chats."
+msgstr[1] "messages found across chats."
 
 #: app/utils/filters_utils.py:79
 msgid "Please enter a search query."

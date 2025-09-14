@@ -24,18 +24,18 @@
                 data-sort="msg_id" data-chat="{{ slug }}"
                 {% if sort_by == 'msg_id' %}aria-sort="{{ 'ascending' if order == 'asc' else 'descending' }}"{% endif %}>
               <div class="sort-wrapper">
-                <span class="header-label">ID</span>
+                <span class="header-label">{{ _('ID') }}</span>
                 <span class="sort-arrow">
                   {{ '▲' if sort_by == 'msg_id' and order == 'asc' else '▼' if sort_by == 'msg_id' else '' }}
                 </span>
               </div>
             </th>
-            <th>Text</th>
+            <th>{{ _('Message text') }}</th>
             <th class="sortable {% if sort_by == 'timestamp' %}active-sort{% endif %}"
                 data-sort="timestamp" data-chat="{{ slug }}"
                 {% if sort_by == 'timestamp' %}aria-sort="{{ 'ascending' if order == 'asc' else 'descending' }}"{% endif %}>
               <div class="sort-wrapper">
-                <span class="header-label">Sent</span>
+                <span class="header-label">{{ _('Sent') }}</span>
                 <span class="sort-arrow">
                   {{ '▲' if sort_by == 'timestamp' and order == 'asc' else '▼' if sort_by == 'timestamp' else '' }}
                 </span>
@@ -92,7 +92,7 @@
       </table>
 
     {% else %}
-      <div class="no-results">No messages found.</div>
+      <div class="no-results">{{ _('No messages found') }}.</div>
     {% endif %}
   </div>
 </section>

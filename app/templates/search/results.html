@@ -6,7 +6,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-  Search Results | Arcanum
+  {{ _('Search Results') }} | Arcanum
 {% endblock %}
 
 {% block content %}
@@ -14,7 +14,7 @@
 
     {# === Page Title === #}
     <section class="section">
-      <h1 class="section-title">Search Results</h1>
+      <h1 class="section-title">{{ _('Search Results') }}</h1>
     </section>
 
     {# === Main Content Wrapper === #}
@@ -39,8 +39,8 @@
         <div class="btn-bar">
           <div class="btn-left">
             <a href="{{ url_for('chats.list_chats') }}" class="btn btn-primary btn-icon">
-              <img src="{{ url_for('static', filename='img/back_icon.png') }}" alt="Back">
-              <span>Back to Chats</span>
+              <img src="{{ url_for('static', filename='img/back_icon.png') }}" alt="{{ _('Back') }}">
+              <span>{{ _('Back to Chats') }}</span>
             </a>
           </div>
         </div>
@@ -52,24 +52,27 @@
           <div class="results-box">
             <p class="results-summary">
               {% if filters.action == 'search' and filters.query %}
-                Search results for “<strong>{{ filters.query }}</strong>”
+                {{ _('Search results') }} {{ _('for') }} "<strong>{{ filters.query }}</strong>"
               {% elif filters.tag %}
-                Results for tag <strong>#{{ filters.tag }}</strong>
+                {{ _('Search results') }} {{ _('for tag') }} "<strong>#{{ filters.tag }}</strong>"
               {% elif filters.action == 'filter' and filters.date_mode and filters.start_date %}
                 {% if filters.date_mode == 'on' %}
-                  Messages on <strong>{{ filters.start_date | dateonlyformat }}</strong>
+                  {{ _('Messages') }} {{ _('on') }} <strong>{{ filters.start_date | dateonlyformat }}</strong>
                 {% elif filters.date_mode == 'before' %}
-                  Messages before <strong>{{ filters.start_date | dateonlyformat }}</strong>
+                  {{ _('Messages') }} {{ _('before') }} <strong>{{ filters.start_date | dateonlyformat }}</strong>
                 {% elif filters.date_mode == 'after' %}
-                  Messages after <strong>{{ filters.start_date | dateonlyformat }}</strong>
+                  {{ _('Messages') }} {{ _('after') }} <strong>{{ filters.start_date | dateonlyformat }}</strong>
                 {% elif filters.date_mode == 'between' and filters.end_date %}
-                  Messages between <strong>{{ filters.start_date | dateonlyformat }}</strong>
-                  and <strong>{{ filters.end_date | dateonlyformat }}</strong>
+                  {{ _('Messages') }} {{ _('between') }} <strong>{{ filters.start_date | dateonlyformat }}</strong>
+                  {{ _('and') }} <strong>{{ filters.end_date | dateonlyformat }}</strong>
                 {% endif %}
               {% endif %}
               <br>
               <span>— <strong>{{ count }}</strong>
-                message{{ 's' if count != 1 else '' }} found across chats.</span>
+                {{ ngettext('message found across chats.',
+                            'messages found across chats.',
+                            count) }}                
+              </span>
             </p>
           </div>
         </section>
@@ -81,24 +84,23 @@
           <div class="results-box no-results">
             <p class="results-summary">
               {% if filters.query %}
-                No messages found for “<strong>{{ filters.query }}</strong>”.
+                {{ _('No messages found') }} {{ _('for') }} "<strong>{{ filters.query }}</strong>".
               {% elif filters.tag %}
-                No messages found for tag “<strong>#{{ filters.tag }}</strong>”.
+                {{ _('No messages found') }} {{ _('for tag') }} "<strong>#{{ filters.tag }}</strong>".
               {% elif filters.start_date %}
-                No messages found
+                {{ _('No messages found') }}
                 {% if filters.date_mode == 'on' %}
-                  on <strong>{{ filters.start_date | dateonlyformat }}</strong>.
+                  {{ _('on') }} <strong>{{ filters.start_date | dateonlyformat }}</strong>.
                 {% elif filters.date_mode == 'before' %}
-                  before <strong>{{ filters.start_date | dateonlyformat }}</strong>.
+                  {{ _('before') }} <strong>{{ filters.start_date | dateonlyformat }}</strong>.
                 {% elif filters.date_mode == 'after' %}
-                  after <strong>{{ filters.start_date | dateonlyformat }}</strong>.
+                  {{ _('after') }} <strong>{{ filters.start_date | dateonlyformat }}</strong>.
                 {% elif filters.date_mode == 'between' and filters.end_date %}
-                  between <strong>{{ filters.start_date | dateonlyformat }}</strong>
-                  and <strong>{{ filters.end_date | dateonlyformat }}</strong>.
-                {% else %}.
+                  {{ _('between') }} <strong>{{ filters.start_date | dateonlyformat }}</strong>
+                  {{ _('and') }} <strong>{{ filters.end_date | dateonlyformat }}</strong>.
                 {% endif %}
               {% else %}
-                No messages found.
+                {{ _('No messages found') }}.
               {% endif %}
             </p>
           </div>
