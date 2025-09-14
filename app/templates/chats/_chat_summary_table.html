@@ -8,24 +8,24 @@
 
   {# === Chat Slug === #}
   <div class="meta-table-row">
-    <div class="meta-label">Slug:</div>
+    <div class="meta-label">{{ _('Slug') }}:</div>
     <div class="meta-value">{{ chat.slug }}</div>
   </div>
 
   {# === Chat Type === #}
   <div class="meta-table-row">
-    <div class="meta-label">Type:</div>
+    <div class="meta-label">{{ _('Type') }}:</div>
     <div class="meta-value">{{ chat.type if chat.type else '—' }}</div>
   </div>
 
   {# === External Link === #}
   <div class="meta-table-row">
-    <div class="meta-label">Link:</div>
+    <div class="meta-label">{{ _('Link') }}:</div>
     <div class="meta-value">
       {% if chat.link %}
         <a href="{{ chat.link }}" target="_blank" rel="noopener noreferrer" class="meta-ext-link">
           {{ chat.link }}
-          <img src="{{ url_for('static', filename='img/external_link.png') }}" alt="External link" class="meta-icon-ext">
+          <img src="{{ url_for('static', filename='img/external_link.png') }}" alt="{{ _('External link') }}" class="meta-icon-ext">
         </a>
       {% else %}
         —
@@ -35,13 +35,13 @@
 
   {# === Telegram Chat ID === #}
   <div class="meta-table-row">
-    <div class="meta-label">Chat ID:</div>
+    <div class="meta-label">{{ _('Chat ID') }}:</div>
     <div class="meta-value">{{ chat.chat_id if chat.chat_id else '—' }}</div>
   </div>
 
   {# === Join Date === #}
   <div class="meta-table-row">
-    <div class="meta-label">Joined:</div>
+    <div class="meta-label">{{ _('Joined') }}:</div>
     <div class="meta-value">
       {{ chat.joined | dateonlyformat("long_date") if chat.joined else '—' }}
     </div>
@@ -49,35 +49,35 @@
 
   {# === Aggregated Message Count === #}
   <div class="meta-table-row">
-    <div class="meta-label">Total messages:</div>
+    <div class="meta-label">{{ _('Total messages') }}:</div>
     <div class="meta-value">{{ total_count }}</div>
   </div>
 
   {# === Status (Active/Inactive) === #}
   <div class="meta-table-row">
-    <div class="meta-label">Status:</div>
+    <div class="meta-label">{{ _('Status') }}:</div>
     <div class="meta-value">
-      {{ 'Active' if chat.is_active else 'Inactive' }}
+      {{ _('Active') if chat.is_active else _('Inactive') }}
       <span class="meta-dot {{ 'online' if chat.is_active else 'offline' }}"
-            title="{{ 'Active' if chat.is_active else 'Inactive' }}"></span>
+            title="{{ _('Active') if chat.is_active else _('Inactive') }}"></span>
     </div>
   </div>
 
   {# === Visibility === #}
   <div class="meta-table-row">
-    <div class="meta-label">Public:</div>
-    <div class="meta-value">{{ 'Yes' if chat.is_public else 'No' }}</div>
+    <div class="meta-label">{{ _('Public') }}:</div>
+    <div class="meta-value">{{ _('Yes') if chat.is_public else _('No') }}</div>
   </div>
 
   {# === Membership === #}
   <div class="meta-table-row">
-    <div class="meta-label">Member:</div>
-    <div class="meta-value">{{ 'Yes' if chat.is_member else 'No' }}</div>
+    <div class="meta-label">{{ _('Member') }}:</div>
+    <div class="meta-value">{{ _('Yes') if chat.is_member else _('No') }}</div>
   </div>
 
   {# === Notes === #}
   <div class="meta-table-row">
-    <div class="meta-label">Notes:</div>
+    <div class="meta-label">{{ _('Notes') }}:</div>
     <div class="meta-value">{{ chat.notes if chat.notes else '—' }}</div>
   </div>
 

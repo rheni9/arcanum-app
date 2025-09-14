@@ -21,7 +21,7 @@
           <div class="chat-avatar-wrapper">
             <div class="chat-avatar-container">
               <a href="{{ signed_image_url }}" target="_blank">
-                <img src="{{ signed_image_url }}" alt="Chat Avatar" class="chat-avatar">
+                <img src="{{ signed_image_url }}" alt="{{ _('Chat Avatar') }}" class="chat-avatar">
               </a>
               <form method="post" action="{{ url_for('chats.remove_chat_image', slug=chat.slug) }}"
                     class="chat-avatar-remove-form">
@@ -49,26 +49,26 @@
         <div class="btn-bar">
           <div class="btn-left">
             <a href="{{ url_for('chats.list_chats') }}" class="btn btn-primary btn-icon">
-              <img src="{{ url_for('static', filename='img/back_icon.png') }}" alt="Back">
-              <span>Back to Chats</span>
+              <img src="{{ url_for('static', filename='img/back_icon.png') }}" alt="{{ _('Back') }}">
+              <span>{{ _('Back to Chats') }}</span>
             </a>
           </div>
 
           <div class="btn-right">
             <a href="{{ url_for('messages.add_message', chat_slug=chat.slug) }}" class="btn btn-primary btn-icon">
-              <img src="{{ url_for('static', filename='img/add_msg_icon.png') }}" alt="Add">
-              <span>Add Message</span>
+              <img src="{{ url_for('static', filename='img/add_msg_icon.png') }}" alt="{{ _('Add Message') }}">
+              <span>{{ _('Add Message') }}</span>
             </a>
             <a href="{{ url_for('chats.edit_chat', slug=chat.slug) }}" class="btn btn-secondary btn-icon">
-              <img src="{{ url_for('static', filename='img/edit_icon.png') }}" alt="Edit">
-              <span>Edit</span>
+              <img src="{{ url_for('static', filename='img/edit_icon.png') }}" alt="{{ _('Edit') }}">
+              <span>{{ _('Edit') }}</span>
             </a>
             <form action="{{ url_for('chats.delete_chat', slug=chat.slug) }}" method="post" class="inline-form">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" class="btn btn-danger btn-icon" data-confirm data-type="chat"
                       data-label="{{ chat.name }}" data-msgcount="{{ total_count }}">
-                <img src="{{ url_for('static', filename='img/delete_icon.png') }}" alt="Delete">
-                <span>Delete</span>
+                <img src="{{ url_for('static', filename='img/delete_icon.png') }}" alt="{{ _('Delete') }}">
+                <span>{{ _('Delete') }}</span>
               </button>
             </form>
           </div>
@@ -93,38 +93,39 @@
             <p class="results-summary">
               {% if messages %}
                 {% if filters.query %}
-                  Search results for “<strong>{{ filters.query }}</strong>”
+                  {{ _('Search results') }} {{ _('for') }} "<strong>{{ filters.query }}</strong>"
                 {% elif filters.tag %}
-                  Search results for tag “<strong>#{{ filters.tag }}</strong>”
+                  {{ _('Search results') }} {{ _('for tag') }} "<strong>#{{ filters.tag }}</strong>"
                 {% endif %}
 
                 {% if filters.date_mode in ['on', 'before', 'after', 'between'] and filters.start_date %}
                   {% if filters.query or filters.tag %} — {% endif %}
-                  {% if filters.date_mode == 'on' %}Messages on <strong>{{ filters.start_date|dateonlyformat }}</strong>{% endif %}
-                  {% if filters.date_mode == 'before' %}Messages before <strong>{{ filters.start_date|dateonlyformat }}</strong>{% endif %}
-                  {% if filters.date_mode == 'after' %}Messages after <strong>{{ filters.start_date|dateonlyformat }}</strong>{% endif %}
+                  {% if filters.date_mode == 'on' %}{{ _('Messages') }} {{ _('on') }} <strong>{{ filters.start_date|dateonlyformat }}</strong>{% endif %}
+                  {% if filters.date_mode == 'before' %}{{ _('Messages') }} {{ _('before') }} <strong>{{ filters.start_date|dateonlyformat }}</strong>{% endif %}
+                  {% if filters.date_mode == 'after' %}{{ _('Messages') }} {{ _('after') }} <strong>{{ filters.start_date|dateonlyformat }}</strong>{% endif %}
                   {% if filters.date_mode == 'between' and filters.end_date %}
-                    Messages between <strong>{{ filters.start_date|dateonlyformat }}</strong>
-                    and <strong>{{ filters.end_date|dateonlyformat }}</strong>
+                    {{ _('Messages') }} {{ _('between') }} <strong>{{ filters.start_date|dateonlyformat }}</strong>
+                    {{ _('and') }} <strong>{{ filters.end_date|dateonlyformat }}</strong>
                   {% endif %}
                 {% endif %}<br>
                 <span>— <strong>{{ messages|length }}</strong>
-                  message{{ 's' if messages|length != 1 else '' }} found.</span>
+                  {{ ngettext('message found.', 'messages found.', messages|length) }}
+                </span>
               {% else %}
                 {% if filters.query %}
-                  No messages found for “<strong>{{ filters.query }}</strong>”.
+                  {{ _('No messages found') }} {{ _('for') }} "<strong>{{ filters.query }}</strong>".
                 {% elif filters.tag %}
-                  No messages found for tag “<strong>#{{ filters.tag }}</strong>”.
+                  {{ _('No messages found') }} {{ _('for tag') }} "<strong>#{{ filters.tag }}</strong>".
                 {% endif %}
-                {% if filters.date_mode == 'on' %}No messages on <strong>{{ filters.start_date|dateonlyformat }}</strong>.{% endif %}
-                {% if filters.date_mode == 'before' %}No messages before <strong>{{ filters.start_date|dateonlyformat }}</strong>.{% endif %}
-                {% if filters.date_mode == 'after' %}No messages after <strong>{{ filters.start_date|dateonlyformat }}</strong>.{% endif %}
+                {% if filters.date_mode == 'on' %}{{ _('No messages found') }} {{ _('on') }} <strong>{{ filters.start_date|dateonlyformat }}</strong>.{% endif %}
+                {% if filters.date_mode == 'before' %}{{ _('No messages found') }} {{ _('before') }} <strong>{{ filters.start_date|dateonlyformat }}</strong>.{% endif %}
+                {% if filters.date_mode == 'after' %}{{ _('No messages found') }} {{ _('after') }} <strong>{{ filters.start_date|dateonlyformat }}</strong>.{% endif %}
                 {% if filters.date_mode == 'between' and filters.end_date %}
-                  No messages between <strong>{{ filters.start_date|dateonlyformat }}</strong>
-                  and <strong>{{ filters.end_date|dateonlyformat }}</strong>.
+                  {{ _('No messages found') }} {{ _('between') }} <strong>{{ filters.start_date|dateonlyformat }}</strong>
+                  {{ _('and') }} <strong>{{ filters.end_date|dateonlyformat }}</strong>.
                 {% endif %}
                 {% if not filters.query and not filters.tag and not filters.start_date %}
-                  No messages in this chat.
+                  {{ _('No messages in this chat.') }}
                 {% endif %}
               {% endif %}
             </p>

@@ -13,16 +13,16 @@
         <th class="col-index">#</th>
         <th class="sortable {% if sort_by == 'msg_id' %}active-sort{% endif %}" data-sort="msg_id">
           <div class="sort-wrapper">
-            <span class="header-label">ID</span>
+            <span class="header-label">{{ _('ID') }}</span>
             <span class="sort-arrow">
               {{ '▲' if sort_by == 'msg_id' and order == 'asc' else '▼' if sort_by == 'msg_id' else '' }}
             </span>
           </div>
         </th>
-        <th>Text</th>
+        <th>{{ _('Message text') }}</th>
         <th class="sortable {% if sort_by == 'timestamp' %}active-sort{% endif %}" data-sort="timestamp">
           <div class="sort-wrapper">
-            <span class="header-label">Sent</span>
+            <span class="header-label">{{ _('Sent') }}</span>
             <span class="sort-arrow">
               {{ '▲' if sort_by == 'timestamp' and order == 'asc' else '▼' if sort_by == 'timestamp' else '' }}
             </span>

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Arcanum 1.1\n"
 "Report-Msgid-Bugs-To: arcanum.app@meta.ua\n"
-"POT-Creation-Date: 2025-09-14 18:54+0300\n"
+"POT-Creation-Date: 2025-09-14 20:02+0300\n"
 "PO-Revision-Date: 2025-09-12 14:18+0300\n"
 "Last-Translator: Arthur Ratsa <rheni.light@gmail.com>\n"
 "Language: en\n"
@@ -60,6 +60,8 @@ msgstr "Select a section to explore your saved content"
 msgid "Chats icon"
 msgstr "Chats icon"
 
+#: app/templates/chats/view.html:103 app/templates/chats/view.html:104
+#: app/templates/chats/view.html:105 app/templates/chats/view.html:107
 #: app/templates/dashboard.html:23 app/templates/search/results.html:60
 #: app/templates/search/results.html:62 app/templates/search/results.html:64
 #: app/templates/search/results.html:66
@@ -118,6 +120,73 @@ msgstr "Required field"
 msgid "Logo icon"
 msgstr "Logo icon"
 
+#: app/templates/chats/_chat_summary_table.html:11
+msgid "Slug"
+msgstr "Slug"
+
+#: app/templates/chats/_chat_summary_table.html:17
+msgid "Type"
+msgstr "Type"
+
+#: app/templates/chats/_chat_summary_table.html:23
+msgid "Link"
+msgstr "Link"
+
+#: app/templates/chats/_chat_summary_table.html:28
+msgid "External link"
+msgstr "External link"
+
+#: app/templates/chats/_chat_summary_table.html:38
+msgid "Chat ID"
+msgstr "Chat ID"
+
+#: app/templates/chats/_chat_summary_table.html:44
+msgid "Joined"
+msgstr "Joined"
+
+#: app/templates/chats/_chat_summary_table.html:52
+msgid "Total messages"
+msgstr "Total messages"
+
+#: app/templates/chats/_chat_summary_table.html:58
+msgid "Status"
+msgstr "Status"
+
+#: app/templates/chats/_chat_summary_table.html:60
+#: app/templates/chats/_chat_summary_table.html:62
+#: app/templates/chats/_chats_table.html:67
+msgid "Active"
+msgstr "Active"
+
+#: app/templates/chats/_chat_summary_table.html:60
+#: app/templates/chats/_chat_summary_table.html:62
+#: app/templates/chats/_chats_table.html:67
+msgid "Inactive"
+msgstr "Inactive"
+
+#: app/templates/chats/_chat_summary_table.html:68
+msgid "Public"
+msgstr "Public"
+
+#: app/templates/chats/_chat_summary_table.html:69
+#: app/templates/chats/_chat_summary_table.html:75
+msgid "Yes"
+msgstr "Yes"
+
+#: app/templates/chats/_chat_summary_table.html:69
+#: app/templates/chats/_chat_summary_table.html:75
+msgid "No"
+msgstr "No"
+
+#: app/templates/chats/_chat_summary_table.html:74
+#: app/templates/chats/_chats_table.html:70
+msgid "Member"
+msgstr "Member"
+
+#: app/templates/chats/_chat_summary_table.html:80
+msgid "Notes"
+msgstr "Notes"
+
 #: app/templates/chats/_chats_table.html:16
 msgid "Chat"
 msgstr "Chat"
@@ -146,18 +215,6 @@ msgstr "Last message timestamp"
 msgctxt "last_message_header"
 msgid "Last message"
 msgstr "Last message"
-
-#: app/templates/chats/_chats_table.html:67
-msgid "Active"
-msgstr "Active"
-
-#: app/templates/chats/_chats_table.html:67
-msgid "Inactive"
-msgstr "Inactive"
-
-#: app/templates/chats/_chats_table.html:70
-msgid "Member"
-msgstr "Member"
 
 #: app/templates/chats/_chats_table.html:85
 msgid "No messages"
@@ -197,6 +254,21 @@ msgstr "Date"
 msgid "Time"
 msgstr "Time"
 
+#: app/templates/chats/_messages_table.html:16
+#: app/templates/search/_grouped_msg_table.html:27
+msgid "ID"
+msgstr "ID"
+
+#: app/templates/chats/_messages_table.html:22
+#: app/templates/search/_grouped_msg_table.html:33
+msgid "Message text"
+msgstr "Message text"
+
+#: app/templates/chats/_messages_table.html:25
+#: app/templates/search/_grouped_msg_table.html:38
+msgid "Sent"
+msgstr "Sent"
+
 #: app/templates/chats/index.html:10 app/templates/chats/index.html:19
 msgid "Chats"
 msgstr "Chats"
@@ -204,6 +276,89 @@ msgstr "Chats"
 #: app/templates/chats/index.html:25 app/templates/chats/index.html:26
 msgid "Add Chat"
 msgstr "Add Chat"
+
+#: app/templates/chats/view.html:24
+msgid "Chat Avatar"
+msgstr "Chat Avatar"
+
+#: app/templates/chats/view.html:52 app/templates/search/results.html:42
+msgid "Back"
+msgstr "Back"
+
+#: app/templates/chats/view.html:53 app/templates/search/results.html:43
+msgid "Back to Chats"
+msgstr "Back to Chats"
+
+#: app/templates/chats/view.html:59 app/templates/chats/view.html:60
+msgid "Add Message"
+msgstr "Add message"
+
+#: app/templates/chats/view.html:63 app/templates/chats/view.html:64
+msgid "Edit"
+msgstr "Edit"
+
+#: app/templates/chats/view.html:70 app/templates/chats/view.html:71
+msgid "Delete"
+msgstr "Delete"
+
+#: app/templates/chats/view.html:96 app/templates/chats/view.html:98
+#: app/templates/search/results.html:55 app/templates/search/results.html:57
+msgid "Search results"
+msgstr "Search results"
+
+#: app/templates/chats/view.html:96 app/templates/chats/view.html:116
+#: app/templates/search/results.html:55 app/templates/search/results.html:87
+msgid "for"
+msgstr "for"
+
+#: app/templates/chats/view.html:98 app/templates/chats/view.html:118
+#: app/templates/search/results.html:57 app/templates/search/results.html:89
+msgid "for tag"
+msgstr "for tag"
+
+#: app/templates/chats/view.html:103 app/templates/chats/view.html:120
+#: app/templates/search/results.html:60 app/templates/search/results.html:93
+msgid "on"
+msgstr "on"
+
+#: app/templates/chats/view.html:104 app/templates/chats/view.html:121
+#: app/templates/search/results.html:62 app/templates/search/results.html:95
+msgid "before"
+msgstr "before"
+
+#: app/templates/chats/view.html:105 app/templates/chats/view.html:122
+#: app/templates/search/results.html:64 app/templates/search/results.html:97
+msgid "after"
+msgstr "after"
+
+#: app/templates/chats/view.html:107 app/templates/chats/view.html:124
+#: app/templates/search/results.html:66 app/templates/search/results.html:99
+msgid "between"
+msgstr "between"
+
+#: app/templates/chats/view.html:108 app/templates/chats/view.html:125
+#: app/templates/search/results.html:67 app/templates/search/results.html:100
+msgid "and"
+msgstr "and"
+
+#: app/templates/chats/view.html:112
+msgid "message found."
+msgid_plural "messages found."
+msgstr[0] "message found."
+msgstr[1] "messages found."
+
+#: app/templates/chats/view.html:116 app/templates/chats/view.html:118
+#: app/templates/chats/view.html:120 app/templates/chats/view.html:121
+#: app/templates/chats/view.html:122 app/templates/chats/view.html:124
+#: app/templates/search/_grouped_msg_table.html:95
+#: app/templates/search/results.html:87 app/templates/search/results.html:89
+#: app/templates/search/results.html:91 app/templates/search/results.html:103
+msgid "No messages found"
+msgstr "No messages found"
+
+#: app/templates/chats/view.html:128
+msgid "No messages in this chat."
+msgstr "No messages in this chat."
 
 #: app/templates/components/_search_filter_block.html:24
 msgid "Search messages..."
@@ -282,67 +437,9 @@ msgstr "Are you sure you want to proceed?"
 msgid "Cancel"
 msgstr "Cancel"
 
-#: app/templates/search/_grouped_msg_table.html:27
-msgid "ID"
-msgstr "ID"
-
-#: app/templates/search/_grouped_msg_table.html:33
-msgid "Message text"
-msgstr "Message text"
-
-#: app/templates/search/_grouped_msg_table.html:38
-msgid "Sent"
-msgstr "Sent"
-
-#: app/templates/search/_grouped_msg_table.html:95
-#: app/templates/search/results.html:87 app/templates/search/results.html:89
-#: app/templates/search/results.html:91 app/templates/search/results.html:105
-msgid "No messages found"
-msgstr "No messages found"
-
 #: app/templates/search/results.html:9 app/templates/search/results.html:17
 msgid "Search Results"
 msgstr "Search Results"
-
-#: app/templates/search/results.html:42
-msgid "Back"
-msgstr "Back"
-
-#: app/templates/search/results.html:43
-msgid "Back to Chats"
-msgstr "Back to Chats"
-
-#: app/templates/search/results.html:55 app/templates/search/results.html:57
-msgid "Search results"
-msgstr "Search results"
-
-#: app/templates/search/results.html:55 app/templates/search/results.html:87
-msgid "for"
-msgstr "for"
-
-#: app/templates/search/results.html:57 app/templates/search/results.html:89
-msgid "for tag"
-msgstr "for tag"
-
-#: app/templates/search/results.html:60 app/templates/search/results.html:93
-msgid "on"
-msgstr "on"
-
-#: app/templates/search/results.html:62 app/templates/search/results.html:95
-msgid "before"
-msgstr "before"
-
-#: app/templates/search/results.html:64 app/templates/search/results.html:97
-msgid "after"
-msgstr "after"
-
-#: app/templates/search/results.html:66 app/templates/search/results.html:99
-msgid "between"
-msgstr "between"
-
-#: app/templates/search/results.html:67 app/templates/search/results.html:100
-msgid "and"
-msgstr "and"
 
 #: app/templates/search/results.html:72
 msgid "message found across chats."

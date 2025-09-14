@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Arcanum 1.1\n"
 "Report-Msgid-Bugs-To: arcanum.app@meta.ua\n"
-"POT-Creation-Date: 2025-09-14 18:54+0300\n"
+"POT-Creation-Date: 2025-09-14 20:02+0300\n"
 "PO-Revision-Date: 2025-09-12 14:18+0300\n"
 "Last-Translator: Arthur Ratsa <rheni.light@gmail.com>\n"
 "Language: uk\n"
@@ -63,6 +63,8 @@ msgstr "Вибери розділ, щоб переглянути збереже�
 msgid "Chats icon"
 msgstr "Значок чатів"
 
+#: app/templates/chats/view.html:103 app/templates/chats/view.html:104
+#: app/templates/chats/view.html:105 app/templates/chats/view.html:107
 #: app/templates/dashboard.html:23 app/templates/search/results.html:60
 #: app/templates/search/results.html:62 app/templates/search/results.html:64
 #: app/templates/search/results.html:66
@@ -121,6 +123,73 @@ msgstr "Обов’язкове поле"
 msgid "Logo icon"
 msgstr "Значок логотипа"
 
+#: app/templates/chats/_chat_summary_table.html:11
+msgid "Slug"
+msgstr "Slug"
+
+#: app/templates/chats/_chat_summary_table.html:17
+msgid "Type"
+msgstr "Тип"
+
+#: app/templates/chats/_chat_summary_table.html:23
+msgid "Link"
+msgstr "Посилання"
+
+#: app/templates/chats/_chat_summary_table.html:28
+msgid "External link"
+msgstr "Зовнішнє посилання"
+
+#: app/templates/chats/_chat_summary_table.html:38
+msgid "Chat ID"
+msgstr "ID чату"
+
+#: app/templates/chats/_chat_summary_table.html:44
+msgid "Joined"
+msgstr "Дата приєднання"
+
+#: app/templates/chats/_chat_summary_table.html:52
+msgid "Total messages"
+msgstr "Усього повідомлень"
+
+#: app/templates/chats/_chat_summary_table.html:58
+msgid "Status"
+msgstr "Статус"
+
+#: app/templates/chats/_chat_summary_table.html:60
+#: app/templates/chats/_chat_summary_table.html:62
+#: app/templates/chats/_chats_table.html:67
+msgid "Active"
+msgstr "Активний"
+
+#: app/templates/chats/_chat_summary_table.html:60
+#: app/templates/chats/_chat_summary_table.html:62
+#: app/templates/chats/_chats_table.html:67
+msgid "Inactive"
+msgstr "Неактивний"
+
+#: app/templates/chats/_chat_summary_table.html:68
+msgid "Public"
+msgstr "Публічний"
+
+#: app/templates/chats/_chat_summary_table.html:69
+#: app/templates/chats/_chat_summary_table.html:75
+msgid "Yes"
+msgstr "Так"
+
+#: app/templates/chats/_chat_summary_table.html:69
+#: app/templates/chats/_chat_summary_table.html:75
+msgid "No"
+msgstr "Ні"
+
+#: app/templates/chats/_chat_summary_table.html:74
+#: app/templates/chats/_chats_table.html:70
+msgid "Member"
+msgstr "Учасник"
+
+#: app/templates/chats/_chat_summary_table.html:80
+msgid "Notes"
+msgstr "Нотатки"
+
 #: app/templates/chats/_chats_table.html:16
 msgid "Chat"
 msgstr "Чат"
@@ -149,18 +218,6 @@ msgstr "Час останнього повідомлення"
 msgctxt "last_message_header"
 msgid "Last message"
 msgstr "Останнє"
-
-#: app/templates/chats/_chats_table.html:67
-msgid "Active"
-msgstr "Активний"
-
-#: app/templates/chats/_chats_table.html:67
-msgid "Inactive"
-msgstr "Неактивний"
-
-#: app/templates/chats/_chats_table.html:70
-msgid "Member"
-msgstr "Учасник"
 
 #: app/templates/chats/_chats_table.html:85
 msgid "No messages"
@@ -201,6 +258,21 @@ msgstr "Дата"
 msgid "Time"
 msgstr "Час"
 
+#: app/templates/chats/_messages_table.html:16
+#: app/templates/search/_grouped_msg_table.html:27
+msgid "ID"
+msgstr "ID"
+
+#: app/templates/chats/_messages_table.html:22
+#: app/templates/search/_grouped_msg_table.html:33
+msgid "Message text"
+msgstr "Текст повідомлення"
+
+#: app/templates/chats/_messages_table.html:25
+#: app/templates/search/_grouped_msg_table.html:38
+msgid "Sent"
+msgstr "Надіслано"
+
 #: app/templates/chats/index.html:10 app/templates/chats/index.html:19
 msgid "Chats"
 msgstr "Чати"
@@ -208,6 +280,90 @@ msgstr "Чати"
 #: app/templates/chats/index.html:25 app/templates/chats/index.html:26
 msgid "Add Chat"
 msgstr "Додати чат"
+
+#: app/templates/chats/view.html:24
+msgid "Chat Avatar"
+msgstr "Аватар чату"
+
+#: app/templates/chats/view.html:52 app/templates/search/results.html:42
+msgid "Back"
+msgstr "Назад"
+
+#: app/templates/chats/view.html:53 app/templates/search/results.html:43
+msgid "Back to Chats"
+msgstr "Назад до чатів"
+
+#: app/templates/chats/view.html:59 app/templates/chats/view.html:60
+msgid "Add Message"
+msgstr "Додати повідомлення"
+
+#: app/templates/chats/view.html:63 app/templates/chats/view.html:64
+msgid "Edit"
+msgstr "Редагувати"
+
+#: app/templates/chats/view.html:70 app/templates/chats/view.html:71
+msgid "Delete"
+msgstr "Видалити"
+
+#: app/templates/chats/view.html:96 app/templates/chats/view.html:98
+#: app/templates/search/results.html:55 app/templates/search/results.html:57
+msgid "Search results"
+msgstr "Результати пошуку"
+
+#: app/templates/chats/view.html:96 app/templates/chats/view.html:116
+#: app/templates/search/results.html:55 app/templates/search/results.html:87
+msgid "for"
+msgstr "для"
+
+#: app/templates/chats/view.html:98 app/templates/chats/view.html:118
+#: app/templates/search/results.html:57 app/templates/search/results.html:89
+msgid "for tag"
+msgstr "за тегом"
+
+#: app/templates/chats/view.html:103 app/templates/chats/view.html:120
+#: app/templates/search/results.html:60 app/templates/search/results.html:93
+msgid "on"
+msgstr "за"
+
+#: app/templates/chats/view.html:104 app/templates/chats/view.html:121
+#: app/templates/search/results.html:62 app/templates/search/results.html:95
+msgid "before"
+msgstr "до"
+
+#: app/templates/chats/view.html:105 app/templates/chats/view.html:122
+#: app/templates/search/results.html:64 app/templates/search/results.html:97
+msgid "after"
+msgstr "після"
+
+#: app/templates/chats/view.html:107 app/templates/chats/view.html:124
+#: app/templates/search/results.html:66 app/templates/search/results.html:99
+msgid "between"
+msgstr "між"
+
+#: app/templates/chats/view.html:108 app/templates/chats/view.html:125
+#: app/templates/search/results.html:67 app/templates/search/results.html:100
+msgid "and"
+msgstr "і"
+
+#: app/templates/chats/view.html:112
+msgid "message found."
+msgid_plural "messages found."
+msgstr[0] "повідомлення знайдено."
+msgstr[1] "повідомлення знайдено."
+msgstr[2] "повідомлень знайдено."
+
+#: app/templates/chats/view.html:116 app/templates/chats/view.html:118
+#: app/templates/chats/view.html:120 app/templates/chats/view.html:121
+#: app/templates/chats/view.html:122 app/templates/chats/view.html:124
+#: app/templates/search/_grouped_msg_table.html:95
+#: app/templates/search/results.html:87 app/templates/search/results.html:89
+#: app/templates/search/results.html:91 app/templates/search/results.html:103
+msgid "No messages found"
+msgstr "Не знайдено повідомлень"
+
+#: app/templates/chats/view.html:128
+msgid "No messages in this chat."
+msgstr "У цьому чаті немає повідомлень."
 
 #: app/templates/components/_search_filter_block.html:24
 msgid "Search messages..."
@@ -286,67 +442,9 @@ msgstr "Ти впевнений, що хочеш продовжити?"
 msgid "Cancel"
 msgstr "Скасувати"
 
-#: app/templates/search/_grouped_msg_table.html:27
-msgid "ID"
-msgstr "ID"
-
-#: app/templates/search/_grouped_msg_table.html:33
-msgid "Message text"
-msgstr "Текст повідомлення"
-
-#: app/templates/search/_grouped_msg_table.html:38
-msgid "Sent"
-msgstr "Надіслано"
-
-#: app/templates/search/_grouped_msg_table.html:95
-#: app/templates/search/results.html:87 app/templates/search/results.html:89
-#: app/templates/search/results.html:91 app/templates/search/results.html:105
-msgid "No messages found"
-msgstr "Не знайдено повідомлень"
-
 #: app/templates/search/results.html:9 app/templates/search/results.html:17
 msgid "Search Results"
 msgstr "Результати пошуку"
-
-#: app/templates/search/results.html:42
-msgid "Back"
-msgstr "Назад"
-
-#: app/templates/search/results.html:43
-msgid "Back to Chats"
-msgstr "Назад до чатів"
-
-#: app/templates/search/results.html:55 app/templates/search/results.html:57
-msgid "Search results"
-msgstr "Результати пошуку"
-
-#: app/templates/search/results.html:55 app/templates/search/results.html:87
-msgid "for"
-msgstr "для"
-
-#: app/templates/search/results.html:57 app/templates/search/results.html:89
-msgid "for tag"
-msgstr "за тегом"
-
-#: app/templates/search/results.html:60 app/templates/search/results.html:93
-msgid "on"
-msgstr "за"
-
-#: app/templates/search/results.html:62 app/templates/search/results.html:95
-msgid "before"
-msgstr "до"
-
-#: app/templates/search/results.html:64 app/templates/search/results.html:97
-msgid "after"
-msgstr "після"
-
-#: app/templates/search/results.html:66 app/templates/search/results.html:99
-msgid "between"
-msgstr "між"
-
-#: app/templates/search/results.html:67 app/templates/search/results.html:100
-msgid "and"
-msgstr "і"
 
 #: app/templates/search/results.html:72
 msgid "message found across chats."
