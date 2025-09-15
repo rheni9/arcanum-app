@@ -8,14 +8,14 @@
 {% extends "base.html" %}
 
 {% block title %}
-  {{ "Edit" if is_edit else "Add" }} Message | Arcanum
+  {{ _('Edit Message') if is_edit else _('Add Message') }} | Arcanum
 {% endblock %}
 
 {% block content %}
   <div class="content-area">
     <section class="section">
       <h1 class="section-title">
-        {{ "Edit" if is_edit else "Add" }} Message
+        {{ _('Edit Message') if is_edit else _('Add a New Message') }}
         {% if is_edit and message.id %}
           <span class="muted">#{{ message.id }}</span>
         {% endif %}
@@ -41,7 +41,7 @@
                 {{ form.msg_id.label.text }}
               </label>
               {{ form.msg_id(class="form-control" ~ (' input-error' if form.msg_id.errors else '')) }}
-              <small class="form-hint">Optional. Only digits. Example: 12345</small>
+              <small class="form-hint">{{ _('Only positive digits, like 1234567890') }}</small>
               <div class="form-message-wrapper"></div>
               {% for error in form.msg_id.errors %}
                 <div class="error">{{ error }}</div>
@@ -90,7 +90,7 @@
                 {{ form.link.label.text }}
               </label>
               {{ form.link(class="form-control" ~ (' input-error' if form.link.errors else '')) }}
-              <small class="form-hint">Should start with http:// or https://</small>
+              <small class="form-hint">{{ _('Must start with http:// or https://') }}</small>
               <div class="form-message-wrapper"></div>
               {% for error in form.link.errors %}
                 <div class="error">{{ error }}</div>
@@ -115,7 +115,7 @@
                 {{ form.media.label.text }}
               </label>
               {{ form.media(class="form-control-file", multiple=True) }}
-              <small class="form-hint">Up to 5 files. Images will be converted to WebP.</small>
+              <small class="form-hint">{{ _('Max 5 files, images will be converted to WebP') }}</small>
               {% for error in form.media.errors %}
                 <div class="error">{{ error }}</div>
               {% endfor %}
@@ -128,7 +128,7 @@
               </label>
               {{ form.screenshot(class="form-control-file" ~ (' input-error' if form.screenshot.errors else '')) }}
               <div class="form-message-wrapper"></div>
-              <small class="form-hint">Supported: JPG, PNG, GIF, WEBP, BMP, TIFF</small>
+              <small class="form-hint">{{ _('Supported: JPG, PNG, GIF, WEBP, BMP, TIFF') }}</small>
               {% for error in form.screenshot.errors %}
                 <div class="error">{{ error }}</div>
               {% endfor %}
@@ -140,7 +140,7 @@
                 {{ form.tags.label.text }}
               </label>
               {{ form.tags(class="form-control" ~ (' input-error' if form.tags.errors else '')) }}
-              <small class="form-hint">Comma-separated (tag1, tag2, ...)</small>
+              <small class="form-hint">{{ _('Comma-separated (tag1, tag2, ...)') }}</small>
               {% for error in form.tags.errors %}
                 <div class="error">{{ error }}</div>
               {% endfor %}
@@ -157,13 +157,13 @@
             {# === Action Buttons === #}
             <div class="form-actions-centered">
               <button type="submit" class="btn btn-primary btn-icon">
-                <img src="{{ url_for('static', filename='img/save_icon.png') }}" alt="Save" aria-hidden="true">
-                {{ "Update" if is_edit else "Save" }}
+                <img src="{{ url_for('static', filename='img/save_icon.png') }}" alt="{{ _('Save') }}" aria-hidden="true">
+                {{ _('Update') if is_edit else _('Create') }}
               </button>
               <a href="{% if is_edit %}{{ url_for('messages.view_message', chat_slug=chat.slug, pk=message.id) }}{% else %}{{ url_for('chats.view_chat', slug=chat.slug) }}{% endif %}"
                  class="btn btn-secondary btn-icon">
-                 <img src="{{ url_for('static', filename='img/cancel_icon.png') }}" alt="Cancel" aria-hidden="true">
-                 Cancel
+                 <img src="{{ url_for('static', filename='img/cancel_icon.png') }}" alt="{{ _('Cancel') }}" aria-hidden="true">
+                 {{ _('Cancel') }}
               </a>
             </div>
 
@@ -172,7 +172,7 @@
       </div>
 
       <p class="form-required-note">
-        <span class="form-required-mark">*</span> Required field
+        <span class="form-required-mark">*</span> {{ _('Required field') }}
       </p>
     </section>
   </div>

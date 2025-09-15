@@ -11,6 +11,7 @@ import logging
 import json
 from datetime import datetime, date, time
 from flask import request
+from flask_babel import lazy_gettext as _l
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed
 from wtforms import (
@@ -44,7 +45,7 @@ def validate_not_blank(_form, field) -> None:
     :raises ValidationError: If the value is empty or blank.
     """
     if not field.data or not field.data.strip():
-        raise ValidationError("Text cannot be empty or whitespace.")
+        raise ValidationError(_l("Text cannot be empty or whitespace."))
 
 
 class MessageForm(FlaskForm):
@@ -57,65 +58,67 @@ class MessageForm(FlaskForm):
     chat_ref_id = HiddenField()  # FK for the parent chat
 
     msg_id = IntegerField(
-        "Message ID",
+        _l("Message ID"),
         validators=[
             Optional(),
             NumberRange(
-                min=0, message="Message ID must be a positive integer."
+                min=1,
+                message=_l("Message ID must be a positive integer.")
             )
         ]
     )
 
     date = StringField(
-        "Date",
-        validators=[DataRequired(message="Date is required.")]
+        _l("Date"),
+        validators=[DataRequired(message=_l("Date is required."))]
     )
     time = StringField(
-        "Time",
-        validators=[DataRequired(message="Time is required.")]
+        _l("Time"),
+        validators=[DataRequired(message=_l("Time is required."))]
     )
 
     link = StringField(
-        "Message Link",
+        _l("Message Link"),
         validators=[
             Optional(),
-            URL(message="Please enter a valid URL starting with "
-                        "http:// or https://.")
+            URL(
+                message=_l(
+                    "Please enter a valid URL starting with "
+                    "http:// or https://."
+                )
+            )
         ]
     )
 
     text = TextAreaField(
-        "Text",
+        _l("Text"),
         validators=[validate_not_blank]
     )
 
-    media = MultipleFileField(
-        "Upload Media (up to 5 files)",
-        validators=[Optional()]
-    )
+    media = MultipleFileField(_l("Media"), validators=[Optional()])
 
     screenshot = FileField(
-        "Screenshot",
+        _l("Screenshot"),
         validators=[
             Optional(),
             FileAllowed(
                 ["jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff"],
-                "Invalid image file or unsupported format."
+                _l("Invalid image file or unsupported format.")
             )
         ]
     )
 
     tags = StringField(
-        "Tags",
+        _l("Tags"),
         validators=[Optional()]
     )
 
     notes = TextAreaField(
-        "Notes",
+        _l("Notes"),
         validators=[Optional()]
     )
 
-    submit = SubmitField("Save")
+    submit = SubmitField(_l("Save"))
 
     def __init__(self, *args, chat_slug: str = None, **kwargs) -> None:
         """
@@ -231,7 +234,9 @@ class MessageForm(FlaskForm):
                 )
                 self.date.errors.append("")
                 self.time.errors.append("")
-                self.datetime_error = "Date and time cannot be in the future."
+                self.datetime_error = _l(
+                    "Date and time cannot be in the future."
+                )
                 is_valid = False
             else:
                 self._final_dt = local_dt
@@ -248,13 +253,14 @@ class MessageForm(FlaskForm):
         :param field: The link field to validate.
         :raises ValidationError: If the link has an invalid prefix.
         """
-
         if field.errors or not field.data:
             return
         if not field.data.startswith(("http://", "https://")):
             logger.debug("[MESSAGES|FORM] Invalid link: %s", field.data)
             raise ValidationError(
-                "Message link must start with 'http://' or 'https://'."
+                _l(
+                    "Message link must start with 'http://' or 'https://'."
+                )
             )
 
     def validate_screenshot(self, field: FileField) -> None:
@@ -278,7 +284,9 @@ class MessageForm(FlaskForm):
                     "[MESSAGES|FORM] Invalid screenshot file: %s", e
                 )
                 raise ValidationError(
-                    "Invalid image file or unsupported format."
+                    _l(
+                        "Invalid image file or unsupported format."
+                    )
                 ) from e
 
     def validate_media(self, _field):
@@ -287,7 +295,13 @@ class MessageForm(FlaskForm):
         non-image files are skipped.
         """
         files = request.files.getlist("media")
-        for file in files[:5]:
+
+        if len(files) > 5:
+            raise ValidationError(
+                _l("You can upload up to 5 files only.")
+            )
+
+        for file in files:
             if file and file.filename:
                 if file.filename.lower().endswith(
                     ('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff')
@@ -301,8 +315,10 @@ class MessageForm(FlaskForm):
                             "%s", e
                         )
                         raise ValidationError(
-                            "One or more media files are invalid images "
-                            "or unsupported format."
+                            _l(
+                                "One or more media files could not "
+                                "be uploaded."
+                            )
                         ) from e
 
     def process_tags(self) -> list[str]:
@@ -376,8 +392,10 @@ class MessageForm(FlaskForm):
                 logger.warning(
                     "[MESSAGES|FORM] Failed to upload screenshot: %s", e
                 )
-                self.screenshot.errors.append("Invalid image file or format.")
-                raise ValidationError("Screenshot upload failed.") from e
+                self.screenshot.errors.append(
+                    _l("Invalid image file or unsupported format.")
+                )
+                raise ValidationError(_l("Screenshot upload failed.")) from e
         else:
             screenshot_url = (
                 self.screenshot.data if isinstance(self.screenshot.data, str)
@@ -397,7 +415,7 @@ class MessageForm(FlaskForm):
                         "[MESSAGES|FORM] Failed to upload media file: %s", e
                     )
                     self.media.errors.append(
-                        "Some files could not be uploaded."
+                        _l("One or more media files could not be uploaded.")
                     )
 
         parsed_manual = self._parse_media_field()

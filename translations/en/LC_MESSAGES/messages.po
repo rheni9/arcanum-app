@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Arcanum 1.1\n"
 "Report-Msgid-Bugs-To: arcanum.app@meta.ua\n"
-"POT-Creation-Date: 2025-09-15 16:36+0300\n"
+"POT-Creation-Date: 2025-09-15 19:53+0300\n"
 "PO-Revision-Date: 2025-09-12 14:18+0300\n"
 "Last-Translator: Arthur Ratsa <rheni.light@gmail.com>\n"
 "Language: en\n"
@@ -47,7 +47,7 @@ msgstr "Type"
 msgid "Link"
 msgstr "Link"
 
-#: app/forms/chat_form.py:56
+#: app/forms/chat_form.py:56 app/forms/message_form.py:86
 msgid "Please enter a valid URL starting with http:// or https://."
 msgstr "Please enter a valid URL starting with http:// or https://."
 
@@ -64,6 +64,8 @@ msgid "Chat Image"
 msgstr "Chat Image"
 
 #: app/forms/chat_form.py:80 app/forms/chat_form.py:150
+#: app/forms/message_form.py:106 app/forms/message_form.py:288
+#: app/forms/message_form.py:396
 msgid "Invalid image file or unsupported format."
 msgstr "Invalid image file or unsupported format."
 
@@ -89,12 +91,14 @@ msgstr "Member"
 msgid "Public"
 msgstr "Public"
 
-#: app/forms/chat_form.py:90 app/templates/chats/_chat_summary_table.html:80
+#: app/forms/chat_form.py:90 app/forms/message_form.py:117
+#: app/templates/chats/_chat_summary_table.html:80
 #: app/templates/messages/_message_summary_table.html:89
 msgid "Notes"
 msgstr "Notes"
 
-#: app/forms/chat_form.py:92 app/templates/chats/form.html:157
+#: app/forms/chat_form.py:92 app/forms/message_form.py:121
+#: app/templates/chats/form.html:157 app/templates/messages/form.html:160
 msgid "Save"
 msgstr "Save"
 
@@ -110,6 +114,79 @@ msgstr "Join date cannot be in the future."
 msgid "Image upload failed."
 msgstr "Image upload failed."
 
+#: app/forms/message_form.py:48
+msgid "Text cannot be empty or whitespace."
+msgstr "Text cannot be empty or whitespace."
+
+#: app/forms/message_form.py:61
+#: app/templates/messages/_message_summary_table.html:32
+msgid "Message ID"
+msgstr "Message ID"
+
+#: app/forms/message_form.py:66
+msgid "Message ID must be a positive integer."
+msgstr "Message ID must be a positive integer."
+
+#: app/forms/message_form.py:72 app/templates/chats/_global_stats_table.html:58
+#: app/templates/messages/_message_summary_table.html:55
+msgid "Date"
+msgstr "Date"
+
+#: app/forms/message_form.py:73
+msgid "Date is required."
+msgstr "Date is required."
+
+#: app/forms/message_form.py:76 app/templates/chats/_global_stats_table.html:62
+#: app/templates/messages/_message_summary_table.html:59
+msgid "Time"
+msgstr "Time"
+
+#: app/forms/message_form.py:77
+msgid "Time is required."
+msgstr "Time is required."
+
+#: app/forms/message_form.py:81
+msgid "Message Link"
+msgstr "Message Link"
+
+#: app/forms/message_form.py:94
+msgid "Text"
+msgstr "Text"
+
+#: app/forms/message_form.py:98
+msgid "Media"
+msgstr "Media"
+
+#: app/forms/message_form.py:101 app/templates/messages/view.html:88
+#: app/templates/messages/view.html:91
+msgid "Screenshot"
+msgstr "Screenshot"
+
+#: app/forms/message_form.py:112
+#: app/templates/messages/_message_summary_table.html:71
+msgid "Tags"
+msgstr "Tags"
+
+#: app/forms/message_form.py:238
+msgid "Date and time cannot be in the future."
+msgstr "Date and time cannot be in the future."
+
+#: app/forms/message_form.py:262
+msgid "Message link must start with 'http://' or 'https://'."
+msgstr "Message link must start with 'http://' or 'https://'."
+
+#: app/forms/message_form.py:301
+msgid "You can upload up to 5 files only."
+msgstr "You can upload up to 5 files only."
+
+#: app/forms/message_form.py:319 app/forms/message_form.py:418
+msgid "One or more media files could not be uploaded."
+msgstr "One or more media files could not be uploaded."
+
+#: app/forms/message_form.py:398
+msgid "Screenshot upload failed."
+msgstr "Screenshot upload failed."
+
 #: app/routes/auth.py:40
 msgid "You have been logged in successfully."
 msgstr "You have been logged in successfully."
@@ -122,13 +199,16 @@ msgstr "Password is incorrect."
 msgid "You have been logged out successfully."
 msgstr "You have been logged out successfully."
 
-#: app/routes/chats.py:45 app/routes/chats.py:71
+#: app/routes/chats.py:45 app/routes/chats.py:71 app/routes/messages.py:76
 #, python-format
 msgid "Database error: %(err)s"
 msgstr "Database error: %(err)s"
 
 #: app/routes/chats.py:60 app/routes/chats.py:138 app/routes/chats.py:165
-#: app/routes/chats.py:205 app/routes/chats.py:237
+#: app/routes/chats.py:205 app/routes/chats.py:237 app/routes/messages.py:52
+#: app/routes/messages.py:93 app/routes/messages.py:158
+#: app/routes/messages.py:239 app/routes/messages.py:282
+#: app/routes/messages.py:330
 #, python-format
 msgid "Chat with slug '%(slug)s' not found."
 msgstr "Chat with slug '%(slug)s' not found."
@@ -182,6 +262,75 @@ msgstr "Chat image removed."
 #: app/routes/chats.py:253
 msgid "Failed to remove chat image."
 msgstr "Failed to remove chat image."
+
+#: app/routes/messages.py:58 app/routes/messages.py:164
+#: app/routes/messages.py:245 app/routes/messages.py:288
+#: app/routes/messages.py:336
+msgid "Message not found in this chat."
+msgstr "Message not found in this chat."
+
+#: app/routes/messages.py:106
+msgid "Message added successfully."
+msgstr "Message added successfully."
+
+#: app/routes/messages.py:120 app/routes/messages.py:194
+msgid "This Message ID is already in use in this chat. Please check the value."
+msgstr "This Message ID is already in use in this chat. Please check the value."
+
+#: app/routes/messages.py:130
+#, python-format
+msgid "Failed to add message: %(err)s"
+msgstr "Failed to add message: %(err)s"
+
+#: app/routes/messages.py:182
+msgid "Message updated successfully."
+msgstr "Message updated successfully."
+
+#: app/routes/messages.py:204
+msgid "Message not found for update."
+msgstr "Message not found for update."
+
+#: app/routes/messages.py:211
+#, python-format
+msgid "Failed to update message: %(err)s"
+msgstr "Failed to update message: %(err)s"
+
+#: app/routes/messages.py:250
+msgid "Message deleted successfully."
+msgstr "Message deleted successfully."
+
+#: app/routes/messages.py:255
+#, python-format
+msgid "Failed to delete message: %(err)s"
+msgstr "Failed to delete message: %(err)s"
+
+#: app/routes/messages.py:272
+msgid "Missing media URL for deletion."
+msgstr "Missing media URL for deletion."
+
+#: app/routes/messages.py:299
+msgid "Could not find matching media for removal."
+msgstr "Could not find matching media for removal."
+
+#: app/routes/messages.py:303
+msgid "Media file removed."
+msgstr "Media file removed."
+
+#: app/routes/messages.py:308
+msgid "Failed to remove media file."
+msgstr "Failed to remove media file."
+
+#: app/routes/messages.py:341
+msgid "Could not find matching screenshot for removal."
+msgstr "Could not find matching screenshot for removal."
+
+#: app/routes/messages.py:346
+msgid "Screenshot removed."
+msgstr "Screenshot removed."
+
+#: app/routes/messages.py:351
+msgid "Failed to remove screenshot."
+msgstr "Failed to remove screenshot."
 
 #: app/services/filters_service.py:219
 msgid "Use the search bar or date filters above to find messages."
@@ -253,6 +402,7 @@ msgid "Sign in"
 msgstr "Sign in"
 
 #: app/templates/auth/login.html:40 app/templates/chats/form.html:172
+#: app/templates/messages/form.html:175
 msgid "Required field"
 msgstr "Required field"
 
@@ -359,16 +509,6 @@ msgstr[1] "messages"
 msgid "Last message timestamp:"
 msgstr "Last message timestamp:"
 
-#: app/templates/chats/_global_stats_table.html:58
-#: app/templates/messages/_message_summary_table.html:55
-msgid "Date"
-msgstr "Date"
-
-#: app/templates/chats/_global_stats_table.html:62
-#: app/templates/messages/_message_summary_table.html:59
-msgid "Time"
-msgstr "Time"
-
 #: app/templates/chats/_messages_table.html:16
 #: app/templates/search/_grouped_msg_table.html:27
 msgid "ID"
@@ -394,18 +534,18 @@ msgid "Add Chat"
 msgstr "Add Chat"
 
 #: app/templates/chats/form.html:16
-msgid "New Chat"
-msgstr "New Chat"
+msgid "Add a New Chat"
+msgstr "Add a New Chat"
 
-#: app/templates/chats/form.html:67
+#: app/templates/chats/form.html:67 app/templates/messages/form.html:93
 msgid "Must start with http:// or https://"
 msgstr "Must start with http:// or https://"
 
-#: app/templates/chats/form.html:80
+#: app/templates/chats/form.html:80 app/templates/messages/form.html:44
 msgid "Only positive digits, like 1234567890"
 msgstr "Only positive digits, like 1234567890"
 
-#: app/templates/chats/form.html:107
+#: app/templates/chats/form.html:107 app/templates/messages/form.html:131
 msgid "Supported: JPG, PNG, GIF, WEBP, BMP, TIFF"
 msgstr "Supported: JPG, PNG, GIF, WEBP, BMP, TIFF"
 
@@ -421,15 +561,16 @@ msgstr "Mark as member of chat"
 msgid "Mark chat as public"
 msgstr "Mark chat as public"
 
-#: app/templates/chats/form.html:158
+#: app/templates/chats/form.html:158 app/templates/messages/form.html:161
 msgid "Update"
 msgstr "Update"
 
-#: app/templates/chats/form.html:158
+#: app/templates/chats/form.html:158 app/templates/messages/form.html:161
 msgid "Create"
 msgstr "Create"
 
 #: app/templates/chats/form.html:162 app/templates/chats/form.html:163
+#: app/templates/messages/form.html:165 app/templates/messages/form.html:166
 #: app/templates/partials/_modal.html:17 app/templates/partials/_modal.html:18
 msgid "Cancel"
 msgstr "Cancel"
@@ -453,8 +594,9 @@ msgid "Back to Chats"
 msgstr "Back to Chats"
 
 #: app/templates/chats/view.html:59 app/templates/chats/view.html:60
+#: app/templates/messages/form.html:11
 msgid "Add Message"
-msgstr "Add message"
+msgstr "Add Message"
 
 #: app/templates/chats/view.html:63 app/templates/chats/view.html:64
 #: app/templates/messages/view.html:36 app/templates/messages/view.html:37
@@ -574,17 +716,25 @@ msgstr "Reset icon"
 msgid "Clear filters"
 msgstr "Clear filters"
 
-#: app/templates/messages/_message_summary_table.html:32
-msgid "Message ID"
-msgstr "Message ID"
-
 #: app/templates/messages/_message_summary_table.html:50
 msgid "Date and Time"
 msgstr "Date and Time"
 
-#: app/templates/messages/_message_summary_table.html:71
-msgid "Tags"
-msgstr "Tags"
+#: app/templates/messages/form.html:11 app/templates/messages/form.html:18
+msgid "Edit Message"
+msgstr "Edit message"
+
+#: app/templates/messages/form.html:18
+msgid "Add a New Message"
+msgstr "Add a New Message"
+
+#: app/templates/messages/form.html:118
+msgid "Max 5 files, images will be converted to WebP"
+msgstr "Max 5 files, images will be converted to WebP"
+
+#: app/templates/messages/form.html:143
+msgid "Comma-separated (tag1, tag2, ...)"
+msgstr "Comma-separated (tag1, tag2, ...)"
 
 #: app/templates/messages/view.html:10 app/templates/messages/view.html:19
 msgid "Message"
@@ -601,10 +751,6 @@ msgstr "Previous"
 #: app/templates/messages/view.html:78 app/templates/messages/view.html:79
 msgid "Next"
 msgstr "Next"
-
-#: app/templates/messages/view.html:88 app/templates/messages/view.html:91
-msgid "Screenshot"
-msgstr "Screenshot"
 
 #: app/templates/messages/view.html:111
 msgid "Attachments"

@@ -11,6 +11,7 @@ from flask import (
     Blueprint, render_template, request,
     redirect, url_for, flash, Response
 )
+from flask_babel import _
 
 from app.models.message import Message
 from app.forms.message_form import MessageForm
@@ -46,9 +47,16 @@ def view_message(chat_slug: str, pk: int) -> str:
         chat = get_chat_by_slug(chat_slug)
         message = get_message_by_id(pk)
 
-        if not chat or not message or message.chat_ref_id != chat.id:
-            flash("Message not found in this chat.", "error")
+        if not chat:
+            flash(
+                _("Chat with slug '%(slug)s' not found.", slug=chat_slug),
+                "error"
+            )
             return redirect(url_for("chats.list_chats"))
+
+        if not message or message.chat_ref_id != chat.id:
+            flash(_("Message not found in this chat."), "error")
+            return redirect(url_for("chats.view_chat", slug=chat_slug))
 
         prev_message = get_previous_message(chat.id, message.timestamp)
         next_message = get_next_message(chat.id, message.timestamp)
@@ -64,7 +72,9 @@ def view_message(chat_slug: str, pk: int) -> str:
         logger.error(
             "[DATABASE|MESSAGES] Failed to retrieve message id=%d: %s", pk, e
         )
-        return render_template("error.html", message=f"Database error: {e}")
+        return render_template(
+            "error.html", message=_("Database error: %(err)s", err=e)
+        )
 
 
 @messages_bp.route("/<chat_slug>/new", methods=["GET", "POST"])
@@ -79,7 +89,9 @@ def add_message(chat_slug: str) -> Response | str:
     """
     chat = get_chat_by_slug(chat_slug)
     if not chat:
-        flash("Chat not found.", "error")
+        flash(
+            _("Chat with slug '%(slug)s' not found.", slug=chat_slug), "error"
+        )
         return redirect(url_for("chats.list_chats"))
 
     form = MessageForm(chat_slug=chat_slug)
@@ -91,7 +103,7 @@ def add_message(chat_slug: str) -> Response | str:
         try:
             pk = insert_message(message)
             message.id = pk
-            flash("Message added successfully.", "success")
+            flash(_("Message added successfully."), "success")
             log_message_action("create", message.id, chat.slug)
             return redirect(
                 url_for("messages.view_message",
@@ -103,13 +115,19 @@ def add_message(chat_slug: str) -> Response | str:
                 "[DATABASE|MESSAGES] Duplicate msg_id in the chat '%s'",
                 chat_slug
             )
-            flash("Duplicate msg_id in this chat.", "error")
+            flash(
+                _(
+                    "This Message ID is already in use in this chat. "
+                    "Please check the value."
+                ),
+                "error"
+            )
         except SQLAlchemyError as e:
             logger.error(
                 "[DATABASE|MESSAGES] Failed to add message to '%s': %s",
                 chat_slug, e
             )
-            flash(f"Failed to add message: {e}", "error")
+            flash(_("Failed to add message: %(err)s", err=e), "error")
 
     return render_template(
         "messages/form.html",
@@ -135,8 +153,15 @@ def edit_message(chat_slug: str, pk: int) -> Response | str:
     chat = get_chat_by_slug(chat_slug)
     message = get_message_by_id(pk)
 
-    if not chat or not message or message.chat_ref_id != chat.id:
-        flash("Message not found in this chat.", "error")
+    if not chat:
+        flash(
+            _("Chat with slug '%(slug)s' not found.", slug=chat_slug),
+            "error"
+        )
+        return redirect(url_for("chats.list_chats"))
+
+    if not message or message.chat_ref_id != chat.id:
+        flash(_("Message not found in this chat."), "error")
         return redirect(url_for("chats.view_chat", slug=chat_slug))
 
     form = MessageForm(chat_slug=chat_slug)
@@ -154,7 +179,7 @@ def edit_message(chat_slug: str, pk: int) -> Response | str:
         updated_message = Message.from_dict(data)
         try:
             update_message(updated_message)
-            flash("Message updated successfully.", "success")
+            flash(_("Message updated successfully."), "success")
             log_message_action("update", message.id, chat.slug)
             return redirect(
                 url_for("messages.view_message", chat_slug=chat_slug, pk=pk)
@@ -164,20 +189,26 @@ def edit_message(chat_slug: str, pk: int) -> Response | str:
                 "[MESSAGES|ROUTER] Duplicate msg_id update rejected "
                 "for chat '%s'.", chat_slug
             )
-            flash("Duplicate msg_id in this chat.", "error")
+            flash(
+                _(
+                    "This Message ID is already in use in this chat. "
+                    "Please check the value."
+                ),
+                "error"
+            )
         except MessageNotFoundError:
             logger.warning(
                 "[MESSAGES|ROUTER] Tried to update non-existent message "
                 "ID=%d.", pk
             )
-            flash("Message not found for update.", "error")
+            flash(_("Message not found for update."), "error")
             return redirect(url_for("chats.view_chat", slug=chat_slug))
         except SQLAlchemyError as e:
             logger.error(
                 "[DATABASE|MESSAGES] Failed to update message id=%d: %s",
                 pk, e
             )
-            flash(f"Failed to update message: {e}", "error")
+            flash(_("Failed to update message: %(err)s", err=e), "error")
 
     return render_template(
         "messages/form.html",
@@ -202,17 +233,26 @@ def delete_message(chat_slug: str, pk: int) -> Response:
     try:
         chat = get_chat_by_slug(chat_slug)
         message = get_message_by_id(pk)
-        if not chat or not message or message.chat_ref_id != chat.id:
-            flash("Message not found in this chat.", "error")
+
+        if not chat:
+            flash(
+                _("Chat with slug '%(slug)s' not found.", slug=chat_slug),
+                "error"
+            )
+            return redirect(url_for("chats.list_chats"))
+
+        if not message or message.chat_ref_id != chat.id:
+            flash(_("Message not found in this chat."), "error")
             return redirect(url_for("chats.view_chat", slug=chat_slug))
+
         delete_message_by_id(pk)
         log_message_action("delete", pk, chat_slug)
-        flash("Message deleted successfully.", "success")
+        flash(_("Message deleted successfully."), "success")
     except SQLAlchemyError as e:
         logger.error(
             "[DATABASE|MESSAGES] Failed to delete message id=%d: %s", pk, e
         )
-        flash(f"Failed to delete message: {e}", "error")
+        flash(_("Failed to delete message: %(err)s", err=e), "error")
         return redirect(request.referrer or url_for("dashboard.dashboard"))
 
     return redirect(url_for("chats.view_chat", slug=chat_slug))
@@ -229,7 +269,7 @@ def remove_media(chat_slug: str, pk: int) -> Response:
     """
     submitted_url = request.form.get("media_url")
     if not submitted_url:
-        flash("Missing media URL for deletion.", "error")
+        flash(_("Missing media URL for deletion."), "error")
         return redirect(
             url_for("messages.view_message", chat_slug=chat_slug, pk=pk)
         )
@@ -237,8 +277,15 @@ def remove_media(chat_slug: str, pk: int) -> Response:
     try:
         message = get_message_by_id(pk)
         chat = get_chat_by_slug(chat_slug)
-        if not message or not chat or message.chat_ref_id != chat.id:
-            flash("Message not found in this chat.", "error")
+        if not chat:
+            flash(
+                _("Chat with slug '%(slug)s' not found.", slug=chat_slug),
+                "error"
+            )
+            return redirect(url_for("chats.list_chats"))
+
+        if not message or message.chat_ref_id != chat.id:
+            flash(_("Message not found in this chat."), "error")
             return redirect(url_for("chats.view_chat", slug=chat_slug))
 
         clean_submitted = clean_url(submitted_url)
@@ -249,16 +296,16 @@ def remove_media(chat_slug: str, pk: int) -> Response:
         ]
 
         if len(updated_media) == len(original_media):
-            flash("Could not find matching media for removal.", "warning")
+            flash(_("Could not find matching media for removal."), "warning")
         else:
             message.media = updated_media
             update_message(message)
-            flash("Media file removed.", "success")
+            flash(_("Media file removed."), "success")
             log_media_removal(pk, chat_slug, clean_submitted)
 
     except SQLAlchemyError as e:
         logger.error("[DATABASE|MESSAGES] Media removal failed: %s", e)
-        flash("Failed to remove media file.", "error")
+        flash(_("Failed to remove media file."), "error")
 
     return redirect(url_for(
         "messages.view_message", chat_slug=chat_slug, pk=pk)
@@ -277,21 +324,31 @@ def remove_screenshot(chat_slug: str, pk: int) -> Response:
     try:
         message = get_message_by_id(pk)
         chat = get_chat_by_slug(chat_slug)
-        if not message or not chat or message.chat_ref_id != chat.id:
-            flash("Message not found in this chat.", "error")
+
+        if not chat:
+            flash(
+                _("Chat with slug '%(slug)s' not found.", slug=chat_slug),
+                "error"
+            )
+            return redirect(url_for("chats.list_chats"))
+
+        if not message or message.chat_ref_id != chat.id:
+            flash(_("Message not found in this chat."), "error")
             return redirect(url_for("chats.view_chat", slug=chat_slug))
 
         if not message.screenshot:
-            flash("Could not find matching screenshot for removal.", "warning")
+            flash(
+                _("Could not find matching screenshot for removal."), "warning"
+            )
         else:
             message.screenshot = None
             update_message(message)
-            flash("Screenshot removed.", "success")
+            flash(_("Screenshot removed."), "success")
             log_screenshot_removal(pk, chat_slug)
 
     except SQLAlchemyError as e:
         logger.error("[DATABASE|MESSAGES] Screenshot removal failed: %s", e)
-        flash("Failed to remove screenshot.", "error")
+        flash(_("Failed to remove screenshot."), "error")
 
     return redirect(
         url_for("messages.view_message", chat_slug=chat_slug, pk=pk)
