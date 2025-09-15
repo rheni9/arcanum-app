@@ -25,7 +25,7 @@ def resolve_message_query(
     filters: MessageFilters,
     sort_by: str,
     order: str
-) -> dict:
+) -> tuple[str, dict]:
     """
     Retrieve messages based on normalized filters.
 
@@ -35,7 +35,7 @@ def resolve_message_query(
     :param filters: Validated message filters.
     :param sort_by: Field to sort by.
     :param order: Sort direction ('asc' or 'desc').
-    :return: Result dictionary with data and metadata.
+    :return: Result tuple with status and metadata.
     :raises DatabaseError: If the DAO operation fails.
     """
     status, msg = preprocess_filters(filters)
