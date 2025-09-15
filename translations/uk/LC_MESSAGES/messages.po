@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Arcanum 1.1\n"
 "Report-Msgid-Bugs-To: arcanum.app@meta.ua\n"
-"POT-Creation-Date: 2025-09-15 19:53+0300\n"
+"POT-Creation-Date: 2025-09-15 20:36+0300\n"
 "PO-Revision-Date: 2025-09-12 14:18+0300\n"
 "Last-Translator: Arthur Ratsa <rheni.light@gmail.com>\n"
 "Language: uk\n"
@@ -201,6 +201,7 @@ msgid "You have been logged out successfully."
 msgstr "Вихід виконано успішно."
 
 #: app/routes/chats.py:45 app/routes/chats.py:71 app/routes/messages.py:76
+#: app/routes/search.py:46
 #, python-format
 msgid "Database error: %(err)s"
 msgstr "Помилка бази даних: %(err)s"
@@ -332,6 +333,14 @@ msgstr "Знімок екрана видалено"
 #: app/routes/messages.py:351
 msgid "Failed to remove screenshot."
 msgstr "Не вдалося видалити знімок екрана."
+
+#: app/routes/search.py:44
+msgid "Database error occurred. Please try again."
+msgstr "Сталася помилка бази даних. Спробуй ще раз"
+
+#: app/routes/search.py:110
+msgid "Unknown"
+msgstr "Невідомо"
 
 #: app/services/filters_service.py:219
 msgid "Use the search bar or date filters above to find messages."

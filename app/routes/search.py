@@ -11,6 +11,7 @@ from sqlite3 import DatabaseError
 from flask import (
     Blueprint, render_template, request, redirect, flash, url_for
 )
+from flask_babel import _
 
 from app.models.filters import MessageFilters
 from app.services.filters_service import resolve_message_query
@@ -40,8 +41,10 @@ def global_search() -> str:
         status, context = resolve_message_query(filters, sort_by, order)
     except DatabaseError as e:
         logger.error("[SEARCH|DATABASE] Query failed: %s", e)
-        flash("Database error occurred. Please try again.", "error")
-        return render_template("error.html", message=str(e))
+        flash(_("Database error occurred. Please try again."), "error")
+        return render_template(
+            "error.html", message=_("Database error: %(err)s", err=e)
+        )
 
     if request.args.get("action") == "search" and filters.action == "tag":
         new_args = request.args.to_dict(flat=True)
@@ -104,7 +107,7 @@ def _render_ajax_response(
                 "search/_grouped_msg_table.html",
                 slug=chat_slug,
                 messages=[],
-                chat_name="Unknown",
+                chat_name=_("Unknown"),
                 sort_by=sort_by,
                 order=order,
                 filters=filters,
