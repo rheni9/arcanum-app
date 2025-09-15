@@ -241,7 +241,7 @@ def remove_chat_image(slug: str) -> Response:
             return redirect(url_for("chats.list_chats"))
 
         if not chat.image:
-            flash(_("No image to remove."), "warning")
+            flash(_("Could not find matching image for removal."), "warning")
         else:
             chat.image = None
             update_chat(chat)

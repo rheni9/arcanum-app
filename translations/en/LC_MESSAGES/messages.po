@@ -172,8 +172,8 @@ msgid "Failed to delete chat: %(err)s"
 msgstr "Failed to delete chat: %(err)s"
 
 #: app/routes/chats.py:244
-msgid "No image to remove."
-msgstr "No image to remove."
+msgid "Could not find matching image for removal."
+msgstr "Could not find matching image for removal."
 
 #: app/routes/chats.py:248
 msgid "Chat image removed."
