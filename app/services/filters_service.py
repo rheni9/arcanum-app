@@ -241,7 +241,7 @@ def _result_error(
     :param error: Exception raised during execution.
     :return: Result tuple with 'error' status and metadata.
     """
-    msg = TranslatableMsg(f"Database error: {error}").ui
+    msg = TranslatableMsg("Database error: %(err)s", {"err": str(error)}).ui
     return "error", {
         "messages": [],
         "count": 0,

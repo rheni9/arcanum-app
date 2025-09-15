@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Arcanum 1.1\n"
 "Report-Msgid-Bugs-To: arcanum.app@meta.ua\n"
-"POT-Creation-Date: 2025-09-15 20:36+0300\n"
+"POT-Creation-Date: 2025-09-15 21:32+0300\n"
 "PO-Revision-Date: 2025-09-12 14:18+0300\n"
 "Last-Translator: Arthur Ratsa <rheni.light@gmail.com>\n"
 "Language: en\n"
@@ -200,7 +200,7 @@ msgid "You have been logged out successfully."
 msgstr "You have been logged out successfully."
 
 #: app/routes/chats.py:45 app/routes/chats.py:71 app/routes/messages.py:76
-#: app/routes/search.py:46
+#: app/routes/search.py:46 app/services/filters_service.py:244
 #, python-format
 msgid "Database error: %(err)s"
 msgstr "Database error: %(err)s"
