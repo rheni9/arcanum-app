@@ -212,7 +212,7 @@ def update_message_record(message: Message) -> None:
             raise DuplicateMessageError(
                 "msg_id already exists within this chat."
             ) from e
-        logger.error("[MESSAGES|DAO] Insert integrity error: %s", e)
+        logger.error("[MESSAGES|DAO] Update integrity error: %s", e)
         raise
     except SQLAlchemyError as e:
         logger.error("[MESSAGES|DAO] Update failed: %s", e)
