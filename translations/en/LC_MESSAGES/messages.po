@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Arcanum 1.1\n"
 "Report-Msgid-Bugs-To: arcanum.app@meta.ua\n"
-"POT-Creation-Date: 2025-09-15 13:22+0300\n"
+"POT-Creation-Date: 2025-09-15 16:36+0300\n"
 "PO-Revision-Date: 2025-09-12 14:18+0300\n"
 "Last-Translator: Arthur Ratsa <rheni.light@gmail.com>\n"
 "Language: en\n"
@@ -31,6 +31,85 @@ msgstr "Please enter your password."
 msgid "Sign In"
 msgstr "Sign In"
 
+#: app/forms/chat_form.py:44
+msgid "Chat Name"
+msgstr "Chats Name"
+
+#: app/forms/chat_form.py:45
+msgid "Chat name is required."
+msgstr "Chat name is required."
+
+#: app/forms/chat_form.py:48 app/templates/chats/_chat_summary_table.html:17
+msgid "Type"
+msgstr "Type"
+
+#: app/forms/chat_form.py:51 app/templates/chats/_chat_summary_table.html:23
+msgid "Link"
+msgstr "Link"
+
+#: app/forms/chat_form.py:56
+msgid "Please enter a valid URL starting with http:// or https://."
+msgstr "Please enter a valid URL starting with http:// or https://."
+
+#: app/forms/chat_form.py:64 app/templates/chats/_chat_summary_table.html:38
+msgid "Chat ID"
+msgstr "Chat ID"
+
+#: app/forms/chat_form.py:69
+msgid "Chat ID must be a positive integer."
+msgstr "Chat ID must be a positive integer."
+
+#: app/forms/chat_form.py:75
+msgid "Chat Image"
+msgstr "Chat Image"
+
+#: app/forms/chat_form.py:80 app/forms/chat_form.py:150
+msgid "Invalid image file or unsupported format."
+msgstr "Invalid image file or unsupported format."
+
+#: app/forms/chat_form.py:85
+msgid "Join Date"
+msgstr "Join Date"
+
+#: app/forms/chat_form.py:87 app/templates/chats/_chat_summary_table.html:60
+#: app/templates/chats/_chat_summary_table.html:62
+#: app/templates/chats/_chats_table.html:67 app/templates/chats/form.html:116
+#: app/templates/messages/_message_summary_table.html:20
+msgid "Active"
+msgstr "Active"
+
+#: app/forms/chat_form.py:88 app/templates/chats/_chat_summary_table.html:74
+#: app/templates/chats/_chats_table.html:70 app/templates/chats/form.html:126
+#: app/templates/messages/_message_summary_table.html:23
+msgid "Member"
+msgstr "Member"
+
+#: app/forms/chat_form.py:89 app/templates/chats/_chat_summary_table.html:68
+#: app/templates/chats/form.html:136
+msgid "Public"
+msgstr "Public"
+
+#: app/forms/chat_form.py:90 app/templates/chats/_chat_summary_table.html:80
+#: app/templates/messages/_message_summary_table.html:89
+msgid "Notes"
+msgstr "Notes"
+
+#: app/forms/chat_form.py:92 app/templates/chats/form.html:157
+msgid "Save"
+msgstr "Save"
+
+#: app/forms/chat_form.py:130
+msgid "Chat link must start with 'http://' or 'https://'."
+msgstr "Chat link must start with 'http://' or 'https://'."
+
+#: app/forms/chat_form.py:171
+msgid "Join date cannot be in the future."
+msgstr "Join date cannot be in the future."
+
+#: app/forms/chat_form.py:242
+msgid "Image upload failed."
+msgstr "Image upload failed."
+
 #: app/routes/auth.py:40
 msgid "You have been logged in successfully."
 msgstr "You have been logged in successfully."
@@ -42,6 +121,67 @@ msgstr "Password is incorrect."
 #: app/routes/auth.py:61
 msgid "You have been logged out successfully."
 msgstr "You have been logged out successfully."
+
+#: app/routes/chats.py:45 app/routes/chats.py:71
+#, python-format
+msgid "Database error: %(err)s"
+msgstr "Database error: %(err)s"
+
+#: app/routes/chats.py:60 app/routes/chats.py:138 app/routes/chats.py:165
+#: app/routes/chats.py:205 app/routes/chats.py:237
+#, python-format
+msgid "Chat with slug '%(slug)s' not found."
+msgstr "Chat with slug '%(slug)s' not found."
+
+#: app/routes/chats.py:95
+#, python-format
+msgid "Chat '%(name)s' created successfully."
+msgstr "Chat '%(name)s' created successfully."
+
+#: app/routes/chats.py:103 app/routes/chats.py:174
+msgid "This Telegram ID is already in use. Please check the value."
+msgstr "This Telegram ID is already in use. Please check the value."
+
+#: app/routes/chats.py:112 app/routes/chats.py:182
+msgid "Slug already exists. Please choose another name."
+msgstr "Slug already exists. Please choose another name."
+
+#: app/routes/chats.py:118
+#, python-format
+msgid "Failed to create chat: %(err)s"
+msgstr "Failed to create chat: %(err)s"
+
+#: app/routes/chats.py:156
+#, python-format
+msgid "Chat '%(name)s' updated successfully."
+msgstr "Chat '%(name)s' updated successfully."
+
+#: app/routes/chats.py:187
+#, python-format
+msgid "Failed to update chat: %(err)s"
+msgstr "Failed to update chat: %(err)s"
+
+#: app/routes/chats.py:212
+#, python-format
+msgid "Chat '%(name)s' deleted successfully."
+msgstr "Chat '%(name)s' deleted successfully."
+
+#: app/routes/chats.py:219
+#, python-format
+msgid "Failed to delete chat: %(err)s"
+msgstr "Failed to delete chat: %(err)s"
+
+#: app/routes/chats.py:244
+msgid "No image to remove."
+msgstr "No image to remove."
+
+#: app/routes/chats.py:248
+msgid "Chat image removed."
+msgstr "Chat image removed."
+
+#: app/routes/chats.py:253
+msgid "Failed to remove chat image."
+msgstr "Failed to remove chat image."
 
 #: app/services/filters_service.py:219
 msgid "Use the search bar or date filters above to find messages."
@@ -112,7 +252,7 @@ msgstr "Lock icon"
 msgid "Sign in"
 msgstr "Sign in"
 
-#: app/templates/auth/login.html:40
+#: app/templates/auth/login.html:40 app/templates/chats/form.html:172
 msgid "Required field"
 msgstr "Required field"
 
@@ -121,25 +261,14 @@ msgid "Logo icon"
 msgstr "Logo icon"
 
 #: app/templates/chats/_chat_summary_table.html:11
+#: app/templates/chats/form.html:32
 msgid "Slug"
 msgstr "Slug"
-
-#: app/templates/chats/_chat_summary_table.html:17
-msgid "Type"
-msgstr "Type"
-
-#: app/templates/chats/_chat_summary_table.html:23
-msgid "Link"
-msgstr "Link"
 
 #: app/templates/chats/_chat_summary_table.html:28
 #: app/templates/messages/_message_summary_table.html:38
 msgid "External link"
 msgstr "External link"
-
-#: app/templates/chats/_chat_summary_table.html:38
-msgid "Chat ID"
-msgstr "Chat ID"
 
 #: app/templates/chats/_chat_summary_table.html:44
 msgid "Joined"
@@ -157,19 +286,8 @@ msgstr "Status"
 #: app/templates/chats/_chat_summary_table.html:62
 #: app/templates/chats/_chats_table.html:67
 #: app/templates/messages/_message_summary_table.html:20
-msgid "Active"
-msgstr "Active"
-
-#: app/templates/chats/_chat_summary_table.html:60
-#: app/templates/chats/_chat_summary_table.html:62
-#: app/templates/chats/_chats_table.html:67
-#: app/templates/messages/_message_summary_table.html:20
 msgid "Inactive"
 msgstr "Inactive"
-
-#: app/templates/chats/_chat_summary_table.html:68
-msgid "Public"
-msgstr "Public"
 
 #: app/templates/chats/_chat_summary_table.html:69
 #: app/templates/chats/_chat_summary_table.html:75
@@ -180,17 +298,6 @@ msgstr "Yes"
 #: app/templates/chats/_chat_summary_table.html:75
 msgid "No"
 msgstr "No"
-
-#: app/templates/chats/_chat_summary_table.html:74
-#: app/templates/chats/_chats_table.html:70
-#: app/templates/messages/_message_summary_table.html:23
-msgid "Member"
-msgstr "Member"
-
-#: app/templates/chats/_chat_summary_table.html:80
-#: app/templates/messages/_message_summary_table.html:89
-msgid "Notes"
-msgstr "Notes"
 
 #: app/templates/chats/_chats_table.html:16
 #: app/templates/messages/_message_summary_table.html:11
@@ -277,13 +384,59 @@ msgstr "Message text"
 msgid "Sent"
 msgstr "Sent"
 
+#: app/templates/chats/form.html:10 app/templates/chats/form.html:16
+msgid "Edit Chat"
+msgstr "Edit Chat"
+
+#: app/templates/chats/form.html:10 app/templates/chats/index.html:25
+#: app/templates/chats/index.html:26
+msgid "Add Chat"
+msgstr "Add Chat"
+
+#: app/templates/chats/form.html:16
+msgid "New Chat"
+msgstr "New Chat"
+
+#: app/templates/chats/form.html:67
+msgid "Must start with http:// or https://"
+msgstr "Must start with http:// or https://"
+
+#: app/templates/chats/form.html:80
+msgid "Only positive digits, like 1234567890"
+msgstr "Only positive digits, like 1234567890"
+
+#: app/templates/chats/form.html:107
+msgid "Supported: JPG, PNG, GIF, WEBP, BMP, TIFF"
+msgstr "Supported: JPG, PNG, GIF, WEBP, BMP, TIFF"
+
+#: app/templates/chats/form.html:120
+msgid "Mark chat as active"
+msgstr "Mark chat as active"
+
+#: app/templates/chats/form.html:130
+msgid "Mark as member of chat"
+msgstr "Mark as member of chat"
+
+#: app/templates/chats/form.html:140
+msgid "Mark chat as public"
+msgstr "Mark chat as public"
+
+#: app/templates/chats/form.html:158
+msgid "Update"
+msgstr "Update"
+
+#: app/templates/chats/form.html:158
+msgid "Create"
+msgstr "Create"
+
+#: app/templates/chats/form.html:162 app/templates/chats/form.html:163
+#: app/templates/partials/_modal.html:17 app/templates/partials/_modal.html:18
+msgid "Cancel"
+msgstr "Cancel"
+
 #: app/templates/chats/index.html:10 app/templates/chats/index.html:19
 msgid "Chats"
 msgstr "Chats"
-
-#: app/templates/chats/index.html:25 app/templates/chats/index.html:26
-msgid "Add Chat"
-msgstr "Add Chat"
 
 #: app/templates/chats/view.html:24
 msgid "Chat Avatar"
@@ -493,10 +646,6 @@ msgstr "Confirm"
 #: app/templates/partials/_modal.html:10
 msgid "Are you sure you want to proceed?"
 msgstr "Are you sure you want to proceed?"
-
-#: app/templates/partials/_modal.html:17 app/templates/partials/_modal.html:18
-msgid "Cancel"
-msgstr "Cancel"
 
 #: app/templates/search/results.html:9 app/templates/search/results.html:17
 msgid "Search Results"

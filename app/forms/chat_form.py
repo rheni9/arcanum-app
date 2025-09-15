@@ -9,6 +9,7 @@ Fields and validation are fully synchronized with the Chat model.
 
 import logging
 from datetime import datetime
+from flask_babel import lazy_gettext as _l
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed
 from wtforms import (
@@ -40,48 +41,55 @@ class ChatForm(FlaskForm):
     slug = HiddenField()  # Used for editing only
 
     name = StringField(
-        "Chat Name",
-        validators=[DataRequired(message="Chat name is required.")]
+        _l("Chat Name"),
+        validators=[DataRequired(message=_l("Chat name is required."))]
     )
 
-    type = StringField("Type", validators=[Optional()])
+    type = StringField(_l("Type"), validators=[Optional()])
 
     link = StringField(
-        "Link",
+        _l("Link"),
         validators=[
             Optional(),
-            URL(message="Please enter a valid URL starting with "
-                        "http:// or https://.")
-        ]
-    )
-
-    chat_id = IntegerField(
-        "Chat ID",
-        validators=[
-            Optional(),
-            NumberRange(min=0, message="Chat ID must be a positive integer.")
-        ]
-    )
-
-    image = FileField(
-        "Chat Image",
-        validators=[
-            Optional(),
-            FileAllowed(
-                ["jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff"],
-                "Invalid image file or unsupported format."
+            URL(
+                message=_l(
+                    "Please enter a valid URL starting with "
+                    "http:// or https://."
+                )
             )
         ]
     )
 
-    joined = StringField("Joined Date")
+    chat_id = IntegerField(
+        _l("Chat ID"),
+        validators=[
+            Optional(),
+            NumberRange(
+                min=0,
+                message=_l("Chat ID must be a positive integer.")
+            )
+        ]
+    )
 
-    is_active = BooleanField("Active")
-    is_member = BooleanField("Member")
-    is_public = BooleanField("Public")
-    notes = TextAreaField("Notes", validators=[Optional()])
+    image = FileField(
+        _l("Chat Image"),
+        validators=[
+            Optional(),
+            FileAllowed(
+                ["jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff"],
+                _l("Invalid image file or unsupported format.")
+            )
+        ]
+    )
 
-    submit = SubmitField("Save")
+    joined = StringField(_l("Join Date"))
+
+    is_active = BooleanField(_l("Active"))
+    is_member = BooleanField(_l("Member"))
+    is_public = BooleanField(_l("Public"))
+    notes = TextAreaField(_l("Notes"), validators=[Optional()])
+
+    submit = SubmitField(_l("Save"))
 
     def __init__(self, *args, **kwargs):
         """
@@ -119,7 +127,7 @@ class ChatForm(FlaskForm):
         if not field.data.startswith(("http://", "https://")):
             logger.debug("[CHATS|FORM] Invalid link: %s", field.data)
             raise ValidationError(
-                "Chat link must start with 'http://' or 'https://'."
+                _l("Chat link must start with 'http://' or 'https://'.")
             )
 
     def validate_image(self, field: FileField) -> None:
@@ -139,7 +147,7 @@ class ChatForm(FlaskForm):
                     "[CHATS|FORM] Invalid image file: %s", e
                 )
                 raise ValidationError(
-                    "Invalid image file or unsupported format."
+                    _l("Invalid image file or unsupported format.")
                 ) from e
 
     def validate_joined(self, field: StringField) -> None:
@@ -160,7 +168,7 @@ class ChatForm(FlaskForm):
 
         if joined_date > datetime.utcnow().date():
             logger.debug("[CHATS|FORM] Join date in future: %s", joined_date)
-            raise ValidationError("Join date cannot be in the future.")
+            raise ValidationError(_l("Join date cannot be in the future."))
 
         field.data = joined_date.isoformat()
 
@@ -231,8 +239,7 @@ class ChatForm(FlaskForm):
                 return upload_image(file, slug)
             except RuntimeError as e:
                 logger.warning("[CHATS|FORM] Failed to upload image: %s", e)
-                self.image.errors.append("Invalid image file or format.")
-                raise ValidationError("Image upload failed.") from e
+                raise ValidationError(_l("Image upload failed.")) from e
         return (
             self.image.data
             if isinstance(self.image.data, str)

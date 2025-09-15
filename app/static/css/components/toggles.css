@@ -90,6 +90,10 @@
 ============================================================= */
 
 @media (max-width: 768px) {
+  .toggle-label {
+    font-size: var(--font-detail);
+  }
+
   .switch {
     width: 38px;
     height: 20px;
@@ -112,6 +116,10 @@
 }
 
 @media (max-width: 480px) {
+  .toggle-label {
+    font-size: var(--font-sm);
+  }
+
   .switch {
     width: 36px;
     height: 18px;

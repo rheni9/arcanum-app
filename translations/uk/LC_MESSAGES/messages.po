@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Arcanum 1.1\n"
 "Report-Msgid-Bugs-To: arcanum.app@meta.ua\n"
-"POT-Creation-Date: 2025-09-15 13:22+0300\n"
+"POT-Creation-Date: 2025-09-15 16:36+0300\n"
 "PO-Revision-Date: 2025-09-12 14:18+0300\n"
 "Last-Translator: Arthur Ratsa <rheni.light@gmail.com>\n"
 "Language: uk\n"
@@ -32,6 +32,85 @@ msgstr "Будь ласка, введи свій пароль."
 msgid "Sign In"
 msgstr "Вхід"
 
+#: app/forms/chat_form.py:44
+msgid "Chat Name"
+msgstr "Назва чату"
+
+#: app/forms/chat_form.py:45
+msgid "Chat name is required."
+msgstr "Потрібно вказати назву чату."
+
+#: app/forms/chat_form.py:48 app/templates/chats/_chat_summary_table.html:17
+msgid "Type"
+msgstr "Тип"
+
+#: app/forms/chat_form.py:51 app/templates/chats/_chat_summary_table.html:23
+msgid "Link"
+msgstr "Посилання"
+
+#: app/forms/chat_form.py:56
+msgid "Please enter a valid URL starting with http:// or https://."
+msgstr "Введи дійсну URL-адресу, що починається з http:// або https://."
+
+#: app/forms/chat_form.py:64 app/templates/chats/_chat_summary_table.html:38
+msgid "Chat ID"
+msgstr "ID чату"
+
+#: app/forms/chat_form.py:69
+msgid "Chat ID must be a positive integer."
+msgstr "ID чату має бути додатним цілим числом."
+
+#: app/forms/chat_form.py:75
+msgid "Chat Image"
+msgstr "Зображення чату"
+
+#: app/forms/chat_form.py:80 app/forms/chat_form.py:150
+msgid "Invalid image file or unsupported format."
+msgstr "Файл зображення некоректний або формат не підтримується."
+
+#: app/forms/chat_form.py:85
+msgid "Join Date"
+msgstr "Дата приєднання"
+
+#: app/forms/chat_form.py:87 app/templates/chats/_chat_summary_table.html:60
+#: app/templates/chats/_chat_summary_table.html:62
+#: app/templates/chats/_chats_table.html:67 app/templates/chats/form.html:116
+#: app/templates/messages/_message_summary_table.html:20
+msgid "Active"
+msgstr "Активний"
+
+#: app/forms/chat_form.py:88 app/templates/chats/_chat_summary_table.html:74
+#: app/templates/chats/_chats_table.html:70 app/templates/chats/form.html:126
+#: app/templates/messages/_message_summary_table.html:23
+msgid "Member"
+msgstr "Учасник"
+
+#: app/forms/chat_form.py:89 app/templates/chats/_chat_summary_table.html:68
+#: app/templates/chats/form.html:136
+msgid "Public"
+msgstr "Публічний"
+
+#: app/forms/chat_form.py:90 app/templates/chats/_chat_summary_table.html:80
+#: app/templates/messages/_message_summary_table.html:89
+msgid "Notes"
+msgstr "Примітки"
+
+#: app/forms/chat_form.py:92 app/templates/chats/form.html:157
+msgid "Save"
+msgstr "Зберегти"
+
+#: app/forms/chat_form.py:130
+msgid "Chat link must start with 'http://' or 'https://'."
+msgstr "Посилання має починатися з «http://» або «https://»."
+
+#: app/forms/chat_form.py:171
+msgid "Join date cannot be in the future."
+msgstr "Дата приєднання не може бути в майбутньому."
+
+#: app/forms/chat_form.py:242
+msgid "Image upload failed."
+msgstr "Завантаження зображення не вдалося."
+
 #: app/routes/auth.py:40
 msgid "You have been logged in successfully."
 msgstr "Вхід виконано успішно."
@@ -43,6 +122,67 @@ msgstr "Неправильний пароль."
 #: app/routes/auth.py:61
 msgid "You have been logged out successfully."
 msgstr "Вихід виконано успішно."
+
+#: app/routes/chats.py:45 app/routes/chats.py:71
+#, python-format
+msgid "Database error: %(err)s"
+msgstr "Помилка бази даних: %(err)s"
+
+#: app/routes/chats.py:60 app/routes/chats.py:138 app/routes/chats.py:165
+#: app/routes/chats.py:205 app/routes/chats.py:237
+#, python-format
+msgid "Chat with slug '%(slug)s' not found."
+msgstr "Чат з ідентифікатором «%(slug)s» не знайдено."
+
+#: app/routes/chats.py:95
+#, python-format
+msgid "Chat '%(name)s' created successfully."
+msgstr "Чат «%(name)s» успішно створено."
+
+#: app/routes/chats.py:103 app/routes/chats.py:174
+msgid "This Telegram ID is already in use. Please check the value."
+msgstr "Цей Telegram ID вже використовується. Перевір значення."
+
+#: app/routes/chats.py:112 app/routes/chats.py:182
+msgid "Slug already exists. Please choose another name."
+msgstr "Такий ідентифікатор уже існує. Вибери іншу назву."
+
+#: app/routes/chats.py:118
+#, python-format
+msgid "Failed to create chat: %(err)s"
+msgstr "Не вдалося створити чат: %(err)s"
+
+#: app/routes/chats.py:156
+#, python-format
+msgid "Chat '%(name)s' updated successfully."
+msgstr "Чат «%(name)s» успішно оновлено."
+
+#: app/routes/chats.py:187
+#, python-format
+msgid "Failed to update chat: %(err)s"
+msgstr "Не вдалося оновити чат: %(err)s"
+
+#: app/routes/chats.py:212
+#, python-format
+msgid "Chat '%(name)s' deleted successfully."
+msgstr "Чат «%(name)s» успішно видалено."
+
+#: app/routes/chats.py:219
+#, python-format
+msgid "Failed to delete chat: %(err)s"
+msgstr "Не вдалося видалити чат: %(err)s"
+
+#: app/routes/chats.py:244
+msgid "No image to remove."
+msgstr "Зображення для видалення відсутнє."
+
+#: app/routes/chats.py:248
+msgid "Chat image removed."
+msgstr "Зображення чату видалено."
+
+#: app/routes/chats.py:253
+msgid "Failed to remove chat image."
+msgstr "Не вдалося видалити зображення чату."
 
 #: app/services/filters_service.py:219
 msgid "Use the search bar or date filters above to find messages."
@@ -115,7 +255,7 @@ msgstr "Значок замка"
 msgid "Sign in"
 msgstr "Увійти"
 
-#: app/templates/auth/login.html:40
+#: app/templates/auth/login.html:40 app/templates/chats/form.html:172
 msgid "Required field"
 msgstr "Обов’язкове поле"
 
@@ -124,25 +264,14 @@ msgid "Logo icon"
 msgstr "Значок логотипа"
 
 #: app/templates/chats/_chat_summary_table.html:11
+#: app/templates/chats/form.html:32
 msgid "Slug"
-msgstr "Slug"
-
-#: app/templates/chats/_chat_summary_table.html:17
-msgid "Type"
-msgstr "Тип"
-
-#: app/templates/chats/_chat_summary_table.html:23
-msgid "Link"
-msgstr "Посилання"
+msgstr "Ідентифікатор"
 
 #: app/templates/chats/_chat_summary_table.html:28
 #: app/templates/messages/_message_summary_table.html:38
 msgid "External link"
 msgstr "Зовнішнє посилання"
-
-#: app/templates/chats/_chat_summary_table.html:38
-msgid "Chat ID"
-msgstr "ID чату"
 
 #: app/templates/chats/_chat_summary_table.html:44
 msgid "Joined"
@@ -160,19 +289,8 @@ msgstr "Статус"
 #: app/templates/chats/_chat_summary_table.html:62
 #: app/templates/chats/_chats_table.html:67
 #: app/templates/messages/_message_summary_table.html:20
-msgid "Active"
-msgstr "Активний"
-
-#: app/templates/chats/_chat_summary_table.html:60
-#: app/templates/chats/_chat_summary_table.html:62
-#: app/templates/chats/_chats_table.html:67
-#: app/templates/messages/_message_summary_table.html:20
 msgid "Inactive"
 msgstr "Неактивний"
-
-#: app/templates/chats/_chat_summary_table.html:68
-msgid "Public"
-msgstr "Публічний"
 
 #: app/templates/chats/_chat_summary_table.html:69
 #: app/templates/chats/_chat_summary_table.html:75
@@ -183,17 +301,6 @@ msgstr "Так"
 #: app/templates/chats/_chat_summary_table.html:75
 msgid "No"
 msgstr "Ні"
-
-#: app/templates/chats/_chat_summary_table.html:74
-#: app/templates/chats/_chats_table.html:70
-#: app/templates/messages/_message_summary_table.html:23
-msgid "Member"
-msgstr "Учасник"
-
-#: app/templates/chats/_chat_summary_table.html:80
-#: app/templates/messages/_message_summary_table.html:89
-msgid "Notes"
-msgstr "Примітки"
 
 #: app/templates/chats/_chats_table.html:16
 #: app/templates/messages/_message_summary_table.html:11
@@ -281,17 +388,63 @@ msgstr "Текст повідомлення"
 msgid "Sent"
 msgstr "Надіслано"
 
+#: app/templates/chats/form.html:10 app/templates/chats/form.html:16
+msgid "Edit Chat"
+msgstr "Редагувати чат"
+
+#: app/templates/chats/form.html:10 app/templates/chats/index.html:25
+#: app/templates/chats/index.html:26
+msgid "Add Chat"
+msgstr "Додати чат"
+
+#: app/templates/chats/form.html:16
+msgid "New Chat"
+msgstr "Новий чат"
+
+#: app/templates/chats/form.html:67
+msgid "Must start with http:// or https://"
+msgstr "Посилання має починатися з http:// або https://."
+
+#: app/templates/chats/form.html:80
+msgid "Only positive digits, like 1234567890"
+msgstr "Поле має містити лише додатні числа, наприклад 1234567890."
+
+#: app/templates/chats/form.html:107
+msgid "Supported: JPG, PNG, GIF, WEBP, BMP, TIFF"
+msgstr "Підтримуються: JPG, PNG, GIF, WEBP, BMP, TIFF."
+
+#: app/templates/chats/form.html:120
+msgid "Mark chat as active"
+msgstr "Позначити чат як активний"
+
+#: app/templates/chats/form.html:130
+msgid "Mark as member of chat"
+msgstr "Позначити, що є учасником цього чату"
+
+#: app/templates/chats/form.html:140
+msgid "Mark chat as public"
+msgstr "Позначити чат як публічний"
+
+#: app/templates/chats/form.html:158
+msgid "Update"
+msgstr "Оновити"
+
+#: app/templates/chats/form.html:158
+msgid "Create"
+msgstr "Створити"
+
+#: app/templates/chats/form.html:162 app/templates/chats/form.html:163
+#: app/templates/partials/_modal.html:17 app/templates/partials/_modal.html:18
+msgid "Cancel"
+msgstr "Скасувати"
+
 #: app/templates/chats/index.html:10 app/templates/chats/index.html:19
 msgid "Chats"
 msgstr "Чати"
 
-#: app/templates/chats/index.html:25 app/templates/chats/index.html:26
-msgid "Add Chat"
-msgstr "Додати чат"
-
 #: app/templates/chats/view.html:24
 msgid "Chat Avatar"
-msgstr "Аватар чату"
+msgstr "Зображення чату"
 
 #: app/templates/chats/view.html:52 app/templates/messages/view.html:28
 #: app/templates/search/results.html:42
@@ -498,10 +651,6 @@ msgstr "Підтвердити"
 #: app/templates/partials/_modal.html:10
 msgid "Are you sure you want to proceed?"
 msgstr "Ти впевнений, що хочеш продовжити?"
-
-#: app/templates/partials/_modal.html:17 app/templates/partials/_modal.html:18
-msgid "Cancel"
-msgstr "Скасувати"
 
 #: app/templates/search/results.html:9 app/templates/search/results.html:17
 msgid "Search Results"

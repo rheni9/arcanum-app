@@ -7,13 +7,13 @@
 {% extends "base.html" %}
 
 {% block title %}
-  {{ "Edit" if is_edit else "Add" }} Chat | Arcanum
+  {{ _('Edit Chat') if is_edit else _('Add Chat') }} | Arcanum
 {% endblock %}
 
 {% block content %}
   <div class="content-area">
     <section class="section">
-      <h1 class="section-title">{{ "Edit" if is_edit else "New" }} Chat</h1>
+      <h1 class="section-title">{{ _('Edit Chat') if is_edit else _('New Chat') }}</h1>
 
       {# === Form Container === #}
       <div class="form-container wide-form">
@@ -29,7 +29,7 @@
             {# === Slug (View-only, Edit Mode) === #}
             {% if is_edit and chat %}
               <div class="form-group">
-                <label class="form-label">Slug:</label>
+                <label class="form-label">{{ _('Slug') }}:</label>
                 <span class="static-value">{{ chat.slug }}</span>
               </div>
             {% endif %}
@@ -64,7 +64,7 @@
               </label>
               {{ form.link(class="form-control" ~ (' input-error' if form.link.errors else '')) }}
               <div class="form-message-wrapper"></div>
-              <small class="form-hint">Must start with http:// or https://</small>
+              <small class="form-hint">{{ _('Must start with http:// or https://') }}</small>
               {% for error in form.link.errors %}
                 <div class="error">{{ error }}</div>
               {% endfor %}
@@ -77,7 +77,7 @@
               </label>
               {{ form.chat_id(class="form-control" ~ (' input-error' if form.chat_id.errors else '')) }}
               <div class="form-message-wrapper"></div>
-              <small class="form-hint">Only digits, like 1234567890</small>
+              <small class="form-hint">{{ _('Only positive digits, like 1234567890') }}</small>
               {% for error in form.chat_id.errors %}
                 <div class="error">{{ error }}</div>
               {% endfor %}
@@ -104,7 +104,7 @@
                 {{ form.image.label.text }}
               </label>
               {{ form.image(class="form-control-file" ~ (' input-error' if form.image.errors else '')) }}
-              <small class="form-hint">Supported: JPG, PNG, GIF, WEBP, BMP, TIFF</small>
+              <small class="form-hint">{{ _('Supported: JPG, PNG, GIF, WEBP, BMP, TIFF') }}</small>
               {% for error in form.image.errors %}
                 <div class="error">{{ error }}</div>
               {% endfor %}
@@ -113,31 +113,31 @@
             {# === Toggle Switches: Is Active, Is Member, Is Public === #}
             <div class="form-group toggle-group">
               <label class="switch-label-block" for="is_active">
-                <span class="form-label toggle-label">Active</span>
+                <span class="form-label toggle-label">{{ _('Active') }}</span>
                 <div class="switch">
                   <input type="checkbox" id="is_active" name="is_active"
                         {% if form.is_active.data %}checked{% endif %}
-                        aria-label="Mark chat as active">
+                        aria-label="{{ _('Mark chat as active') }}">
                   <span class="slider"></span>
                 </div>
               </label>
 
               <label class="switch-label-block" for="is_member">
-                <span class="form-label toggle-label">Member</span>
+                <span class="form-label toggle-label">{{ _('Member') }}</span>
                 <div class="switch">
                   <input type="checkbox" id="is_member" name="is_member"
                         {% if form.is_member.data %}checked{% endif %}
-                        aria-label="Mark chat as joined">
+                        aria-label="{{ _('Mark as member of chat') }}">
                   <span class="slider"></span>
                 </div>
               </label>
 
               <label class="switch-label-block" for="is_public">
-                <span class="form-label toggle-label">Public</span>
+                <span class="form-label toggle-label">{{ _('Public') }}</span>
                 <div class="switch">
                   <input type="checkbox" id="is_public" name="is_public"
                         {% if form.is_public.data %}checked{% endif %}
-                        aria-label="Mark chat as public">
+                        aria-label="{{ _('Mark chat as public') }}">
                   <span class="slider"></span>
                 </div>
               </label>
@@ -154,13 +154,13 @@
             {# === Action Buttons === #}
             <div class="form-actions-centered">
               <button type="submit" class="btn btn-primary btn-icon">
-                <img src="{{ url_for('static', filename='img/save_icon.png') }}" alt="Save" aria-hidden="true">
-                {{ "Update" if is_edit else "Create" }}
+                <img src="{{ url_for('static', filename='img/save_icon.png') }}" alt="{{ _('Save') }}" aria-hidden="true">
+                {{ _('Update') if is_edit else _('Create') }}
               </button>
               <a href="{{ url_for('chats.view_chat', slug=chat.slug) if is_edit else url_for('chats.list_chats') }}"
                  class="btn btn-secondary btn-icon">
-                 <img src="{{ url_for('static', filename='img/cancel_icon.png') }}" alt="Cancel" aria-hidden="true">
-                 Cancel
+                 <img src="{{ url_for('static', filename='img/cancel_icon.png') }}" alt="{{ _('Cancel') }}" aria-hidden="true">
+                 {{ _('Cancel') }}
               </a>
             </div>
 
@@ -169,13 +169,9 @@
       </div>
 
       <p class="form-required-note">
-        <span class="form-required-mark">*</span> Required field
+        <span class="form-required-mark">*</span> {{ _('Required field') }}
       </p>
     </section>
   </div>
 {% endblock %}
 
-{% block scripts %}
-  <script type="module" src="{{ url_for('static', filename='js/forms/chatForm.js') }}"></script>
-  <script type="module" src="{{ url_for('static', filename='js/forms/formAutofocus.js') }}"></script>
-{% endblock %}

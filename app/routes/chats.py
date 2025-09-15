@@ -10,6 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from flask import (
     Blueprint, render_template, redirect, url_for, flash, Response
 )
+from flask_babel import _
 
 from app.models.chat import Chat
 from app.forms.chat_form import ChatForm
@@ -39,7 +40,10 @@ def list_chats() -> str:
         return render_chat_list()
     except SQLAlchemyError as e:
         logger.error("[DATABASE|CHATS] Failed to retrieve chats: %s", e)
-        return render_template("error.html", message=f"Database error: {e}")
+        return render_template(
+            "error.html",
+            message=_("Database error: %(err)s", err=e)
+        )
 
 
 @chats_bp.route("/<slug>")
@@ -53,7 +57,7 @@ def view_chat(slug: str) -> str:
     """
     chat = get_chat_by_slug(slug)
     if not chat:
-        flash(f"Chat with slug '{slug}' not found.", "error")
+        flash(_("Chat with slug '%(slug)s' not found.", slug=slug), "error")
         return redirect(url_for("chats.list_chats"))
 
     try:
@@ -62,7 +66,10 @@ def view_chat(slug: str) -> str:
         logger.error(
             "[DATABASE|CHATS] Failed to load messages for '%s': %s", slug, e
         )
-        return render_template("error.html", message=f"Database error: {e}")
+        return render_template(
+            "error.html",
+            message=_("Database error: %(err)s", err=e)
+        )
 
 
 @chats_bp.route("/new", methods=["GET", "POST"])
@@ -84,22 +91,31 @@ def add_chat() -> Response | str:
         try:
             insert_chat(chat)
             log_chat_action(action="create", chat_slug=chat.slug)
-            flash(f"Chat '{chat.name}' created successfully.", "success")
+            flash(
+                _("Chat '%(name)s' created successfully.", name=chat.name),
+                "success"
+            )
             return redirect(url_for("chats.view_chat", slug=chat.slug))
         except DuplicateChatIDError:
             logger.warning("[CHATS|ROUTER] Duplicate Telegram ID.")
             flash(
-                "This Telegram ID is already in use. "
-                "Please check the value.", "error"
+                _(
+                    "This Telegram ID is already in use. "
+                    "Please check the value."
+                ),
+                "error",
             )
         except DuplicateSlugError:
             logger.warning("[CHATS|ROUTER] Duplicate chat slug.")
             flash(
-                "Slug already exists. Please choose another name.", "error"
+                _(
+                    "Slug already exists. Please choose another name."
+                ),
+                "error"
             )
         except SQLAlchemyError as e:
             logger.error("[DATABASE|CHATS] Failed to create chat: %s", e)
-            flash(f"Failed to create chat: {e}", "error")
+            flash(_("Failed to create chat: %(err)s", err=e), "error")
 
     return render_template("chats/form.html", form=form, is_edit=False)
 
@@ -119,14 +135,16 @@ def edit_chat(slug: str) -> Response | str:
     chat = get_chat_by_slug(slug)
 
     if not chat:
-        flash(f"Chat with slug '{slug}' not found.", "error")
+        flash(_("Chat with slug '%(slug)s' not found.", slug=slug), "error")
         return redirect(url_for("chats.list_chats"))
 
     form = ChatForm(obj=chat)
 
     if form.validate_on_submit():
-        updated_data = form.to_model_dict(existing_image=chat.image,
-                                          original_slug=chat.slug)
+        updated_data = form.to_model_dict(
+            existing_image=chat.image,
+            original_slug=chat.slug
+        )
         updated_data["id"] = chat.id
         updated_chat = Chat.from_dict(updated_data)
 
@@ -134,26 +152,39 @@ def edit_chat(slug: str) -> Response | str:
             update_chat(updated_chat)
             log_chat_action(action="update", chat_slug=updated_chat.slug)
             flash(
-                f"Chat '{updated_chat.name}' updated successfully.", "success"
+                _(
+                    "Chat '%(name)s' updated successfully.",
+                    name=updated_chat.name,
+                ),
+                "success",
             )
             return redirect(url_for("chats.view_chat", slug=updated_chat.slug))
         except ChatNotFoundError:
-            flash("Chat not found.", "error")
+            flash(
+                _(
+                    "Chat with slug '%(slug)s' not found.", slug=slug
+                ),
+                "error",
+            )
             return redirect(url_for("chats.list_chats"))
         except DuplicateChatIDError:
             logger.warning("[CHATS|ROUTER] Duplicate Telegram ID.")
             flash(
-                "This Telegram ID is already in use. "
-                "Please check the value.", "error"
+                _(
+                    "This Telegram ID is already in use. "
+                    "Please check the value."
+                ),
+                "error",
             )
         except DuplicateSlugError:
             logger.warning("[CHATS|ROUTER] Duplicate chat slug.")
             flash(
-                "Slug already exists. Please choose another name.", "error"
+                _("Slug already exists. Please choose another name."),
+                "error",
             )
         except SQLAlchemyError as e:
             logger.error("[DATABASE|CHATS] Failed to update chat: %s", e)
-            flash(f"Failed to update chat: {e}", "error")
+            flash(_("Failed to update chat: %(err)s", err=e), "error")
 
     return render_template(
         "chats/form.html", form=form, is_edit=True, chat=chat
@@ -171,18 +202,21 @@ def delete_chat(slug: str) -> Response:
     """
     chat = get_chat_by_slug(slug)
     if not chat:
-        flash(f"Chat with slug '{slug}' not found.", "error")
+        flash(_("Chat with slug '%(slug)s' not found.", slug=slug), "error")
         return redirect(url_for("chats.list_chats"))
 
     try:
         delete_chat_and_messages(slug)
         log_chat_action(action="delete", chat_slug=slug)
-        flash(f"Chat '{chat.name}' deleted successfully.", "success")
+        flash(
+            _("Chat '%(name)s' deleted successfully.", name=chat.name),
+            "success",
+        )
     except SQLAlchemyError as e:
         logger.error(
             "[DATABASE|CHATS] Failed to delete chat '%s': %s", slug, e
         )
-        flash(f"Failed to delete chat: {e}", "error")
+        flash(_("Failed to delete chat: %(err)s", err=e), "error")
 
     return redirect(url_for("chats.list_chats"))
 
@@ -198,19 +232,24 @@ def remove_chat_image(slug: str) -> Response:
     try:
         chat = get_chat_by_slug(slug)
         if not chat:
-            flash("Chat not found.", "error")
+            flash(
+                _(
+                    "Chat with slug '%(slug)s' not found.", slug=slug
+                ),
+                "error"
+            )
             return redirect(url_for("chats.list_chats"))
 
         if not chat.image:
-            flash("No image to remove.", "warning")
+            flash(_("No image to remove."), "warning")
         else:
             chat.image = None
             update_chat(chat)
-            flash("Chat image removed.", "success")
+            flash(_("Chat image removed."), "success")
             log_chat_image_removal(slug)
 
     except SQLAlchemyError as e:
         logger.error("[DATABASE|CHATS] Chat image removal failed: %s", e)
-        flash("Failed to remove chat image.", "error")
+        flash(_("Failed to remove chat image."), "error")
 
     return redirect(url_for("chats.view_chat", slug=slug))
