@@ -7,7 +7,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-  Message #{{ message.id }} | Arcanum
+  {{ _('Message') }} #{{ message.id }} | Arcanum
 {% endblock %}
 
 {% block content %}
@@ -16,7 +16,7 @@
 
       {# === Message Metadata Section === #}
       <section class="section">
-        <h1 class="section-title">Message #{{ message.id }}</h1>
+        <h1 class="section-title">{{ _('Message') }} #{{ message.id }}</h1>
         {% include "messages/_message_summary_table.html" %}
       </section>
 
@@ -25,7 +25,7 @@
         <div class="btn-bar">
           <div class="btn-left">
             <a href="{{ back_url }}" class="btn btn-primary btn-icon">
-              <img src="{{ url_for('static', filename='img/back_icon.png') }}" alt="Back">
+              <img src="{{ url_for('static', filename='img/back_icon.png') }}" alt="{{ _('Back') }}">
               <span>{{ back_label }}</span>
             </a>
           </div>
@@ -33,8 +33,8 @@
           <div class="btn-right">
             <a href="{{ url_for('messages.edit_message', chat_slug=chat.slug, pk=message.id) }}"
                class="btn btn-secondary btn-icon">
-              <img src="{{ url_for('static', filename='img/edit_icon.png') }}" alt="Edit">
-              <span>Edit</span>
+              <img src="{{ url_for('static', filename='img/edit_icon.png') }}" alt="{{ _('Edit') }}">
+              <span>{{ _('Edit') }}</span>
             </a>
             <form action="{{ url_for('messages.delete_message', chat_slug=chat.slug, pk=message.id) }}"
                   method="post" class="inline-form">
@@ -42,8 +42,8 @@
               <button type="submit" class="btn btn-danger btn-icon"
                       data-confirm data-type="message"
                       data-label="{{ (message.text or '') | truncate(50, True) }}">
-                <img src="{{ url_for('static', filename='img/delete_icon.png') }}" alt="Delete">
-                <span>Delete</span>
+                <img src="{{ url_for('static', filename='img/delete_icon.png') }}" alt="{{ _('Delete') }}">
+                <span>{{ _('Delete') }}</span>
               </button>
             </form>
           </div>
@@ -57,7 +57,7 @@
             {% if message.text %}
               {{ message.text | replace('\n', '<br>') | safe }}
             {% else %}
-              <span class="muted">— No message content —</span>
+              <span class="muted">— {{ _('No message content') }} —</span>
             {% endif %}
           </div>
         </div>
@@ -68,15 +68,15 @@
           {% if prev_message %}
             <a href="{{ url_for('messages.view_message', chat_slug=chat.slug, pk=prev_message.id) }}"
               class="btn btn-secondary btn-icon">
-              <img src="{{ url_for('static', filename='img/back_icon.png') }}" alt="Previous">
-              <span>Previous</span>
+              <img src="{{ url_for('static', filename='img/back_icon.png') }}" alt="{{ _('Previous') }}">
+              <span>{{ _('Previous') }}</span>
             </a>
           {% endif %}
           {% if next_message %}
             <a href="{{ url_for('messages.view_message', chat_slug=chat.slug, pk=next_message.id) }}"
               class="btn btn-secondary btn-icon">
-              <span>Next</span>
-              <img src="{{ url_for('static', filename='img/next_icon.png') }}" alt="Next">
+              <span>{{ _('Next') }}</span>
+              <img src="{{ url_for('static', filename='img/next_icon.png') }}" alt="{{ _('Next') }}">
             </a>
           {% endif %}
         </div>
@@ -85,10 +85,10 @@
       {# === Screenshot Preview === #}
       {% if message.screenshot %}
         <section class="section">
-          <h2 class="section-subtitle">Screenshot</h2>
+          <h2 class="section-subtitle">{{ _('Screenshot') }}</h2>
           <div class="media-with-delete screenshot-preview">
             <a href="{{ signed_screenshot_url }}" target="_blank">
-              <img src="{{ signed_screenshot_url }}" alt="Screenshot" class="screenshot-image">
+              <img src="{{ signed_screenshot_url }}" alt="{{ _('Screenshot') }}" class="screenshot-image">
             </a>
             <form method="post"
                   action="{{ url_for('messages.remove_screenshot', chat_slug=chat.slug, pk=message.id) }}"
@@ -98,7 +98,7 @@
                       data-confirm
                       data-type="screenshot"
                       data-label="{{ (message.text or '#' ~ message.id) | truncate(50, True) }}">
-                <img src="{{ url_for('static', filename='img/delete_icon.png') }}" alt="Delete">
+                <img src="{{ url_for('static', filename='img/delete_icon.png') }}" alt="{{ _('Delete') }}">
               </button>
             </form>
           </div>
@@ -108,7 +108,7 @@
       {# === Media Attachments === #}
       {% if signed_media_urls %}
         <section class="section">
-          <h2 class="section-subtitle">Attachments</h2>
+          <h2 class="section-subtitle">{{ _('Attachments') }}</h2>
           <div class="media-gallery">
             {% for media_url in signed_media_urls %}
               {% set lower_url = media_url.lower() %}
@@ -119,20 +119,20 @@
                 {# === Image === #}
                 {% if url_path.endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp')) %}
                   <a href="{{ media_url }}" target="_blank">
-                    <img src="{{ media_url }}" alt="Image" class="media-thumb">
+                    <img src="{{ media_url }}" alt="{{ _('Image') }}" class="media-thumb">
                   </a>
 
                 {# === Video === #}
                 {% elif url_path.endswith(('.mp4', '.webm', '.ogg')) %}
                   <video src="{{ media_url }}" controls class="media-thumb" preload="metadata">
-                    Your browser does not support the video tag.
+                    {{ _("Your browser does not support the video tag.") }}
                   </video>
 
                 {# === Audio === #}
                 {% elif url_basename.endswith(('.mp3', '.wav', '.aac', '.oga')) %}
                   <audio controls preload="metadata" class="media-audio">
                     <source src="{{ media_url }}" type="audio/mpeg">
-                    Your browser does not support the audio tag.
+                    {{ _("Your browser does not support the audio tag.") }}
                   </audio>
 
                 {# === Other files === #}
@@ -154,7 +154,7 @@
                           data-confirm
                           data-type="media"
                           data-label="{{ clean_name }}">
-                    <img src="{{ url_for('static', filename='img/delete_icon.png') }}" alt="Delete">
+                    <img src="{{ url_for('static', filename='img/delete_icon.png') }}" alt="{{ _('Delete') }}">
                   </button>
                 </form>
 

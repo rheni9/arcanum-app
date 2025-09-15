@@ -8,6 +8,7 @@ for UI display. Used primarily in global search results.
 import logging
 from typing import Any
 from flask import render_template, request, redirect, url_for, flash
+from flask_babel import _
 
 from app.models.filters import MessageFilters
 from app.services.messages_service import get_message_by_id
@@ -86,14 +87,14 @@ def render_message_view(
 
     if from_search:
         back_url = url_for("search.global_search", **filters.to_query_args())
-        back_label = "Back to Search"
+        back_label = _("Back to Search")
     elif from_chats:
         back_url = url_for("chats.list_chats")
-        back_label = "Back to Chats"
+        back_label = _("Back to Chats")
     else:
         back_url = url_for("chats.view_chat", slug=chat.slug,
                            **filters.to_query_args())
-        back_label = "Back to Chat"
+        back_label = _("Back to Chat")
 
     # Generate signed URL for screenshot if it exists
     signed_screenshot_url = ""

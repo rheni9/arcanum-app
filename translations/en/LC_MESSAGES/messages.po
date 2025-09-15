@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Arcanum 1.1\n"
 "Report-Msgid-Bugs-To: arcanum.app@meta.ua\n"
-"POT-Creation-Date: 2025-09-14 20:02+0300\n"
+"POT-Creation-Date: 2025-09-15 13:22+0300\n"
 "PO-Revision-Date: 2025-09-12 14:18+0300\n"
 "Last-Translator: Arthur Ratsa <rheni.light@gmail.com>\n"
 "Language: en\n"
@@ -133,6 +133,7 @@ msgid "Link"
 msgstr "Link"
 
 #: app/templates/chats/_chat_summary_table.html:28
+#: app/templates/messages/_message_summary_table.html:38
 msgid "External link"
 msgstr "External link"
 
@@ -155,12 +156,14 @@ msgstr "Status"
 #: app/templates/chats/_chat_summary_table.html:60
 #: app/templates/chats/_chat_summary_table.html:62
 #: app/templates/chats/_chats_table.html:67
+#: app/templates/messages/_message_summary_table.html:20
 msgid "Active"
 msgstr "Active"
 
 #: app/templates/chats/_chat_summary_table.html:60
 #: app/templates/chats/_chat_summary_table.html:62
 #: app/templates/chats/_chats_table.html:67
+#: app/templates/messages/_message_summary_table.html:20
 msgid "Inactive"
 msgstr "Inactive"
 
@@ -180,14 +183,17 @@ msgstr "No"
 
 #: app/templates/chats/_chat_summary_table.html:74
 #: app/templates/chats/_chats_table.html:70
+#: app/templates/messages/_message_summary_table.html:23
 msgid "Member"
 msgstr "Member"
 
 #: app/templates/chats/_chat_summary_table.html:80
+#: app/templates/messages/_message_summary_table.html:89
 msgid "Notes"
 msgstr "Notes"
 
 #: app/templates/chats/_chats_table.html:16
+#: app/templates/messages/_message_summary_table.html:11
 msgid "Chat"
 msgstr "Chat"
 
@@ -247,10 +253,12 @@ msgid "Last message timestamp:"
 msgstr "Last message timestamp:"
 
 #: app/templates/chats/_global_stats_table.html:58
+#: app/templates/messages/_message_summary_table.html:55
 msgid "Date"
 msgstr "Date"
 
 #: app/templates/chats/_global_stats_table.html:62
+#: app/templates/messages/_message_summary_table.html:59
 msgid "Time"
 msgstr "Time"
 
@@ -281,11 +289,13 @@ msgstr "Add Chat"
 msgid "Chat Avatar"
 msgstr "Chat Avatar"
 
-#: app/templates/chats/view.html:52 app/templates/search/results.html:42
+#: app/templates/chats/view.html:52 app/templates/messages/view.html:28
+#: app/templates/search/results.html:42
 msgid "Back"
 msgstr "Back"
 
 #: app/templates/chats/view.html:53 app/templates/search/results.html:43
+#: app/utils/messages_utils.py:93
 msgid "Back to Chats"
 msgstr "Back to Chats"
 
@@ -294,10 +304,13 @@ msgid "Add Message"
 msgstr "Add message"
 
 #: app/templates/chats/view.html:63 app/templates/chats/view.html:64
+#: app/templates/messages/view.html:36 app/templates/messages/view.html:37
 msgid "Edit"
 msgstr "Edit"
 
 #: app/templates/chats/view.html:70 app/templates/chats/view.html:71
+#: app/templates/messages/view.html:45 app/templates/messages/view.html:46
+#: app/templates/messages/view.html:101 app/templates/messages/view.html:157
 msgid "Delete"
 msgstr "Delete"
 
@@ -408,6 +421,54 @@ msgstr "Reset icon"
 msgid "Clear filters"
 msgstr "Clear filters"
 
+#: app/templates/messages/_message_summary_table.html:32
+msgid "Message ID"
+msgstr "Message ID"
+
+#: app/templates/messages/_message_summary_table.html:50
+msgid "Date and Time"
+msgstr "Date and Time"
+
+#: app/templates/messages/_message_summary_table.html:71
+msgid "Tags"
+msgstr "Tags"
+
+#: app/templates/messages/view.html:10 app/templates/messages/view.html:19
+msgid "Message"
+msgstr "Message"
+
+#: app/templates/messages/view.html:60
+msgid "No message content"
+msgstr "No message content"
+
+#: app/templates/messages/view.html:71 app/templates/messages/view.html:72
+msgid "Previous"
+msgstr "Previous"
+
+#: app/templates/messages/view.html:78 app/templates/messages/view.html:79
+msgid "Next"
+msgstr "Next"
+
+#: app/templates/messages/view.html:88 app/templates/messages/view.html:91
+msgid "Screenshot"
+msgstr "Screenshot"
+
+#: app/templates/messages/view.html:111
+msgid "Attachments"
+msgstr "Attachments"
+
+#: app/templates/messages/view.html:122
+msgid "Image"
+msgstr "Image"
+
+#: app/templates/messages/view.html:128
+msgid "Your browser does not support the video tag."
+msgstr "Your browser does not support the video tag."
+
+#: app/templates/messages/view.html:135
+msgid "Your browser does not support the audio tag."
+msgstr "Your browser does not support the audio tag."
+
 #: app/templates/partials/_footer.html:9
 msgid "All rights reserved."
 msgstr "All rights reserved."
@@ -490,4 +551,12 @@ msgstr "Please select a date filter mode."
 #: app/utils/filters_utils.py:205
 msgid "Please enter a search query, tag, or select a date filter."
 msgstr "Please enter a search query, tag, or select a date filter."
+
+#: app/utils/messages_utils.py:90
+msgid "Back to Search"
+msgstr "Back to Search"
+
+#: app/utils/messages_utils.py:97
+msgid "Back to Chat"
+msgstr "Back to Chat"
 

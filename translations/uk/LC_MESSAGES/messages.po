@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Arcanum 1.1\n"
 "Report-Msgid-Bugs-To: arcanum.app@meta.ua\n"
-"POT-Creation-Date: 2025-09-14 20:02+0300\n"
+"POT-Creation-Date: 2025-09-15 13:22+0300\n"
 "PO-Revision-Date: 2025-09-12 14:18+0300\n"
 "Last-Translator: Arthur Ratsa <rheni.light@gmail.com>\n"
 "Language: uk\n"
@@ -136,6 +136,7 @@ msgid "Link"
 msgstr "Посилання"
 
 #: app/templates/chats/_chat_summary_table.html:28
+#: app/templates/messages/_message_summary_table.html:38
 msgid "External link"
 msgstr "Зовнішнє посилання"
 
@@ -158,12 +159,14 @@ msgstr "Статус"
 #: app/templates/chats/_chat_summary_table.html:60
 #: app/templates/chats/_chat_summary_table.html:62
 #: app/templates/chats/_chats_table.html:67
+#: app/templates/messages/_message_summary_table.html:20
 msgid "Active"
 msgstr "Активний"
 
 #: app/templates/chats/_chat_summary_table.html:60
 #: app/templates/chats/_chat_summary_table.html:62
 #: app/templates/chats/_chats_table.html:67
+#: app/templates/messages/_message_summary_table.html:20
 msgid "Inactive"
 msgstr "Неактивний"
 
@@ -183,14 +186,17 @@ msgstr "Ні"
 
 #: app/templates/chats/_chat_summary_table.html:74
 #: app/templates/chats/_chats_table.html:70
+#: app/templates/messages/_message_summary_table.html:23
 msgid "Member"
 msgstr "Учасник"
 
 #: app/templates/chats/_chat_summary_table.html:80
+#: app/templates/messages/_message_summary_table.html:89
 msgid "Notes"
-msgstr "Нотатки"
+msgstr "Примітки"
 
 #: app/templates/chats/_chats_table.html:16
+#: app/templates/messages/_message_summary_table.html:11
 msgid "Chat"
 msgstr "Чат"
 
@@ -251,10 +257,12 @@ msgid "Last message timestamp:"
 msgstr "Час останнього повідомлення:"
 
 #: app/templates/chats/_global_stats_table.html:58
+#: app/templates/messages/_message_summary_table.html:55
 msgid "Date"
 msgstr "Дата"
 
 #: app/templates/chats/_global_stats_table.html:62
+#: app/templates/messages/_message_summary_table.html:59
 msgid "Time"
 msgstr "Час"
 
@@ -285,11 +293,13 @@ msgstr "Додати чат"
 msgid "Chat Avatar"
 msgstr "Аватар чату"
 
-#: app/templates/chats/view.html:52 app/templates/search/results.html:42
+#: app/templates/chats/view.html:52 app/templates/messages/view.html:28
+#: app/templates/search/results.html:42
 msgid "Back"
 msgstr "Назад"
 
 #: app/templates/chats/view.html:53 app/templates/search/results.html:43
+#: app/utils/messages_utils.py:93
 msgid "Back to Chats"
 msgstr "Назад до чатів"
 
@@ -298,10 +308,13 @@ msgid "Add Message"
 msgstr "Додати повідомлення"
 
 #: app/templates/chats/view.html:63 app/templates/chats/view.html:64
+#: app/templates/messages/view.html:36 app/templates/messages/view.html:37
 msgid "Edit"
 msgstr "Редагувати"
 
 #: app/templates/chats/view.html:70 app/templates/chats/view.html:71
+#: app/templates/messages/view.html:45 app/templates/messages/view.html:46
+#: app/templates/messages/view.html:101 app/templates/messages/view.html:157
 msgid "Delete"
 msgstr "Видалити"
 
@@ -413,6 +426,54 @@ msgstr "Значок скидання"
 msgid "Clear filters"
 msgstr "Очистити фільтри"
 
+#: app/templates/messages/_message_summary_table.html:32
+msgid "Message ID"
+msgstr "ID повідомлення"
+
+#: app/templates/messages/_message_summary_table.html:50
+msgid "Date and Time"
+msgstr "Дата і час"
+
+#: app/templates/messages/_message_summary_table.html:71
+msgid "Tags"
+msgstr "Теги"
+
+#: app/templates/messages/view.html:10 app/templates/messages/view.html:19
+msgid "Message"
+msgstr "Повідомлення"
+
+#: app/templates/messages/view.html:60
+msgid "No message content"
+msgstr "Немає тексту повідомлення"
+
+#: app/templates/messages/view.html:71 app/templates/messages/view.html:72
+msgid "Previous"
+msgstr "Попереднє"
+
+#: app/templates/messages/view.html:78 app/templates/messages/view.html:79
+msgid "Next"
+msgstr "Наступне"
+
+#: app/templates/messages/view.html:88 app/templates/messages/view.html:91
+msgid "Screenshot"
+msgstr "Знімок екрана"
+
+#: app/templates/messages/view.html:111
+msgid "Attachments"
+msgstr "Вкладення"
+
+#: app/templates/messages/view.html:122
+msgid "Image"
+msgstr "Зображення"
+
+#: app/templates/messages/view.html:128
+msgid "Your browser does not support the video tag."
+msgstr "Браузер не підтримує відтворення відео."
+
+#: app/templates/messages/view.html:135
+msgid "Your browser does not support the audio tag."
+msgstr "Браузер не підтримує відтворення аудіо."
+
 #: app/templates/partials/_footer.html:9
 msgid "All rights reserved."
 msgstr "Всі права захищені."
@@ -496,4 +557,12 @@ msgstr "Вибери режим фільтрації за датою."
 #: app/utils/filters_utils.py:205
 msgid "Please enter a search query, tag, or select a date filter."
 msgstr "Введи пошуковий запит або тег чи вибери фільтр за датою."
+
+#: app/utils/messages_utils.py:90
+msgid "Back to Search"
+msgstr "Назад до пошуку"
+
+#: app/utils/messages_utils.py:97
+msgid "Back to Chat"
+msgstr "Назад до чату"
 
