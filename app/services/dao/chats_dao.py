@@ -2,8 +2,9 @@
 Chat database access for the Arcanum application.
 
 Handles low-level database operations for retrieving, inserting,
-updating, and deleting chat records. Supports access by ID and slug,
-and provides aggregate statistics for UI, sorting, and message summaries.
+updating, and deleting chat records in a PostgreSQL database.
+Supports access by ID and slug, and provides aggregate statistics
+for UI, sorting, and message summaries.
 """
 # pylint: disable=no-member
 
@@ -15,7 +16,9 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from app.models.chat import Chat
 from app.utils.db_utils import get_connection_lazy
 from app.utils.sql_utils import OrderConfig, build_order_clause
-from app.errors import DuplicateSlugError, DuplicateChatIDError
+from app.errors import (
+    DuplicateSlugError, DuplicateChatIDError, ChatNotFoundError
+)
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +45,7 @@ def fetch_chats(
 
     query = text(f"""
         SELECT
-            c.id, c.chat_id, c.slug, c.name, c.link, c.type,
+            c.id, c.chat_id, c.slug, c.name, c.link, c.type, c.image,
             c.joined, c.is_active, c.is_member, c.is_public, c.notes,
             (SELECT COUNT(*) FROM messages m
                 WHERE m.chat_ref_id = c.id) AS message_count,
@@ -79,8 +82,10 @@ def fetch_chat_by_slug(slug: str) -> Chat | None:
             logger.debug("[CHATS|DAO] No match for slug '%s'.", slug)
         return Chat.from_row(dict(row)) if row else None
     except SQLAlchemyError as e:
-        logger.error("[CHATS|DAO] Failed to fetch chat by slug '%s': %s",
-                     slug, e)
+        logger.error(
+            "[CHATS|DAO] Failed to fetch chat by slug '%s': %s",
+            slug, e
+        )
         raise
 
 
@@ -126,27 +131,30 @@ def insert_chat_record(chat: Chat) -> int:
     try:
         conn = get_connection_lazy()
         params = chat.prepare_for_db()
-        result = conn.execute(query, params)
+        cursor = conn.execute(query, params)
         conn.commit()
-        pk = result.scalar_one()
+        pk = cursor.scalar_one()
         logger.debug(
-            "[CHATS|DAO] Inserted chat ID=%d (slug='%s').", pk, chat.slug
+            "[CHATS|DAO] Inserted chat ID=%d (slug='%s').",
+            pk, chat.slug
         )
         return pk
     except IntegrityError as e:
         if isinstance(e.orig, errors.UniqueViolation):
             constraint = getattr(e.orig.diag, "constraint_name", "")
             if constraint == "chats_slug_key":
-                logger.warning("[CHATS|DAO] Slug conflict: '%s'", chat.slug)
-                raise DuplicateSlugError("Chat slug already exists.") from e
+                logger.warning(
+                    "[CHATS|DAO] Slug conflict during insert: '%s'",
+                    chat.slug
+                )
+                raise DuplicateSlugError(slug=chat.slug) from e
             if constraint == "chats_chat_id_key":
                 logger.warning(
-                    "[CHATS|DAO] Chat ID conflict: %s", chat.chat_id
+                    "[CHATS|DAO] Chat ID conflict during insert: %s",
+                    chat.chat_id
                 )
-                raise DuplicateChatIDError(
-                    "Telegram chat ID already exists."
-                ) from e
-        logger.error("[CHATS|DAO] Insert failed: %s", e)
+                raise DuplicateChatIDError(chat_id=chat.chat_id) from e
+        logger.error("[CHATS|DAO] Insert integrity error: %s", e)
         raise
     except SQLAlchemyError as e:
         logger.error("[CHATS|DAO] Insert failed: %s", e)
@@ -158,6 +166,7 @@ def update_chat_record(chat: Chat) -> None:
     Update an existing chat record in the database.
 
     :param chat: Chat instance with updated values.
+    :raises ChatNotFoundError: If the chat to update does not exist.
     :raises DuplicateSlugError: If the slug already exists.
     :raises DuplicateChatIDError: If the Telegram chat ID already exists.
     :raises SQLAlchemyError: If the query fails.
@@ -174,30 +183,31 @@ def update_chat_record(chat: Chat) -> None:
         conn = get_connection_lazy()
         params = chat.prepare_for_db()
         params["id"] = chat.id
-        result = conn.execute(query, params)
+        cursor = conn.execute(query, params)
         conn.commit()
-        if result.rowcount == 0:
-            logger.debug("[CHATS|DAO] No rows updated for ID=%d.", chat.id)
-        else:
-            logger.debug("[CHATS|DAO] Updated chat ID=%d (slug='%s').",
-                         chat.id, chat.slug)
+        if cursor.rowcount == 0:
+            logger.warning("[CHATS|DAO] No rows updated for ID=%d.", chat.id)
+            raise ChatNotFoundError(chat_id=chat.id)
+        logger.debug(
+            "[CHATS|DAO] Updated chat ID=%d (slug='%s').",
+            chat.id, chat.slug
+        )
     except IntegrityError as e:
         if isinstance(e.orig, errors.UniqueViolation):
             constraint = getattr(e.orig.diag, "constraint_name", "")
             if constraint == "chats_slug_key":
                 logger.warning(
-                    "[CHATS|DAO] Slug conflict during update: '%s'", chat.slug
+                    "[CHATS|DAO] Slug conflict during update: '%s'",
+                    chat.slug
                 )
-                raise DuplicateSlugError("Chat slug already exists.") from e
+                raise DuplicateSlugError(slug=chat.slug) from e
             if constraint == "chats_chat_id_key":
                 logger.warning(
                     "[CHATS|DAO] Chat ID conflict during update: %s",
                     chat.chat_id
                 )
-                raise DuplicateChatIDError(
-                    "Telegram ID already exists."
-                ) from e
-        logger.error("[CHATS|DAO] Update failed: %s", e)
+                raise DuplicateChatIDError(chat_id=chat.chat_id) from e
+        logger.error("[CHATS|DAO] Update integrity error: %s", e)
         raise
     except SQLAlchemyError as e:
         logger.error("[CHATS|DAO] Update failed: %s", e)
@@ -209,51 +219,69 @@ def delete_chat_record(pk: int) -> None:
     Delete a chat record by its primary key.
 
     :param pk: Chat primary key.
+    :raises ChatNotFoundError: If no chat exists with the given ID.
     :raises SQLAlchemyError: If the query fails.
     """
     query = text("DELETE FROM chats WHERE id = :id;")
     try:
         conn = get_connection_lazy()
-        conn.execute(query, {"id": pk})
+        cursor = conn.execute(query, {"id": pk})
         conn.commit()
+        if cursor.rowcount == 0:
+            logger.warning(
+                "[CHATS|DAO] No chat found to delete with ID=%d.", pk
+            )
+            raise ChatNotFoundError(chat_id=pk)
         logger.debug("[CHATS|DAO] Deleted chat ID=%d.", pk)
     except SQLAlchemyError as e:
         logger.error("[CHATS|DAO] Delete failed: %s", e)
         raise
 
 
-def check_slug_exists(slug: str) -> bool:
+def check_slug_exists(slug: str, exclude_id: int | None = None) -> bool:
     """
     Check whether a chat slug already exists in the database.
 
     :param slug: Chat slug.
+    :param exclude_id: Chat ID to exclude from the check (useful for updates).
     :return: True if the slug exists, otherwise False.
     :raises SQLAlchemyError: If the query fails.
     """
-    query = text("SELECT 1 FROM chats WHERE slug = :slug LIMIT 1;")
+    query = "SELECT 1 FROM chats WHERE slug = :slug"
+    params = {"slug": slug}
+    if exclude_id is not None:
+        query += " AND id != :id"
+        params["id"] = exclude_id
+    query += " LIMIT 1;"
+
     try:
         conn = get_connection_lazy()
-        result = conn.execute(query, {"slug": slug})
-        row = result.fetchone()
+        row = conn.execute(text(query), params).fetchone()
         return row is not None
     except SQLAlchemyError as e:
         logger.error("[CHATS|DAO] Slug check failed: %s", e)
         raise
 
 
-def check_chat_id_exists(chat_id: int) -> bool:
+def check_chat_id_exists(chat_id: int, exclude_id: int | None = None) -> bool:
     """
     Check whether a chat ID already exists in the database.
 
     :param chat_id: Telegram chat ID.
+    :param exclude_id: Chat ID to exclude from the check (useful for updates).
     :return: True if the chat ID exists, otherwise False.
     :raises SQLAlchemyError: If the query fails.
     """
-    query = text("SELECT 1 FROM chats WHERE chat_id = :chat_id LIMIT 1;")
+    query = "SELECT 1 FROM chats WHERE chat_id = :chat_id"
+    params = {"chat_id": chat_id}
+    if exclude_id is not None:
+        query += " AND id != :id"
+        params["id"] = exclude_id
+    query += " LIMIT 1;"
+
     try:
         conn = get_connection_lazy()
-        result = conn.execute(query, {"chat_id": chat_id})
-        row = result.fetchone()
+        row = conn.execute(text(query), params).fetchone()
         return row is not None
     except SQLAlchemyError as e:
         logger.error("[CHATS|DAO] Chat ID check failed: %s", e)
