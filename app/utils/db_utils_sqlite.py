@@ -44,9 +44,27 @@ def get_db_path() -> str:
         raise ValueError("DATABASE_URL path is empty.")
 
     if path.startswith("//"):
-        path = path[1:]
+        path = os.path.abspath(os.path.join("/", path.lstrip("/")))
 
     return path
+
+
+def _open_connection(db_path: str) -> sqlite3.Connection:
+    """
+    Open a new SQLite connection with standard configuration.
+
+    Configures the connection to:
+      - Use Row factory for dict-like row access.
+      - Enforce foreign key constraints via PRAGMA.
+
+    :param db_path: Absolute path to the SQLite database file.
+    :return: SQLite connection object with configured settings.
+    :raises sqlite3.Error: If the connection cannot be established.
+    """
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    return conn
 
 
 def get_connection_lazy() -> sqlite3.Connection:
@@ -62,10 +80,7 @@ def get_connection_lazy() -> sqlite3.Connection:
     """
     if "db_conn" not in g:
         db_path = get_db_path()
-        conn = sqlite3.connect(db_path)
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA foreign_keys = ON")
-        g.db_conn = conn
+        g.db_conn = _open_connection(db_path)
         logger.debug(
             "[DATABASE|REQUEST] Opened request-scoped connection to '%s'.",
             db_path
@@ -75,7 +90,7 @@ def get_connection_lazy() -> sqlite3.Connection:
     return g.db_conn
 
 
-def close_request_connection(_exception: Exception | None = None) -> None:
+def close_request_connection(_exception: BaseException | None = None) -> None:
     """
     Close the request-scoped SQLite connection after request ends.
 
@@ -98,9 +113,7 @@ def get_connection_standalone() -> sqlite3.Connection:
     :raises sqlite3.DatabaseError: If the connection fails.
     """
     db_path = get_db_path()
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
+    conn = _open_connection(db_path)
     logger.debug(
         "[DATABASE|STANDALONE] Opened standalone connection to '%s'.", db_path
     )
@@ -119,9 +132,7 @@ def get_connection() -> Generator[sqlite3.Connection, None, None]:
     :raises sqlite3.DatabaseError: If the connection fails.
     """
     db_path = get_db_path()
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
+    conn = _open_connection(db_path)
     logger.debug(
         "[DATABASE|STANDALONE] Opened standalone connection to '%s'.",
         db_path
@@ -166,7 +177,7 @@ def ensure_db_exists() -> None:
     )
 
 
-def execute_and_commit(query: str, params: tuple) -> None:
+def execute_and_commit(query: str, params: tuple | dict | None = None) -> None:
     """
     Execute a parameterized query and commit the transaction.
 
@@ -179,7 +190,7 @@ def execute_and_commit(query: str, params: tuple) -> None:
     """
     conn = get_connection_lazy()
     try:
-        conn.execute(query, params)
+        conn.execute(query, params or ())
         conn.commit()
         logger.debug("[DATABASE|EXECUTE] Query committed successfully.")
     except sqlite3.DatabaseError as e:
