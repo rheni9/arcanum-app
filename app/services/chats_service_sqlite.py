@@ -7,15 +7,18 @@ operations to the DAO layer.
 """
 
 import logging
-from sqlite3 import IntegrityError
+from sqlite3 import DatabaseError
 
 from app.models.chat import Chat
-from app.services.dao.chats_dao import (
+from app.services.dao.chats_dao_sqlite import (
     fetch_chats, fetch_chat_by_slug,
     fetch_chat_by_id, insert_chat_record,
     update_chat_record, delete_chat_record,
     check_slug_exists, check_chat_id_exists,
     fetch_global_chat_stats
+)
+from app.errors import (
+    DuplicateSlugError, DuplicateChatIDError, ChatNotFoundError
 )
 
 logger = logging.getLogger(__name__)
@@ -28,11 +31,17 @@ def get_chats(sort_by: str, order: str) -> list[dict]:
     :param sort_by: Field to sort by.
     :param order: Sort direction ('asc' or 'desc').
     :return: List of chat row dictionaries with aggregate statistics.
-    :raises sqlite3.DatabaseError: If the DAO operation fails.
+    :raises DatabaseError: If the DAO operation fails.
     """
-    logger.debug("[CHATS|SERVICE] Retrieving chats sorted by '%s' (%s).",
-                 sort_by, order)
-    return fetch_chats(sort_by, order)
+    logger.debug(
+        "[CHATS|SERVICE] Retrieving chats sorted by '%s' (%s).",
+        sort_by, order
+    )
+    try:
+        return fetch_chats(sort_by, order)
+    except DatabaseError as exc:
+        logger.error("[CHATS|SERVICE] Failed to retrieve chats: %s", exc)
+        raise
 
 
 def get_chat_by_slug(slug: str) -> Chat | None:
@@ -41,14 +50,23 @@ def get_chat_by_slug(slug: str) -> Chat | None:
 
     :param slug: Chat slug.
     :return: Chat instance if found, otherwise None.
-    :raises sqlite3.DatabaseError: If the DAO operation fails.
+    :raises DatabaseError: If the DAO operation fails.
     """
     logger.debug("[CHATS|SERVICE] Retrieving chat by slug '%s'.", slug)
-    chat = fetch_chat_by_slug(slug)
-    if not chat:
-        logger.warning("[CHATS|SERVICE] No chat found with slug '%s'.", slug)
-        return None
-    return chat
+    try:
+        chat = fetch_chat_by_slug(slug)
+        if not chat:
+            logger.warning(
+                "[CHATS|SERVICE] No chat found with slug '%s'.", slug
+            )
+            return None
+        return chat
+    except DatabaseError as exc:
+        logger.error(
+            "[CHATS|SERVICE] Failed to retrieve chat by slug: %s",
+            exc
+        )
+        raise
 
 
 def get_chat_by_id(pk: int) -> Chat | None:
@@ -57,14 +75,18 @@ def get_chat_by_id(pk: int) -> Chat | None:
 
     :param pk: Chat ID.
     :return: Chat instance if found, otherwise None.
-    :raises sqlite3.DatabaseError: If the DAO operation fails.
+    :raises DatabaseError: If the DAO operation fails.
     """
     logger.debug("[CHATS|SERVICE] Retrieving chat ID=%d.", pk)
-    chat = fetch_chat_by_id(pk)
-    if not chat:
-        logger.warning("[CHATS|SERVICE] No chat found with ID=%d.", pk)
-        return None
-    return chat
+    try:
+        chat = fetch_chat_by_id(pk)
+        if not chat:
+            logger.warning("[CHATS|SERVICE] No chat found with ID=%d.", pk)
+            return None
+        return chat
+    except DatabaseError as exc:
+        logger.error("[CHATS|SERVICE] Failed to retrieve chat by ID: %s", exc)
+        raise
 
 
 def insert_chat(chat: Chat) -> int:
@@ -76,24 +98,31 @@ def insert_chat(chat: Chat) -> int:
 
     :param chat: Chat instance to insert.
     :return: Primary key ID of the inserted chat.
-    :raises IntegrityError: If the slug or Telegram ID already exists.
+    :raises DuplicateSlugError: If the slug already exists.
+    :raises DuplicateChatIDError: If the Telegram chat ID already exists.
     :raises DatabaseError: If the DAO operation fails.
     """
-    if check_slug_exists(chat.slug):
-        logger.warning("[CHATS|SERVICE] Slug '%s' already exists.", chat.slug)
-        raise IntegrityError(f"Chat with slug '{chat.slug}' already exists.")
-    if chat.chat_id is not None and check_chat_id_exists(chat.chat_id):
-        logger.warning(
-            "[CHATS|SERVICE] Telegram chat ID '%d' already exists.",
-            chat.chat_id
+    try:
+        if check_slug_exists(chat.slug):
+            logger.warning(
+                "[CHATS|SERVICE] Slug '%s' already exists.", chat.slug
+            )
+            raise DuplicateSlugError(slug=chat.slug)
+        if chat.chat_id is not None and check_chat_id_exists(chat.chat_id):
+            logger.warning(
+                "[CHATS|SERVICE] Telegram chat ID '%d' already exists.",
+                chat.chat_id
+            )
+            raise DuplicateChatIDError(chat_id=chat.chat_id)
+        pk = insert_chat_record(chat)
+        logger.info(
+            "[CHATS|SERVICE] Chat '%s' created (slug='%s', ID=%d).",
+            chat.name, chat.slug, pk
         )
-        raise IntegrityError(
-            f"Chat with Telegram ID '{chat.chat_id}' already exists."
-        )
-    pk = insert_chat_record(chat)
-    logger.info("[CHATS|SERVICE] Chat '%s' created (slug='%s', ID=%d).",
-                chat.name, chat.slug, pk)
-    return pk
+        return pk
+    except DatabaseError as exc:
+        logger.error("[CHATS|SERVICE] Failed to insert chat: %s", exc)
+        raise
 
 
 def update_chat(chat: Chat) -> None:
@@ -104,35 +133,44 @@ def update_chat(chat: Chat) -> None:
     and performs update via the DAO layer.
 
     :param chat: Chat instance with updated values (must have ID).
-    :raises ValueError: If the ID is missing or the chat does not exist.
-    :raises IntegrityError: If the slug or Telegram ID already exists.
-    :raises sqlite3.DatabaseError: If the DAO operation fails.
+    :raises ValueError: If the ID is missing before update.
+    :raises DuplicateSlugError: If the slug already exists.
+    :raises DuplicateChatIDError: If the Telegram chat ID already exists.
+    :raises ChatNotFoundError: If the chat to update does not exist.
+    :raises DatabaseError: If the DAO operation fails.
     """
     if not chat.id:
         logger.error("[CHATS|SERVICE] Update failed: no ID.")
         raise ValueError("Chat ID is required for update.")
-    existing = fetch_chat_by_id(chat.id)
-    if not existing:
-        logger.warning("[CHATS|SERVICE] Chat with ID=%d not found.", chat.id)
-        raise ValueError("Chat not found for update.")
-    if existing.slug != chat.slug and check_slug_exists(chat.slug):
-        logger.warning(
-            "[CHATS|SERVICE] Slug update rejected (%s -> %s): duplicate.",
-            existing.slug, chat.slug
-        )
-        raise IntegrityError("Chat with this slug already exists.")
-    if (chat.chat_id is not None and existing.chat_id != chat.chat_id
-            and check_chat_id_exists(chat.chat_id)):
-        logger.warning(
-            "[CHATS|SERVICE] Telegram chat ID update rejected: %s -> %s "
-            "(duplicate).",
-            existing.chat_id, chat.chat_id
-        )
-        raise IntegrityError("Chat with this Telegram ID already exists.")
+    try:
+        if check_slug_exists(chat.slug, exclude_id=chat.id):
+            logger.warning(
+                "[CHATS|SERVICE] Slug update rejected: %s (duplicate).",
+                chat.slug
+            )
+            raise DuplicateSlugError(slug=chat.slug)
+        if (
+            chat.chat_id is not None
+            and check_chat_id_exists(chat.chat_id, exclude_id=chat.id)
+        ):
+            logger.warning(
+                "[CHATS|SERVICE] Telegram chat ID update rejected: %s "
+                "(duplicate).",
+                chat.chat_id
+            )
+            raise DuplicateChatIDError(chat_id=chat.chat_id)
 
-    update_chat_record(chat)
-    logger.info("[CHATS|SERVICE] Chat '%s' updated (slug='%s', ID=%d).",
-                chat.name, chat.slug, chat.id)
+        update_chat_record(chat)
+        logger.info(
+            "[CHATS|SERVICE] Chat '%s' updated (slug='%s', ID=%d).",
+            chat.name, chat.slug, chat.id
+        )
+    except ChatNotFoundError:
+        logger.warning("[CHATS|SERVICE] Chat with ID=%d not found.", chat.id)
+        raise
+    except DatabaseError as exc:
+        logger.error("[CHATS|SERVICE] Failed to update chat: %s", exc)
+        raise
 
 
 def delete_chat_and_messages(slug: str) -> None:
@@ -140,19 +178,27 @@ def delete_chat_and_messages(slug: str) -> None:
     Delete a chat and its related messages by slug.
 
     :param slug: Chat slug.
-    :raises sqlite3.DatabaseError: If the DAO operation fails.
+    :raises ChatNotFoundError: If the chat to delete does not exist.
+    :raises DatabaseError: If the DAO operation fails.
     """
-    chat = get_chat_by_slug(slug)
-    if not chat:
-        logger.warning(
-            "[CHATS|SERVICE] Delete skipped: no chat for slug '%s'.", slug
-        )
-        return
+    try:
+        chat = get_chat_by_slug(slug)
+        if not chat:
+            logger.warning(
+                "[CHATS|SERVICE] Delete skipped: no chat for slug '%s'.",
+                slug
+            )
+            return
 
-    # Messages deleted via ON DELETE CASCADE constraint.
-    delete_chat_record(chat.id)
-    logger.info("[CHATS|SERVICE] Chat '%s' deleted (ID=%d, slug='%s').",
-                chat.name, chat.id, chat.slug)
+        # Messages deleted via ON DELETE CASCADE constraint.
+        delete_chat_record(chat.id)
+        logger.info(
+            "[CHATS|SERVICE] Chat '%s' deleted (ID=%d, slug='%s').",
+            chat.name, chat.id, chat.slug
+        )
+    except DatabaseError as exc:
+        logger.error("[CHATS|SERVICE] Failed to delete chat: %s", exc)
+        raise
 
 
 def slug_exists(slug: str) -> bool:
@@ -161,11 +207,18 @@ def slug_exists(slug: str) -> bool:
 
     :param slug: Chat slug.
     :return: True if the slug exists, otherwise False.
-    :raises sqlite3.DatabaseError: If the DAO operation fails.
+    :raises DatabaseError: If the DAO operation fails.
     """
-    result = check_slug_exists(slug)
-    logger.debug("[CHATS|SERVICE] Slug '%s' exists: %s", slug, result)
-    return result
+    try:
+        result = check_slug_exists(slug)
+        logger.debug("[CHATS|SERVICE] Slug '%s' exists: %s", slug, result)
+        return result
+    except DatabaseError as exc:
+        logger.error(
+            "[CHATS|SERVICE] Failed to check slug existence: %s",
+            exc
+        )
+        raise
 
 
 def get_global_stats() -> dict:
@@ -173,7 +226,14 @@ def get_global_stats() -> dict:
     Retrieve global chat statistics.
 
     :return: Dictionary with total chats, messages, media count, etc.
-    :raises sqlite3.DatabaseError: If the DAO operation fails.
+    :raises DatabaseError: If the DAO operation fails.
     """
     logger.debug("[CHATS|SERVICE] Retrieving global chat statistics.")
-    return fetch_global_chat_stats()
+    try:
+        return fetch_global_chat_stats()
+    except DatabaseError as exc:
+        logger.error(
+            "[CHATS|SERVICE] Failed to retrieve global stats: %s",
+            exc
+        )
+        raise
