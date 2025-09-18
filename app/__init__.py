@@ -67,6 +67,9 @@ def create_app(config_class: type = None) -> Flask:
     app = Flask(__name__)
     app.config.from_object(config_class)
 
+    # === Validate & Apply Configuration ===
+    config_class.init_app(app)
+
     # === Initialize Database & Context Processors ===
     db.init_app(app)
 
@@ -101,9 +104,6 @@ def create_app(config_class: type = None) -> Flask:
 
     # === Re-configure Logging with App Settings ===
     configure_logging(app.config.get("LOG_LEVEL"))
-
-    # === Validate & Apply Configuration ===
-    config_class.init_app(app)
 
     # === Initialize Cloudinary ===
     cloudinary_config(
