@@ -7,7 +7,9 @@ and prepares runtime configuration for extensions.
 Required environment variables:
 - FLASK_SECRET_KEY: Secret key for sessions and CSRF protection.
 - APP_ADMIN_PASSWORD: Password for single-user access.
-- DATABASE_URL: Database connection URI (optional fallback provided).
+- DB_BACKEND: Which database backend to use ('sqlite' or 'postgres').
+- SQLITE_PATH: Path to SQLite database file (required if DB_BACKEND=sqlite).
+- POSTGRES_URL: PostgreSQL connection URI (required if DB_BACKEND=postgres).
 - Backblaze B2 S3 keys: B2_S3_ENDPOINT_URL, B2_S3_BUCKET_NAME,
                         B2_S3_ACCESS_KEY_ID, B2_S3_SECRET_ACCESS_KEY.
 
@@ -46,11 +48,7 @@ class Config:
     Defines defaults and environment-specific flags.
     """
 
-    # === Database ===
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URL",
-        f"sqlite:///{os.path.join(basedir, '..', 'data', 'chatvault.sqlite')}"
-    )
+    # === Database / SQLAlchemy Settings ===
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_pre_ping": True,
         "pool_recycle": 1800,   # 30 min
@@ -92,12 +90,20 @@ class Config:
         """
         Validate and apply runtime configuration.
 
-        Loads secrets, Cloudinary, and Backblaze B2 configs.
+        Performs initialization of:
+          - Database backend (SQLite or PostgreSQL) and SQLAlchemy URI
+          - Core application secrets (Flask secret key, admin password)
+          - Optional third-party integrations (Cloudinary, Backblaze B2)
+          - CSRF secret fallback
 
         :param app: Flask app instance.
-        :raises ConfigValidationError: If required settings are missing.
+        :raises ConfigValidationError: If required settings are missing
+                                       or invalid.
         :raises RuntimeError: If Backblaze config is incomplete.
         """
+
+        # Database
+        cls._configure_database(app)
 
         # Core secrets
         cls._validate_secret_key(app)
@@ -105,16 +111,59 @@ class Config:
         cls._validate_cloudinary_config(app)
         cls._validate_backblaze_config(app)
 
-        # CSRF secret fallback
-        app.config["WTF_CSRF_SECRET_KEY"] = os.getenv(
-            "WTF_CSRF_SECRET_KEY",
-            app.config["SECRET_KEY"]
-        )
+        # CSRF secret
+        cls._configure_csrf(app)
 
         logger.debug(
             "[CONFIG|INIT] Configuration applied for '%s' environment.",
             cls.ENV
         )
+
+    # === Database ===
+    @staticmethod
+    def _configure_database(app: Flask) -> None:
+        """
+        Configure SQLAlchemy database URI based on DB_BACKEND.
+
+        Supported values:
+        - DB_BACKEND=sqlite: requires SQLITE_PATH (absolute file path)
+        - DB_BACKEND=postgres: requires POSTGRES_URL (full URI)
+
+        :param app: Flask app instance.
+        :raises ConfigValidationError: If DB_BACKEND is unsupported
+                                       or required variables are missing.
+        """
+        db_backend = os.getenv("DB_BACKEND", "sqlite").lower()
+
+        if db_backend == "sqlite":
+            sqlite_path = os.getenv(
+                "SQLITE_PATH",
+                os.path.join(basedir, "..", "data", "chatvault.sqlite"),
+            )
+            app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{sqlite_path}"
+
+        elif db_backend == "postgres":
+            postgres_url = os.getenv("POSTGRES_URL")
+            if not postgres_url:
+                logger.error(
+                    "[CONFIG|VALIDATION] 'POSTGRES_URL' must be set "
+                    "when DB_BACKEND=postgres."
+                )
+                raise ConfigValidationError(
+                    "'POSTGRES_URL' must be set when DB_BACKEND=postgres."
+                )
+            app.config["SQLALCHEMY_DATABASE_URI"] = postgres_url
+
+        else:
+            logger.error(
+                "[CONFIG|VALIDATION] Unsupported DB_BACKEND='%s'. "
+                "Use 'sqlite' or 'postgres'.",
+                db_backend,
+            )
+            raise ConfigValidationError(
+                f"Unsupported DB_BACKEND: {db_backend}. "
+                "Use 'sqlite' or 'postgres'."
+            )
 
     # === Secret Key ===
     @staticmethod
@@ -149,6 +198,20 @@ class Config:
             raise ConfigValidationError(
                 "'APP_ADMIN_PASSWORD' must be set in environment variables."
             )
+
+    # === CSRF ===
+    @staticmethod
+    def _configure_csrf(app: Flask) -> None:
+        """
+        Configure CSRF secret key.
+
+        Uses WTF_CSRF_SECRET_KEY if provided, otherwise falls back to
+        the main Flask SECRET_KEY.
+        """
+        app.config["WTF_CSRF_SECRET_KEY"] = os.getenv(
+            "WTF_CSRF_SECRET_KEY",
+            app.config["SECRET_KEY"]
+        )
 
     # === Cloudinary ===
     @staticmethod
