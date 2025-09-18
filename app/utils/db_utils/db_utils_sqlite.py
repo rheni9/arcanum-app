@@ -1,8 +1,9 @@
 """
-Database utilities for the Arcanum application.
+Database utilities for the Arcanum application using SQLite.
 
-Provides SQLite connection helpers, request-scoped and standalone
-connections, context-managed usage, and database presence check.
+Provides PostgreSQL connection helpers, request-scoped and standalone
+connections, context-managed usage, database reachability check,
+and a unified execute-and-commit helper.
 """
 
 import os
@@ -20,33 +21,38 @@ def get_db_path() -> str:
     """
     Resolve the SQLite database file path.
 
-    Determines the path from Flask configuration
-    or the DATABASE_URL environment variable.
+    Determines the path from the SQLITE_PATH environment variable
+    or Flask configuration. Must be an absolute path.
 
     :return: Absolute path to SQLite database file.
     :raises ValueError: If the database path is invalid or missing.
     """
-    db_url = (
-        current_app.config.get("SQLALCHEMY_DATABASE_URI")
-        or os.getenv("DATABASE_URL")
-    )
-    if not db_url:
-        raise ValueError("DATABASE_URL is not configured.")
+    raw = os.getenv("SQLITE_PATH") or current_app.config.get("SQLITE_PATH")
+    if not raw:
+        raise ValueError("SQLITE_PATH is not configured.")
+    if raw.startswith("sqlite:"):
+        parsed = urlparse(raw)
+        if parsed.scheme != "sqlite":
+            raise ValueError(
+                f"Unsupported scheme in SQLITE_PATH: {parsed.scheme}"
+            )
+        path = parsed.path
+    else:
+        path = raw
 
-    parsed = urlparse(db_url)
-    if parsed.scheme != "sqlite":
+    if not path:
+        raise ValueError("SQLITE_PATH is empty or invalid.")
+
+    db_path = os.path.abspath(os.path.expanduser(path))
+
+    # Ensure directory exists
+    db_dir = os.path.dirname(db_path)
+    if not os.path.isdir(db_dir):
         raise ValueError(
-            f"Unsupported scheme in DATABASE_URL: {parsed.scheme}"
+            f"Directory for SQLite database does not exist: {db_dir}"
         )
 
-    path = parsed.path
-    if not path:
-        raise ValueError("DATABASE_URL path is empty.")
-
-    if path.startswith("//"):
-        path = os.path.abspath(os.path.join("/", path.lstrip("/")))
-
-    return path
+    return db_path
 
 
 def _open_connection(db_path: str) -> sqlite3.Connection:
@@ -149,7 +155,7 @@ def get_connection() -> Generator[sqlite3.Connection, None, None]:
 
 def ensure_db_exists() -> None:
     """
-    Check if the configured SQLite database file exists and is accessible.
+    Check if the configured SQLite database is reachable
 
     Logs a warning if the database is missing or inaccessible.
     Logs an info message if the file exists and is readable.
@@ -184,15 +190,18 @@ def execute_and_commit(query: str, params: tuple | dict | None = None) -> None:
     Rolls back and raises if execution fails.
 
     :param query: SQL query string.
-    :param params: Query parameters.
+    :param params: Query parameters (tuple, dictionary, or None).
     :raises ValueError: If the database path is invalid or missing.
     :raises sqlite3.DatabaseError: If the query fails and cannot be committed.
     """
     conn = get_connection_lazy()
     try:
-        conn.execute(query, params or ())
+        conn.execute(query, params or {})
         conn.commit()
-        logger.debug("[DATABASE|EXECUTE] Query committed successfully.")
+        logger.debug(
+            "[DATABASE|EXECUTE] Query committed successfully: %s",
+            query
+        )
     except sqlite3.DatabaseError as e:
         conn.rollback()
         logger.error(

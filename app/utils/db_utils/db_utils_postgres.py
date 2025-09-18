@@ -2,10 +2,8 @@
 Database utilities for the Arcanum application using PostgreSQL.
 
 Provides SQLAlchemy connection helpers, request-scoped and standalone
-connections, context-managed usage, and database presence check.
-
-Function names and signatures match the SQLite version for backward
-compatibility.
+connections, context-managed usage, database connectivity check,
+and a unified execute-and-commit helper.
 """
 
 import logging
@@ -42,7 +40,7 @@ def get_connection_lazy() -> Connection:
 
 def close_request_connection(_exception: Exception | None = None) -> None:
     """
-    Close the request-scoped connection after request ends.
+    Close the request-scoped SQLAlchemy connection after request ends.
 
     :param _exception: Exception from Flask teardown (ignored).
     """
@@ -68,7 +66,7 @@ def get_connection_standalone() -> Connection:
 @contextmanager
 def get_connection() -> Generator[Connection, None, None]:
     """
-    Provide a context-managed standalone connection.
+    Provide a context-managed standalone SQLAlchemy connection.
 
     Yields a connection object which should be closed after use.
 
@@ -85,7 +83,7 @@ def get_connection() -> Generator[Connection, None, None]:
 
 def ensure_db_exists(retries: int = 5, delay: float = 2.0) -> None:
     """
-    Check if the PostgreSQL database is reachable.
+    Check if the configured PostgreSQL database is reachable.
 
     Executes 'SELECT 1' to verify connectivity.
     Retries multiple times with delay if the database is not reachable.
@@ -98,7 +96,7 @@ def ensure_db_exists(retries: int = 5, delay: float = 2.0) -> None:
     while attempt <= retries:
         try:
             with db.engine.connect() as conn:
-                conn.execute(text("SELECT 1"))
+                conn.execute(text("SELECT 1")).scalar()
             logger.info("[DATABASE|CHECK] Database connection successful.")
             return
         except SQLAlchemyError as e:
@@ -116,28 +114,26 @@ def ensure_db_exists(retries: int = 5, delay: float = 2.0) -> None:
             time.sleep(delay)
 
 
-def execute_and_commit(query: str, params: tuple) -> None:
+def execute_and_commit(query: str, params: dict | None = None) -> None:
     """
     Execute a parameterized query and commit the transaction.
 
     Rolls back and raises if execution fails.
 
     :param query: SQL query string.
-    :param params: Query parameters as tuple.
+    :param params: Query parameters (dictionary or None).
     :raises SQLAlchemyError: If the query fails and cannot be committed.
     """
-    # Convert tuple params to dict with positional keys for SQLAlchemy
-    params_dict = None
-    if params:
-        params_dict = {f"param{i+1}": val for i, val in enumerate(params)}
-
     try:
-        if params_dict:
-            db.session.execute(query, params_dict)
+        if params:
+            db.session.execute(text(query), params)
         else:
-            db.session.execute(query)
+            db.session.execute(text(query))
         db.session.commit()
-        logger.debug("[DATABASE|EXECUTE] Query committed successfully.")
+        logger.debug(
+            "[DATABASE|EXECUTE] Query committed successfully: %s",
+            query
+        )
     except SQLAlchemyError as e:
         db.session.rollback()
         logger.error(
