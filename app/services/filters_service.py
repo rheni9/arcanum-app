@@ -224,9 +224,7 @@ class FilterService:
         error: Exception,
     ) -> tuple[str, dict]:
         """Return an error result when the DAO query fails."""
-        msg = TranslatableMsg(
-            "Database error: %(err)s", {"err": str(error)}
-        ).ui
+        msg = TranslatableMsg(f"Database error: {error}").ui
         return "error", {
             "messages": [],
             "count": 0,
