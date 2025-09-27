@@ -78,9 +78,34 @@ class ChatNotFoundError(AppError):
         super().__init__(msg, chat_id=chat_id, slug=slug)
 
 
-class DuplicateMessageError(Exception):
-    """Raised when msg_id already exists within the same chat."""
+class DuplicateMessageIDError(AppError):
+    """
+    Raised when a message with the same msg_id already exists in the chat.
+
+    :param chat_ref_id: ID of the related chat (foreign key).
+    :param msg_id: Conflicting Telegram message ID.
+    """
+    code = "duplicate_message"
+
+    def __init__(self, chat_ref_id: int, msg_id: int):
+        msg = (
+            f"Message with msg_id={msg_id} already exists in chat "
+            f"(chat_ref_id={chat_ref_id})."
+        )
+        super().__init__(msg, chat_ref_id=chat_ref_id, msg_id=msg_id)
 
 
-class MessageNotFoundError(Exception):
-    """Raised when a message cannot be found for update or view."""
+class MessageNotFoundError(AppError):
+    """
+    Raised when a message cannot be found by ID.
+
+    :param message_id: Database primary key of the message.
+    """
+    code = "message_not_found"
+
+    def __init__(self, message_id: int | None = None):
+        msg = (
+            f"Message with ID={message_id} not found."
+            if message_id is not None else "Message not found."
+        )
+        super().__init__(msg, message_id=message_id)

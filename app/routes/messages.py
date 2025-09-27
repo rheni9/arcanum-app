@@ -19,7 +19,7 @@ from app.forms.message_form import MessageForm
 from app.services import message_service
 from app.services import chat_service
 from app.utils.backblaze_utils import generate_signed_s3_url, clean_url
-from app.errors import DuplicateMessageError, MessageNotFoundError
+from app.errors import DuplicateMessageIDError, MessageNotFoundError
 from app.logs.messages_logs import (
     log_message_view,
     log_message_action,
@@ -152,7 +152,7 @@ def add_message(chat_slug: str) -> Response | str:
 
     :param chat_slug: Slug of the target chat.
     :return: Redirect on success or rendered form on GET/error.
-    :raises DuplicateMessageError: If msg_id is not unique within the chat.
+    :raises DuplicateMessageIDError: If msg_id is not unique within the chat.
     :raises SQLAlchemyError: On insertion failure.
     """
     chat = chat_service.get_chat_by_slug(chat_slug)
@@ -178,7 +178,7 @@ def add_message(chat_slug: str) -> Response | str:
                         chat_slug=chat.slug,
                         pk=message.id)
             )
-        except DuplicateMessageError:
+        except DuplicateMessageIDError:
             logger.warning(
                 "[DATABASE|MESSAGES] Duplicate msg_id in the chat '%s'",
                 chat_slug
@@ -215,7 +215,7 @@ def edit_message(chat_slug: str, pk: int) -> Response | str:
     :param pk: Database ID of the message.
     :return: Redirect on success or rendered form on GET/error.
     :raises MessageNotFoundError: If the message to update does not exist.
-    :raises DuplicateMessageError: If msg_id is not unique within the chat.
+    :raises DuplicateMessageIDError: If msg_id is not unique within the chat.
     :raises SQLAlchemyError: On update failure.
     """
     chat = chat_service.get_chat_by_slug(chat_slug)
@@ -252,7 +252,7 @@ def edit_message(chat_slug: str, pk: int) -> Response | str:
             return redirect(
                 url_for("messages.view_message", chat_slug=chat_slug, pk=pk)
             )
-        except DuplicateMessageError:
+        except DuplicateMessageIDError:
             logger.warning(
                 "[MESSAGES|ROUTER] Duplicate msg_id update rejected "
                 "for chat '%s'.", chat_slug

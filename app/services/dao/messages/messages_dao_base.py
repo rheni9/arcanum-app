@@ -172,7 +172,8 @@ class BaseMessageDAO(ABC):
 
         :param exc: Original backend exception.
         :param msg: Message instance involved in the operation.
-        :raises DuplicateMessageError: If (chat_ref_id, msg_id) is not unique.
+        :raises DuplicateMessageIDError:
+            If (chat_ref_id, msg_id) is not unique.
         """
         raise NotImplementedError
 
@@ -306,7 +307,8 @@ class BaseMessageDAO(ABC):
 
         :param message: Message instance to insert.
         :return: Primary key of the inserted message.
-        :raises DuplicateMessageError: If (chat_ref_id, msg_id) is not unique.
+        :raises DuplicateMessageIDError:
+            If (chat_ref_id, msg_id) is not unique.
         :raises db_error_class: On any other database error.
         """
         query = load_sql("insert_message.sql")
@@ -356,7 +358,8 @@ class BaseMessageDAO(ABC):
         :param message: Message instance with updated values
                         (must have ``id``).
         :raises MessageNotFoundError: If the message to update does not exist.
-        :raises DuplicateMessageError: If (chat_ref_id, msg_id) is not unique.
+        :raises DuplicateMessageIDError:
+            If (chat_ref_id, msg_id) is not unique.
         :raises db_error_class: On any other database error.
         """
         query = load_sql("update_message.sql")

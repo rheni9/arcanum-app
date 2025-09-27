@@ -19,7 +19,7 @@ from datetime import datetime
 
 from app.models.message import Message
 from app.services.dao.messages.messages_dao_base import BaseMessageDAO
-from app.errors import DuplicateMessageError, MessageNotFoundError
+from app.errors import DuplicateMessageIDError, MessageNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -167,8 +167,8 @@ class MessageService:
 
         :param message: Message instance to insert.
         :return: Primary key ID of the inserted message.
-        :raises DuplicateMessageError: If ``msg_id`` already exists
-                                       within the chat.
+        :raises DuplicateMessageIDError: If ``msg_id`` already exists
+                                         within the chat.
         :raises dao.db_error_class: If the DAO operation fails.
         """
         try:
@@ -183,7 +183,7 @@ class MessageService:
                         message.msg_id,
                         message.chat_ref_id,
                     )
-                    raise DuplicateMessageError(
+                    raise DuplicateMessageIDError(
                         chat_ref_id=message.chat_ref_id,
                         msg_id=message.msg_id,
                     )
@@ -212,8 +212,8 @@ class MessageService:
         :param message: Message instance with updated values
                         (must have ``id``).
         :raises ValueError: If the message primary key is missing.
-        :raises DuplicateMessageError: If ``msg_id`` already exists
-                                       within the chat.
+        :raises DuplicateMessageIDError: If ``msg_id`` already exists
+                                         within the chat.
         :raises MessageNotFoundError: If the message does not exist.
         :raises dao.db_error_class: If the DAO operation fails.
         """
@@ -236,7 +236,7 @@ class MessageService:
                         message.chat_ref_id,
                         message.msg_id,
                     )
-                    raise DuplicateMessageError(
+                    raise DuplicateMessageIDError(
                         chat_ref_id=message.chat_ref_id,
                         msg_id=message.msg_id,
                     )

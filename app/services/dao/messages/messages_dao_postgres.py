@@ -16,7 +16,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app.models.message import Message
 from app.utils.db_utils import get_connection_lazy
-from app.errors import DuplicateMessageError
+from app.errors import DuplicateMessageIDError
 from .messages_dao_base import BaseMessageDAO
 
 logger = logging.getLogger(__name__)
@@ -164,14 +164,14 @@ class PostgresMessageDAO(BaseMessageDAO):
 
         :param exc: SQLAlchemy IntegrityError.
         :param msg: Message instance involved in the operation.
-        :raises DuplicateMessageError: If unique on (chat_ref_id, msg_id)
-                                       is violated.
+        :raises DuplicateMessageIDError: If unique on (chat_ref_id, msg_id)
+                                         is violated.
         """
         orig = getattr(exc, "orig", None)
         if orig and isinstance(orig, errors.UniqueViolation):
             constraint = getattr(orig.diag, "constraint_name", "") or ""
             if constraint == "idx_unique_msg_id":
-                raise DuplicateMessageError(
+                raise DuplicateMessageIDError(
                     chat_ref_id=msg.chat_ref_id,
                     msg_id=msg.msg_id,
                 ) from exc
