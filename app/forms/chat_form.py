@@ -22,7 +22,7 @@ from wtforms.validators import (
 from PIL import Image, UnidentifiedImageError
 
 from app.models.chat import Chat
-from app.services.chats_service import slug_exists
+from app.services import chat_service
 from app.utils.slugify_utils import slugify, generate_unique_slug
 from app.utils.model_utils import empty_to_none, to_int_or_none
 from app.utils.time_utils import parse_flexible_date
@@ -190,7 +190,7 @@ class ChatForm(FlaskForm):
         if not original_slug:
             # New chat: generate slug
             new_slug = slugify(name_value)
-            if slug_exists(new_slug):
+            if chat_service.slug_exists(new_slug):
                 logger.debug(
                     "[CHATS|FORM] Slug '%s' exists. Resolving unique.",
                     new_slug
@@ -210,7 +210,7 @@ class ChatForm(FlaskForm):
             return original_slug
 
         new_slug = slugify(current_name)
-        if slug_exists(new_slug):
+        if chat_service.slug_exists(new_slug):
             logger.debug(
                 "[CHATS|FORM] Slug '%s' exists. Resolving unique.", new_slug
             )
