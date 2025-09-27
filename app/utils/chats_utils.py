@@ -11,13 +11,10 @@ from flask import render_template, request, redirect, url_for, Response
 
 from app.models.chat import Chat
 from app.models.filters import MessageFilters
-from app.services.chats_service import get_chats, get_global_stats
-from app.services.messages_service import (
-    get_messages_by_chat_slug, count_messages_in_chat
-)
-from app.services.filters_service import (
-    resolve_message_query, normalize_filter_action
-)
+from app.services import chat_service
+from app.services import message_service
+from app.services import filter_service
+from app.utils.filters_utils import normalize_filter_action
 from app.utils.sort_utils import get_sort_order
 from app.utils.backblaze_utils import generate_signed_s3_url
 from app.logs.chats_logs import log_chat_list, log_chat_view
@@ -39,8 +36,8 @@ def render_chat_list() -> str:
         default_order="desc"
     )
 
-    chats = get_chats(sort_by, order)
-    stats = get_global_stats()
+    chats = chat_service.get_chats(sort_by, order)
+    stats = chat_service.get_global_stats()
 
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
     template = "chats/_chats_table.html" if is_ajax else "chats/index.html"
@@ -104,7 +101,7 @@ def render_chat_view(chat: Chat) -> str | Response:
         template,
         chat=chat,
         messages=messages,
-        total_count=count_messages_in_chat(chat.id),
+        total_count=message_service.count_messages_in_chat(chat.id),
         sort_by=sort_by,
         order=order,
         filters=filters,
@@ -147,15 +144,20 @@ def _resolve_messages(
     :return: Tuple of (messages, count, info message).
     """
     if not filters.action:
-        messages = get_messages_by_chat_slug(slug, sort_by, order)
+        messages = message_service.get_messages_by_chat_slug(slug,
+                                                             sort_by, order)
         return messages, len(messages), None
 
-    status, context = resolve_message_query(filters, sort_by, order)
+    status, context = filter_service.resolve_message_query(
+        filters, sort_by, order
+    )
 
     if status == "invalid":
         return [], 0, context["info_message"]
     if status == "cleared":
-        messages = get_messages_by_chat_slug(slug, sort_by, order)
+        messages = message_service.get_messages_by_chat_slug(
+            slug, sort_by, order
+        )
         return messages, len(messages), context["info_message"]
 
     return context["messages"], context["count"], context["info_message"]
