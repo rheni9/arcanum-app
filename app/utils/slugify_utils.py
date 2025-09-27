@@ -11,7 +11,7 @@ import hashlib
 import logging
 from uuid import uuid4
 
-from app.services.chats_service import slug_exists
+from app.services import chat_service
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +97,7 @@ def generate_unique_slug(
         unique_input = f"{seed}-{uuid4().hex}"
         suffix = generate_short_hash(unique_input)
         new_slug = f"{base_slug}_{suffix}"
-        if not slug_exists(new_slug):
+        if not chat_service.slug_exists(new_slug):
             if i > 0:
                 logger.info(
                     "[SLUG|RESOLVE] Collision detected, resolved to '%s'.",
