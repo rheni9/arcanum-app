@@ -110,8 +110,8 @@ def view_message(chat_slug: str, pk: int) -> str:
     :raises SQLAlchemyError: On retrieval failure.
     """
     try:
-        chat = get_chat_by_slug(chat_slug)
-        message = get_message_by_id(pk)
+        chat = chat_service.get_chat_by_slug(chat_slug)
+        message = message_service.get_message_by_id(pk)
 
         if not chat:
             flash(
@@ -124,8 +124,10 @@ def view_message(chat_slug: str, pk: int) -> str:
             flash(_("Message not found in this chat."), "error")
             return redirect(url_for("chats.view_chat", slug=chat_slug))
 
-        prev_message = get_previous_message(chat.id, message.timestamp)
-        next_message = get_next_message(chat.id, message.timestamp)
+        prev_message = message_service.get_previous_message(chat.id,
+                                                            message.timestamp)
+        next_message = message_service.get_next_message(chat.id,
+                                                        message.timestamp)
 
         return render_message_view(
             chat_slug,
@@ -153,7 +155,7 @@ def add_message(chat_slug: str) -> Response | str:
     :raises DuplicateMessageError: If msg_id is not unique within the chat.
     :raises SQLAlchemyError: On insertion failure.
     """
-    chat = get_chat_by_slug(chat_slug)
+    chat = chat_service.get_chat_by_slug(chat_slug)
     if not chat:
         flash(
             _("Chat with slug '%(slug)s' not found.", slug=chat_slug), "error"
@@ -167,7 +169,7 @@ def add_message(chat_slug: str) -> Response | str:
         data = form.to_model_dict()
         message = Message.from_dict(data)
         try:
-            pk = insert_message(message)
+            pk = message_service.insert_message(message)
             message.id = pk
             flash(_("Message added successfully."), "success")
             log_message_action("create", message.id, chat.slug)
@@ -216,8 +218,8 @@ def edit_message(chat_slug: str, pk: int) -> Response | str:
     :raises DuplicateMessageError: If msg_id is not unique within the chat.
     :raises SQLAlchemyError: On update failure.
     """
-    chat = get_chat_by_slug(chat_slug)
-    message = get_message_by_id(pk)
+    chat = chat_service.get_chat_by_slug(chat_slug)
+    message = message_service.get_message_by_id(pk)
 
     if not chat:
         flash(
@@ -244,7 +246,7 @@ def edit_message(chat_slug: str, pk: int) -> Response | str:
         data["chat_ref_id"] = chat.id
         updated_message = Message.from_dict(data)
         try:
-            update_message(updated_message)
+            message_service.update_message(updated_message)
             flash(_("Message updated successfully."), "success")
             log_message_action("update", message.id, chat.slug)
             return redirect(
@@ -297,8 +299,8 @@ def delete_message(chat_slug: str, pk: int) -> Response:
     :raises SQLAlchemyError: On deletion failure.
     """
     try:
-        chat = get_chat_by_slug(chat_slug)
-        message = get_message_by_id(pk)
+        chat = chat_service.get_chat_by_slug(chat_slug)
+        message = message_service.get_message_by_id(pk)
 
         if not chat:
             flash(
@@ -311,7 +313,7 @@ def delete_message(chat_slug: str, pk: int) -> Response:
             flash(_("Message not found in this chat."), "error")
             return redirect(url_for("chats.view_chat", slug=chat_slug))
 
-        delete_message_by_id(pk)
+        message_service.delete_message_by_id(pk)
         log_message_action("delete", pk, chat_slug)
         flash(_("Message deleted successfully."), "success")
     except SQLAlchemyError as e:
@@ -341,8 +343,8 @@ def remove_media(chat_slug: str, pk: int) -> Response:
         )
 
     try:
-        message = get_message_by_id(pk)
-        chat = get_chat_by_slug(chat_slug)
+        message = message_service.get_message_by_id(pk)
+        chat = chat_service.get_chat_by_slug(chat_slug)
         if not chat:
             flash(
                 _("Chat with slug '%(slug)s' not found.", slug=chat_slug),
@@ -365,7 +367,7 @@ def remove_media(chat_slug: str, pk: int) -> Response:
             flash(_("Could not find matching media for removal."), "warning")
         else:
             message.media = updated_media
-            update_message(message)
+            message_service.update_message(message)
             flash(_("Media file removed."), "success")
             log_media_removal(pk, chat_slug, clean_submitted)
 
@@ -388,8 +390,8 @@ def remove_screenshot(chat_slug: str, pk: int) -> Response:
     :return: Redirect to message view after update.
     """
     try:
-        message = get_message_by_id(pk)
-        chat = get_chat_by_slug(chat_slug)
+        message = message_service.get_message_by_id(pk)
+        chat = chat_service.get_chat_by_slug(chat_slug)
 
         if not chat:
             flash(
@@ -408,7 +410,7 @@ def remove_screenshot(chat_slug: str, pk: int) -> Response:
             )
         else:
             message.screenshot = None
-            update_message(message)
+            message_service.update_message(message)
             flash(_("Screenshot removed."), "success")
             log_screenshot_removal(pk, chat_slug)
 

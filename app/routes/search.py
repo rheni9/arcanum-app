@@ -14,7 +14,7 @@ from flask import (
 from flask_babel import _
 
 from app.models.filters import MessageFilters
-from app.services.filters_service import resolve_message_query
+from app.services import filter_service
 from app.logs.search_logs import log_search_outcome
 
 search_bp = Blueprint("search", __name__, url_prefix="/search")
@@ -38,7 +38,9 @@ def global_search() -> str:
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
     try:
-        status, context = resolve_message_query(filters, sort_by, order)
+        status, context = filter_service.resolve_message_query(
+            filters, sort_by, order
+        )
     except DatabaseError as e:
         logger.error("[SEARCH|DATABASE] Query failed: %s", e)
         flash(_("Database error occurred. Please try again."), "error")

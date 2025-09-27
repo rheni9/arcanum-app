@@ -14,10 +14,7 @@ from flask_babel import _
 
 from app.models.chat import Chat
 from app.forms.chat_form import ChatForm
-from app.services.chats_service import (
-    get_chat_by_slug, insert_chat, update_chat,
-    delete_chat_and_messages
-)
+from app.services import chat_service
 from app.utils.chats_utils import render_chat_list, render_chat_view
 from app.errors import (
     DuplicateChatIDError, DuplicateSlugError, ChatNotFoundError
@@ -55,7 +52,7 @@ def view_chat(slug: str) -> str:
     :return: Rendered chat view page or table fragment.
     :raises SQLAlchemyError: On retrieval failure.
     """
-    chat = get_chat_by_slug(slug)
+    chat = chat_service.get_chat_by_slug(slug)
     if not chat:
         flash(_("Chat with slug '%(slug)s' not found.", slug=slug), "error")
         return redirect(url_for("chats.list_chats"))
@@ -89,7 +86,7 @@ def add_chat() -> Response | str:
         chat = Chat.from_dict(chat_data)
 
         try:
-            insert_chat(chat)
+            chat_service.insert_chat(chat)
             log_chat_action(action="create", chat_slug=chat.slug)
             flash(
                 _("Chat '%(name)s' created successfully.", name=chat.name),
@@ -132,7 +129,7 @@ def edit_chat(slug: str) -> Response | str:
     :raises DuplicateChatIDError: If Telegram chat ID already exists.
     :raises SQLAlchemyError: On update failure.
     """
-    chat = get_chat_by_slug(slug)
+    chat = chat_service.get_chat_by_slug(slug)
 
     if not chat:
         flash(_("Chat with slug '%(slug)s' not found.", slug=slug), "error")
@@ -149,7 +146,7 @@ def edit_chat(slug: str) -> Response | str:
         updated_chat = Chat.from_dict(updated_data)
 
         try:
-            update_chat(updated_chat)
+            chat_service.update_chat(updated_chat)
             log_chat_action(action="update", chat_slug=updated_chat.slug)
             flash(
                 _(
@@ -200,13 +197,13 @@ def delete_chat(slug: str) -> Response:
     :return: Redirect to chat list after deletion.
     :raises SQLAlchemyError: On deletion failure.
     """
-    chat = get_chat_by_slug(slug)
+    chat = chat_service.get_chat_by_slug(slug)
     if not chat:
         flash(_("Chat with slug '%(slug)s' not found.", slug=slug), "error")
         return redirect(url_for("chats.list_chats"))
 
     try:
-        delete_chat_and_messages(slug)
+        chat_service.delete_chat_and_messages(slug)
         log_chat_action(action="delete", chat_slug=slug)
         flash(
             _("Chat '%(name)s' deleted successfully.", name=chat.name),
@@ -230,7 +227,7 @@ def remove_chat_image(slug: str) -> Response:
     :return: Redirect to chat view after update.
     """
     try:
-        chat = get_chat_by_slug(slug)
+        chat = chat_service.get_chat_by_slug(slug)
         if not chat:
             flash(
                 _(
@@ -244,7 +241,7 @@ def remove_chat_image(slug: str) -> Response:
             flash(_("Could not find matching image for removal."), "warning")
         else:
             chat.image = None
-            update_chat(chat)
+            chat_service.update_chat(chat)
             flash(_("Chat image removed."), "success")
             log_chat_image_removal(slug)
 
