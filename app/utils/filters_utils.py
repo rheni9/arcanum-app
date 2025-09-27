@@ -210,20 +210,32 @@ def validate_search_filters(
 
 def build_sql_clause(
     filters: MessageFilters,
-    chat_slug: str | None = None
+    chat_slug: str | None = None,
+    dialect: str = "postgres",
 ) -> tuple[str, dict]:
     """
     Build a SQL WHERE clause and parameter dictionary for SQLAlchemy.
 
-    Extracts conditions from filters and optionally restricts the query
-    to a specific chat.
+    Generates conditions for Postgres or SQLite depending on the dialect.
 
     :param filters: MessageFilters instance to extract clauses from.
     :param chat_slug: Optional slug to limit filtering to a specific chat.
+    :param dialect: Database dialect (``'postgres'`` or ``'sqlite'``).
     :return: Tuple of (WHERE clause as string, dict of parameters).
     """
     clause: list[str] = []
     params: dict = {}
+
+    def text_expr(field: str, param: str) -> str:
+        """
+        Generate a case-insensitive LIKE/ILIKE expression
+        depending on the active dialect.
+        """
+        if dialect == "postgres":
+            if field == "m.tags":
+                return f"{field}::text ILIKE :{param}"
+            return f"{field} ILIKE :{param}"
+        return f"LOWER({field}) LIKE LOWER(:{param})"
 
     if chat_slug:
         clause.append("c.slug = :chat_slug")
@@ -232,20 +244,24 @@ def build_sql_clause(
     if filters.action == "search":
         if filters.query and filters.tag:
             clause.append(
-                "(m.text ILIKE :query OR m.tags::text ILIKE :query "
-                "OR m.tags::text ILIKE :tag)"
+                f"({text_expr('m.text', 'query')} "
+                f"OR {text_expr('m.tags', 'query')} "
+                f"OR {text_expr('m.tags', 'tag')})"
             )
             params["query"] = f"%{filters.query}%"
             params["tag"] = f"%{filters.tag}%"
         elif filters.query:
-            clause.append("(m.text ILIKE :query OR m.tags::text ILIKE :query)")
+            clause.append(
+                f"({text_expr('m.text', 'query')} "
+                f"OR {text_expr('m.tags', 'query')})"
+            )
             params["query"] = f"%{filters.query}%"
         elif filters.tag:
-            clause.append("m.tags::text ILIKE :tag")
+            clause.append(text_expr("m.tags", "tag"))
             params["tag"] = f"%{filters.tag}%"
 
     if filters.action == "tag":
-        clause.append("m.tags::text ILIKE :tag")
+        clause.append(text_expr("m.tags", "tag"))
         params["tag"] = f"%{filters.tag}%"
 
     if filters.action == "filter":
@@ -256,7 +272,10 @@ def build_sql_clause(
 
     where_sql = "WHERE " + " AND ".join(clause) if clause else ""
     logger.debug(
-        "[FILTERS|SQL] %s | params: %s", where_sql or "<no clause>", params
+        "[FILTERS|SQL|%s] %s | params=%s",
+        dialect.upper(),
+        where_sql or "<no clause>",
+        params,
     )
     return where_sql, params
 

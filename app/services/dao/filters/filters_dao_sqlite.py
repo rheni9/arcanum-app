@@ -9,7 +9,9 @@ error translation and structured results.
 import logging
 import sqlite3
 
+from app.models.filters import MessageFilters
 from app.utils.db_utils import get_connection_lazy
+from app.utils.filters_utils import build_sql_clause
 from .filters_dao_base import BaseFiltersDAO
 
 logger = logging.getLogger(__name__)
@@ -30,6 +32,12 @@ class SQLiteFiltersDAO(BaseFiltersDAO):
         return sqlite3.DatabaseError
 
     # ---------- Execution primitives ----------
+
+    def _build_where_clause(
+        self, filters: MessageFilters
+    ) -> tuple[str, dict]:
+        """Build a WHERE clause and parameters for SQLite."""
+        return build_sql_clause(filters, filters.chat_slug, dialect="sqlite")
 
     def _select_all(
         self,

@@ -18,7 +18,6 @@ from pathlib import Path
 
 from app.models.filters import MessageFilters
 from app.utils.sql_utils import OrderConfig, build_order_clause
-from app.utils.filters_utils import build_sql_clause
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +71,19 @@ class BaseFiltersDAO(ABC):
     # ---------- Execution primitives ----------
 
     @abstractmethod
+    def _build_where_clause(
+        self,
+        filters: MessageFilters,
+    ) -> tuple[str, dict]:
+        """
+        Build backend-specific WHERE clause and params.
+
+        :param filters: MessageFilters instance.
+        :return: Tuple (WHERE clause, params).
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def _select_all(
         self,
         query: str,
@@ -112,7 +124,7 @@ class BaseFiltersDAO(ABC):
             default_order="desc",
             prefix="m.",
         )
-        where_clause, params = build_sql_clause(filters, filters.chat_slug)
+        where_clause, params = self._build_where_clause(filters)
         order_clause = build_order_clause(sort_by, order, config)
 
         query = load_sql("fetch_filtered_messages.sql").format(

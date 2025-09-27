@@ -2,11 +2,11 @@
 -- Retrieve messages matching filters (search query, tag, or date range).
 --
 -- Parameters (bound in Python):
---   :query       – search text (optional, only if action=search)
---   :tag         – tag text (optional, only if action=tag)
---   :start_date  – start date (optional, if date filter used)
---   :end_date    – end date (optional, if date filter with "between" mode)
---   :chat_slug   – optional chat slug to scope the filter
+--   query       – search text (optional, only if action=search)
+--   tag         – tag text (optional, only if action=tag)
+--   start_date  – start date (optional, if date filter used)
+--   end_date    – end date (optional, if date filter with "between" mode)
+--   chat_slug   – optional chat slug to scope the filter
 --
 -- Placeholders for formatting:
 --   {where_clause} – dynamically generated WHERE conditions
