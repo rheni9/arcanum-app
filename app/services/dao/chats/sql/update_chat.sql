@@ -2,9 +2,9 @@
 -- Update an existing chat record.
 --
 -- Parameters:
---   :id – primary key of the chat to update
---   :chat_id, :slug, :name, :link, :type, :image, :joined,
---   :is_active, :is_member, :is_public, :notes – updated values
+--   id – primary key of the chat to update
+--   chat_id, slug, name, link, type, image, joined,
+--   is_active, is_member, is_public, notes – updated values
 --
 -- Returns:
 --   Number of rows affected (should be 1 on success).

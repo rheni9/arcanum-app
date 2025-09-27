@@ -2,7 +2,7 @@
 -- Retrieve messages with chat join for a given chat slug and ordering.
 --
 -- Parameters:
---   :slug – chat slug to filter by
+--   slug – chat slug to filter by
 --   {order_clause} – ORDER BY clause injected from Python.
 --
 -- Returns:

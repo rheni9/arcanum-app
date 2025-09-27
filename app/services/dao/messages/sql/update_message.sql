@@ -2,9 +2,9 @@
 -- Update an existing message record.
 --
 -- Parameters:
---   :id – primary key of the message to update
---   :msg_id, :timestamp, :link, :text, :media,
---   :screenshot, :tags, :notes – updated values
+--   id – primary key of the message to update
+--   msg_id, timestamp, link, text, media,
+--   screenshot, tags, notes – updated values
 --
 -- Returns:
 --   Number of rows affected (should be 1 on success).
