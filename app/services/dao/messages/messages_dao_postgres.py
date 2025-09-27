@@ -176,3 +176,11 @@ class PostgresMessageDAO(BaseMessageDAO):
                     msg_id=msg.msg_id,
                 ) from exc
         raise exc
+
+    # ---------- Backend-specific SQL helpers ----------
+
+    def _get_ts_expressions(self) -> tuple[str, str]:
+        """
+        PostgreSQL uses proper TIMESTAMP type, no casting needed.
+        """
+        return "timestamp", ":current_ts"

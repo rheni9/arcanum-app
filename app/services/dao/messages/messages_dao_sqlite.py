@@ -176,3 +176,12 @@ class SQLiteMessageDAO(BaseMessageDAO):
                 msg_id=msg.msg_id,
             ) from exc
         raise exc
+
+    # ---------- Backend-specific SQL helpers ----------
+
+    def _get_ts_expressions(self) -> tuple[str, str]:
+        """
+        SQLite stores timestamps as TEXT.
+        Use `datetime()` for correct comparison and ordering.
+        """
+        return "datetime(timestamp)", "datetime(:current_ts)"

@@ -176,6 +176,24 @@ class BaseMessageDAO(ABC):
         """
         raise NotImplementedError
 
+    # ---------- Backend-specific SQL helpers ----------
+
+    @abstractmethod
+    def _get_ts_expressions(self) -> tuple[str, str]:
+        """
+        Return backend-specific SQL expressions for timestamp comparison.
+
+        Returns:
+            tuple[str, str]: A pair `(ts_expr, ts_param)` where:
+                - ts_expr: SQL expression for the timestamp column.
+                - ts_param: SQL placeholder for the bound parameter.
+
+        Example:
+            SQLite   -> ("datetime(timestamp)", "datetime(:current_ts)")
+            Postgres -> ("timestamp", ":current_ts")
+        """
+        raise NotImplementedError
+
     # ---------- Backend-agnostic helpers built on primitives ----------
 
     def fetch_messages_by_chat(
@@ -247,7 +265,11 @@ class BaseMessageDAO(ABC):
         else:
             raise ValueError("Direction must be 'previous' or 'next'")
 
+        ts_expr, ts_param = self._get_ts_expressions()
+
         query = load_sql("fetch_adjacent_message.sql").format(
+            ts_expr=ts_expr,
+            ts_param=ts_param,
             comparator=comparator,
             order=order,
         )
