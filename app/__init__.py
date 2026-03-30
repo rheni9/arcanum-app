@@ -28,6 +28,7 @@ from app.routes.home import home_bp
 from app.routes.auth import auth_bp
 from app.routes.dashboard import dashboard_bp
 from app.routes.chats import chats_bp
+from app.routes.health import health_bp
 from app.routes.messages import messages_bp
 from app.routes.search import search_bp
 from app.routes.lang import lang_bp
@@ -166,6 +167,7 @@ def _register_blueprints(app: Flask) -> None:
     :param app: Flask app instance.
     """
     app.register_blueprint(lang_bp)
+    app.register_blueprint(health_bp)
     app.register_blueprint(home_bp, url_prefix="/")
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(chats_bp, url_prefix="/chats")

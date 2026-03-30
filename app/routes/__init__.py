@@ -9,6 +9,7 @@ Organizes views and route handlers for:
 - Chats
 - Messages
 - Search and filtering
+- Health checks (infrastructure/service monitoring)
 
 Each blueprint handles request routing, template rendering, and session
 interaction, while delegating core logic to the service layer.

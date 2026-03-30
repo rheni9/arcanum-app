@@ -24,11 +24,16 @@ def restrict_access() -> Response | None:
         "auth.login",
         "auth.logout",
         "lang.set_language",
+        "health.health",
         "static"
     }
 
     # Do nothing if endpoint is missing (static file, etc)
     if request.endpoint is None:
+        return None
+    
+    # Allow health check without logging noise
+    if request.endpoint == "health.health":
         return None
 
     # Verify if user is authenticated
